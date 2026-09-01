@@ -118,7 +118,14 @@ def fit_omori(
         (c0, p0),
         args=(t, t_end),
         method="Nelder-Mead",
-        options={"xatol": 1e-8, "fatol": 1e-10, "maxiter": 5000},
+        # fatol is absolute, so it must scale with the likelihood, which grows
+        # with n; a fixed 1e-10 is unreachable on a large catalogue and the fit
+        # is then rejected as unconverged despite sitting on the optimum.
+        options={
+            "xatol": 1e-8,
+            "fatol": max(1e-10, 1e-10 * abs(_profiled_nll((c0, p0), t, t_end))),
+            "maxiter": 5000,
+        },
     )
     if not search.success:
         raise ValueError(f"Omori fit did not converge: {search.message}")
@@ -160,6 +167,8 @@ def bootstrap_omori(
     Efron, B. (1979).
     """
     n_boot = constants.N_BOOT if n_boot is None else n_boot
+    if n_boot < 0:
+        raise ValueError(f"n_boot cannot be negative; got {n_boot}")
     t = np.asarray(times_days, float)
     t = t[t > 0]
     if t_end is None:

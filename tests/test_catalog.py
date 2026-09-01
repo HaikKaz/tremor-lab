@@ -46,6 +46,12 @@ def test_distance_from_a_point_to_itself_is_zero():
     assert haversine_km(37.0, 37.0, 37.0, 37.0) == pytest.approx(0.0)
 
 
+def test_one_degree_of_longitude_shrinks_with_the_cosine_of_latitude():
+    # Without the cos(lat) factor this would also return 111.19, so this is the
+    # test that holds the longitude half of the formula in place.
+    assert haversine_km(37.0, 37.0, 37.0, 38.0) == pytest.approx(88.80, abs=0.05)
+
+
 def test_distance_is_symmetric():
     there = haversine_km(37.0, 36.0, 38.5, 38.2)
     back = haversine_km(38.5, 38.2, 37.0, 36.0)

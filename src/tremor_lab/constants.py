@@ -63,6 +63,15 @@ OMORI_P0 = 1.1
 # Bootstrap resamples used for the Omori uncertainty.
 N_BOOT = 200
 
+# Bounds used only to judge whether a fitted decay is worth believing; they never
+# constrain the fit itself. c below the floor means the offset has collapsed onto
+# the boundary of the model, where the likelihood has no interior maximum and c is
+# not identified. The p range brackets the values compiled from real sequences by
+# Utsu, Ogata and Matsu'ura (1995); outside it the fit is reported with a caution.
+OMORI_C_FLOOR = 1e-3
+OMORI_P_MIN = 0.5
+OMORI_P_MAX = 2.0
+
 # Minimum event counts below which an estimate is reported as unavailable rather than
 # fitted to a catalogue too sparse to support it.
 MIN_EVENTS_FOR_MC = 50

@@ -28,7 +28,10 @@ def main(argv: list[str] | None = None) -> int:
         settings = _load_settings(args.settings)
         result, source = _run(settings, args.settings.parent)
     except (OSError, KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as e:
-        print(f"tremor-lab: {e}", file=sys.stderr)
+        # KeyError formats itself with repr, which quotes the message and doubles
+        # every backslash in a Windows path.
+        message = e.args[0] if isinstance(e, KeyError) and e.args else e
+        print(f"tremor-lab: {message}", file=sys.stderr)
         return 2
     print(_report(result, source))
     if args.fmd_out and result["fmd"] is not None:
@@ -105,14 +108,34 @@ def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
         window_days=window_days,
         **analysis,
     )
+    result.update({k: v for k, v in catalog.attrs.items() if k.startswith("rows_")})
+    scale_col = columns.get("mag_type")
+    result["magnitude_note"] = (
+        f"column {columns.get('mag')!r}, scale column {scale_col!r}, converted to "
+        f"Mw by the Scordilis relations where the scale is Ms or mb"
+        if scale_col
+        else f"column {columns.get('mag')!r}, used as published; no scale column "
+        f"given, so no homogenisation was applied"
+    )
     return result, path
 
 
 def _report(result: dict[str, Any], source: Path) -> str:
     """Render the analysis as the block of text a reader would paste into a table."""
+    read = result.get("rows_read")
     lines = [
         f"Tremor Lab {__version__}",
         f"catalogue            {source.name}",
+    ]
+    if read is not None and result.get("rows_parsed") is not None:
+        dropped = read - result["rows_parsed"]
+        lines.append(
+            f"rows                 {read} read, {result['rows_parsed']} usable"
+            + (f", {dropped} unreadable and left out" if dropped else "")
+        )
+    if result.get("n_unusable"):
+        lines.append(f"incomplete rows      {result['n_unusable']} dropped")
+    lines += [
         f"events in window     {result['n_events']}",
         f"completeness Mc      {_show(result['mc'])}",
         f"threshold used       {_show(result['threshold'])}"
@@ -130,10 +153,14 @@ def _report(result: dict[str, Any], source: Path) -> str:
             + (f" +/- {spread.c_std:.3f}" if spread else ""),
             f"Omori k              {omori.k:.1f}",
         ]
+        if result.get("omori_warning"):
+            lines.append(f"CAUTION              {result['omori_warning']}")
     lines += [
         f"mainshock energy     {result['mainshock_energy_j']:.3e} J",
         f"Bath expectation     M {result['bath_mag']:.2f}",
     ]
+    if result.get("magnitude_note"):
+        lines.append(f"magnitudes           {result['magnitude_note']}")
     return "\n".join(lines)
 
 

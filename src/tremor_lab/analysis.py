@@ -85,9 +85,9 @@ def analyze_case(
     if min_events_for_fit is None:
         min_events_for_fit = constants.MIN_EVENTS_FOR_FIT
 
-    post = catalog_df[
-        (catalog_df["dt_days"] > 0) & (catalog_df["dt_days"] <= window_days)
-    ]
+    usable = catalog_df.dropna(subset=list(REQUIRED_COLUMNS))
+    n_unusable = len(catalog_df) - len(usable)
+    post = usable[(usable["dt_days"] > 0) & (usable["dt_days"] <= window_days)]
     mags = post["mw"].to_numpy()
 
     mc = (
@@ -109,25 +109,57 @@ def analyze_case(
         "mainshock_energy_j": float(energy_joules(mainshock["mw"])),
         "bath_mag": float(bath_mag(mainshock["mw"])),
         "fmd": fmd(mags, dm=dm) if len(post) else None,
+        "n_unusable": n_unusable,
+        "omori_warning": None,
         "note": None,
     }
 
     if threshold is None:
         result["note"] = (
-            f"fewer than {min_events_for_mc} events in the window; "
-            f"no completeness magnitude estimated"
+            f"{len(post)} events in the window; estimating a completeness "
+            f"magnitude needs more than {min_events_for_mc}"
         )
         return result
     if len(above) <= min_events_for_fit:
         result["note"] = (
-            f"only {len(above)} events at or above M {threshold}; "
-            f"fewer than the {min_events_for_fit} required for a stable fit"
+            f"only {len(above)} events at or above M {threshold}; a stable fit "
+            f"needs more than {min_events_for_fit}"
         )
         return result
 
     result["b_value"] = b_value_aki(above["mw"].to_numpy(), threshold, dm=dm)
     times = above["dt_days"].to_numpy()
     result["omori"] = fit_omori(times)
+    result["omori_warning"] = _omori_caution(result["omori"])
     if n_boot:
         result["omori_bootstrap"] = bootstrap_omori(times, n_boot=n_boot, seed=seed)
     return result
+
+
+def _omori_caution(fit) -> str | None:
+    """
+    Say when a converged Omori fit should not be believed.
+
+    Two cases. The offset c can collapse onto zero, the boundary of the model,
+    where the likelihood has no interior maximum: that happens when the earliest
+    events sit essentially on the origin time, and c is then not identified at
+    all. And p can land far outside the range compiled from real sequences,
+    which usually means the sample is too small or too sparse to constrain it.
+    Neither suppresses the fit; both mark it.
+
+    References
+    ----------
+    Utsu, T., Ogata, Y. and Matsu'ura, R. S. (1995).
+    """
+    cautions = []
+    if fit.c < constants.OMORI_C_FLOOR:
+        cautions.append(
+            f"c has collapsed to {fit.c:.2g}, at the boundary of the model, so it "
+            f"is not identified by this catalogue"
+        )
+    if not constants.OMORI_P_MIN <= fit.p <= constants.OMORI_P_MAX:
+        cautions.append(
+            f"p = {fit.p:.3f} lies outside {constants.OMORI_P_MIN} to "
+            f"{constants.OMORI_P_MAX}, the range reported for real sequences"
+        )
+    return "; ".join(cautions) if cautions else None

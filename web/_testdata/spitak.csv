@@ -1,0 +1,264 @@
+time,latitude,longitude,depth,mag,magType,nst,gap,dmin,rms,net,id,updated,place,type,horizontalError,depthError,magError,magNst,status,locationSource,magSource
+1992-12-28T17:57:03.650Z,42.383,43.525,10,4.4,mb,,,,1.1,us,usp0005k00,2014-11-07T00:52:06.050Z,"9 km ENE of Sach‚Äôkhere, Georgia",earthquake,,,,11,reviewed,us,us
+1992-12-11T11:37:39.030Z,42.423,43.53,33,4.2,mb,,,,0.9,us,usp0005j3m,2014-11-07T00:52:01.826Z,"12 km NE of Sach‚Äôkhere, Georgia",earthquake,,,,15,reviewed,us,us
+1992-12-09T20:29:47.190Z,40.058,45.312,15.8,4.8,mb,,,,1.2,us,usp0005j1h,2020-08-29T01:59:22.093Z,"5 km ESE of Madina, Armenia",earthquake,,,,51,reviewed,us,us
+1992-12-08T05:34:26.570Z,40.264,45.469,33,4.2,mb,,,,1,us,usp0005hyr,2014-11-07T00:52:00.996Z,"11 km N of Tsovinar, Armenia",earthquake,,,,6,reviewed,us,us
+1992-11-06T15:28:46.170Z,37.989,47.757,33,4.1,mb,,,,1.3,us,usp0005gdj,2014-11-07T00:51:49.541Z,northwestern Iran,earthquake,,,,2,reviewed,us,us
+1992-11-05T15:42:26.930Z,42.284,44.794,40.4,4.5,mb,,,,1,us,usp0005gbh,2014-11-07T00:51:49.042Z,"11 km SE of Pasanauri, Georgia",earthquake,,7.5,,17,reviewed,us,us
+1992-10-24T00:46:53.170Z,42.428,44.865,33,3.5,mb,,,,1.5,us,usp0005fth,2014-11-07T00:51:42.871Z,"16 km ENE of Pasanauri, Georgia",earthquake,,,,3,reviewed,us,us
+1992-10-24T00:14:40.260Z,42.485,44.931,33,4.6,mb,,,,1.3,us,usp0005fte,2014-11-07T00:51:42.863Z,"24 km NE of Pasanauri, Georgia",earthquake,,,,11,reviewed,us,us
+1992-10-23T23:19:45.200Z,42.589,45.104,16.4,6.4,mw,,,,1,us,usp0005ftd,2022-04-28T18:33:59.208Z,"38 km ESE of St‚Äôepants‚Äôminda, Georgia",earthquake,,,,,reviewed,us,hrv
+1992-09-25T15:53:51.570Z,42.605,45.861,33,3.7,mb,,,,1.1,us,usp0005ege,2014-11-07T00:51:30.745Z,"22 km WNW of Agvali, Russia",earthquake,,,,2,reviewed,us,us
+1992-08-21T19:11:07.870Z,42.444,43.26,33,4.5,mb,,,,1.1,us,usp0005cuw,2014-11-07T00:51:17.802Z,"11 km SE of Ambrolauri, Georgia",earthquake,,4.2,,39,reviewed,us,us
+1992-08-06T17:53:09.110Z,40.07,48.865,57,4.2,mb,,,,1.3,us,usp0005c2u,2014-11-07T00:51:14.072Z,"5 km SE of Mughan, Azerbaijan",earthquake,,9.8,,4,reviewed,us,us
+1992-07-14T18:46:22.730Z,39.178,41.722,10,4.5,mb,,,,1.4,us,usp0005aus,2014-11-07T00:51:04.109Z,"20 km S of H?n?s, Turkey",earthquake,,,,19,reviewed,us,us
+1992-07-14T04:26:26.630Z,39.255,41.754,18.1,4.5,mb,,,,1.3,us,usp0005atm,2020-08-29T01:40:55.076Z,"12 km SSE of H?n?s, Turkey",earthquake,,,,33,reviewed,us,us
+1992-04-26T13:15:51.340Z,37.841,47.146,33,4,mb,,,,1.3,us,usp00056g3,2014-11-07T00:50:30.327Z,"41 km NNE of Hashtr?d, Iran",earthquake,,,,6,reviewed,us,us
+1992-03-27T19:21:04.880Z,42.466,43.725,33,4.8,mb,,,,1.2,us,usp00054xr,2022-04-28T18:53:20.217Z,"18 km WNW of Java, Georgia",earthquake,,,,39,reviewed,us,us
+1992-03-26T02:32:49.330Z,42.208,43.554,33,3.6,mb,,,,1.1,us,usp00054uq,2014-11-07T00:50:19.044Z,"18 km SE of Sach‚Äôkhere, Georgia",earthquake,,,,3,reviewed,us,us
+1992-03-19T19:16:39.050Z,43.023,45.754,33,4.4,mb,,,,1.2,us,usp00054h5,2014-11-07T00:50:17.497Z,"2 km SE of Duba-Yurt, Russia",earthquake,,,,32,reviewed,us,us
+1992-03-11T02:26:06.760Z,42.575,46.391,33,4.3,mb,,,,1.6,us,usp000543p,2014-11-07T00:50:15.251Z,"4 km ESE of Karata, Russia",earthquake,,,,12,reviewed,us,us
+1992-03-05T03:30:16.530Z,38.283,45.037,38.1,4.4,mb,,,,1.2,us,usp00053wc,2014-11-07T00:50:14.129Z,"25 km ENE of Salm?s, Iran",earthquake,,10.9,,25,reviewed,us,us
+1992-02-18T01:39:40.920Z,41.477,43.464,33,4.5,mb,,,,1.5,us,usp000536w,2014-11-07T00:50:06.862Z,"8 km NNW of Akhalk‚Äôalak‚Äôi, Georgia",earthquake,,,,2,reviewed,us,us
+1992-02-15T15:18:04.240Z,41.434,46.184,33,4.2,mb,,,,1,us,usp0005345,2014-11-07T00:50:06.077Z,"27 km SE of Ts‚Äônori, Georgia",earthquake,,,,6,reviewed,us,us
+1992-02-15T13:37:40.170Z,42.934,46.548,33,4.2,mb,,,,1.2,us,usp0005340,2014-11-07T00:50:06.065Z,"9 km SW of Burtunay, Russia",earthquake,,,,12,reviewed,us,us
+1992-02-15T13:30:32.020Z,42.462,46.493,33,4,mb,,,,1.7,us,usp000533z,2014-11-07T00:50:06.062Z,"5 km WNW of Khebda, Russia",earthquake,,,,6,reviewed,us,us
+1992-02-15T12:52:51.770Z,42.803,46.524,15.2,4.9,mb,,,,1.6,us,usp000533x,2022-04-28T18:55:05.806Z,"17 km WNW of Ashil‚Äôta, Russia",earthquake,,,,44,reviewed,us,us
+1992-01-27T08:11:36.050Z,42.359,44.044,33,3.7,mb,,,,1.6,us,usp00052a9,2014-11-07T00:49:57.170Z,"9 km ESE of Java, Georgia",earthquake,,,,4,reviewed,us,us
+1991-12-08T01:02:06.250Z,38.335,48.151,33,3.8,mb,,,,1.3,us,usp000505p,2014-11-07T00:49:42.884Z,"5 km N of Om?dcheh, Iran",earthquake,,,,4,reviewed,us,us
+1991-11-12T20:35:59.670Z,39.306,44.936,33,4.3,mb,,,,1.6,us,usp0004z2u,2014-11-07T00:49:34.356Z,"27 km S of Sharur City, Azerbaijan",earthquake,,,,4,reviewed,us,us
+1991-10-21T11:58:19.310Z,41.982,46.746,33,4.5,mb,,,,1.3,us,usp0004y49,2014-11-07T00:49:25.976Z,"29 km SSW of Tsurib, Russia",earthquake,,,,10,reviewed,us,us
+1991-10-18T16:23:44.350Z,41.642,47.638,33,4.5,mb,,,,1.2,us,usp0004xzp,2014-11-07T00:49:25.187Z,"13 km WNW of Kurakh, Russia",earthquake,,,,10,reviewed,us,us
+1991-10-10T02:44:49.640Z,41.399,43.259,10,4.4,mb,,,,1.1,us,usp0004xm0,2014-11-07T00:49:23.151Z,"19 km W of Akhalk‚Äôalak‚Äôi, Georgia",earthquake,,,,3,reviewed,us,us
+1991-10-06T01:46:47.580Z,41.096,43.409,18.3,5.1,mw,,,,1.1,us,usp0004xex,2022-04-28T19:00:37.380Z,"24 km SW of Ninotsminda, Georgia",earthquake,,,,,reviewed,us,hrv
+1991-09-05T19:23:04.800Z,38.847,41.417,10,4.3,mb,,,,1.3,us,usp0004w9j,2014-11-07T00:49:13.705Z,"14 km NNW of Mu?, Turkey",earthquake,,,,13,reviewed,us,us
+1991-08-10T08:57:51.870Z,40.052,42.153,10,4.4,mb,,,,0.9,us,usp0004v6g,2014-11-07T00:49:04.597Z,"1 km NNW of Horasan, Turkey",earthquake,,,,3,reviewed,us,us
+1991-07-11T05:58:18.820Z,41.955,43.578,33,4,mb,,,,1.5,us,usp0004u09,2014-11-07T00:48:53.627Z,"4 km SSW of Khashuri, Georgia",earthquake,,,,3,reviewed,us,us
+1991-07-04T06:26:31.860Z,42.387,44.116,20.4,5.4,mw,,,,1.3,us,usp0004ts1,2022-04-28T19:06:36.339Z,"14 km E of Java, Georgia",earthquake,,,,,reviewed,us,hrv
+1991-06-30T20:09:18.370Z,42.424,43.688,10,4.5,mb,,,,1,us,usp0004tm3,2014-11-07T00:48:47.948Z,"20 km W of Java, Georgia",earthquake,,,,15,reviewed,us,us
+1991-06-19T06:40:28.950Z,40.282,42.971,33,4.6,mb,,,,1.2,us,usp0004t56,2014-11-07T00:48:45.897Z,"19 km NW of Ka??zman, Turkey",earthquake,,,,9,reviewed,us,us
+1991-06-17T03:04:45.510Z,42.252,44.222,10,4.5,ms,,,,1.6,us,usp0004t20,2014-11-07T00:48:45.567Z,"21 km E of Ts‚Äôkhinvali, Georgia",earthquake,,,,1,reviewed,us,us
+1991-06-16T11:07:10.690Z,39.984,42.875,25.6,4.6,mb,,,,1.3,us,usp0004t17,2020-08-29T00:50:40.430Z,"26 km NE of Ele?kirt, Turkey",earthquake,,,,19,reviewed,us,us
+1991-06-15T00:59:20.310Z,42.461,44.009,9.4,6.3,mw,,,,1.2,us,usp0004sxm,2022-04-28T19:10:00.925Z,"9 km NE of Java, Georgia",earthquake,,,,,reviewed,us,hrv
+1991-06-08T01:12:01.860Z,41.005,43.563,33,4.2,mb,,,,1.3,us,usp0004snj,2014-11-07T00:48:43.531Z,"19 km WNW of Amasia, Armenia",earthquake,,,,6,reviewed,us,us
+1991-06-04T00:55:16.380Z,40.6,42.989,10,3.7,mb,,,,0.9,us,usp0004sfw,2014-11-07T00:48:41.916Z,"8 km W of Kars, Turkey",earthquake,,,,2,reviewed,us,us
+1991-06-03T10:22:40.440Z,40.048,42.859,27.8,5.2,mw,,,,1.3,us,usp0004sez,2022-04-28T19:09:23.293Z,"26 km WSW of Ka??zman, Turkey",earthquake,,,,,reviewed,us,hrv
+1991-05-27T03:40:45.580Z,42.337,45.862,10,3.7,mb,,,,1.5,us,usp0004s4n,2014-11-07T00:48:37.621Z,"26 km WSW of Aknada, Russia",earthquake,,,,3,reviewed,us,us
+1991-05-24T07:59:38.830Z,42.679,42.908,10,3.9,mb,,,,0.7,us,usp0004s17,2014-11-07T00:48:37.170Z,"19 km SE of Lent‚Äôekhi, Georgia",earthquake,,,,3,reviewed,us,us
+1991-05-23T08:41:32.630Z,42.551,43.159,10,4.4,mb,,,,1,us,usp0004rzy,2014-11-07T00:48:37.069Z,"3 km N of Ambrolauri, Georgia",earthquake,,,,11,reviewed,us,us
+1991-05-21T17:37:38.850Z,42.867,48.028,10,5,mb,,,,1.2,us,usp0004rxt,2014-11-07T00:48:36.620Z,Caspian Sea,earthquake,,,,13,reviewed,us,us
+1991-05-15T14:28:50.120Z,42.565,43.349,14,4.9,mb,,,,1.2,us,usp0004rpk,2022-04-28T19:14:23.487Z,"7 km WSW of Oni, Georgia",earthquake,,,,50,reviewed,us,us
+1991-05-14T09:36:25.490Z,42.609,43.579,10,3.8,mb,,,,1.5,us,usp0004rmu,2014-11-07T00:48:35.328Z,"11 km ENE of Oni, Georgia",earthquake,,,,3,reviewed,us,us
+1991-05-11T18:35:19.150Z,43.293,44.543,10,3.8,mb,,,,1.6,us,usp0004rh6,2014-11-07T00:48:34.040Z,"7 km NNW of Dalakovo, Russia",earthquake,,,,4,reviewed,us,us
+1991-05-10T20:52:27.340Z,42.534,43.986,10,4.7,mb,,,,1.1,us,usp0004rfx,2022-04-28T19:13:57.629Z,"15 km NNE of Java, Georgia",earthquake,,,,31,reviewed,us,us
+1991-05-10T20:30:45.340Z,42.627,43.449,27.7,4.4,mb,,,,1,us,usp0004rfu,2014-11-07T00:48:33.853Z,"5 km N of Oni, Georgia",earthquake,,,,16,reviewed,us,us
+1991-05-10T01:25:15.610Z,42.496,43.153,10,4.6,mb,,,,1,us,usp0004rf3,2014-11-07T00:48:33.756Z,"2 km SSW of Ambrolauri, Georgia",earthquake,,,,21,reviewed,us,us
+1991-05-07T09:01:23.640Z,42.606,43.125,10,4.2,mb,,,,0.7,us,usp0004rc4,2014-11-07T00:48:33.396Z,"9 km NNW of Ambrolauri, Georgia",earthquake,,,,4,reviewed,us,us
+1991-05-06T02:54:24.440Z,41.903,43.288,33,4,mb,,,,1.4,us,usp0004raa,2014-11-07T00:48:33.110Z,"11 km NW of Borjomi, Georgia",earthquake,,,,4,reviewed,us,us
+1991-05-06T01:35:27.940Z,42.747,43.126,10,4.4,mb,,,,1.4,us,usp0004ra9,2014-11-07T00:48:33.106Z,"25 km N of Ambrolauri, Georgia",earthquake,,,,10,reviewed,us,us
+1991-05-04T04:53:35.620Z,42.154,43.509,10,4.2,mb,,,,1.4,us,usp0004r77,2014-11-07T00:48:32.553Z,"14 km NNW of Surami, Georgia",earthquake,,,,5,reviewed,us,us
+1991-05-03T23:41:01.870Z,42.647,43.263,10.8,5.2,mb,,,,1.1,us,usp0004r6r,2022-04-28T19:12:56.144Z,"16 km NNE of Ambrolauri, Georgia",earthquake,,,,64,reviewed,us,us
+1991-05-03T20:19:38.860Z,42.683,43.247,10,5.6,mw,,,,1.2,us,usp0004r6m,2022-04-28T19:12:54.682Z,"19 km NNE of Ambrolauri, Georgia",earthquake,,,,,reviewed,us,hrv
+1991-05-03T06:12:54.230Z,41.933,43.8,33,4.2,mb,,,,1,us,usp0004r60,2014-11-07T00:48:32.072Z,"11 km S of Agara, Georgia",earthquake,,,,5,reviewed,us,us
+1991-05-03T06:08:37.170Z,42.482,43.363,10,4.6,mb,,,,0.9,us,usp0004r5z,2014-11-07T00:48:32.040Z,"12 km SSW of Oni, Georgia",earthquake,,,,10,reviewed,us,us
+1991-05-02T09:44:41.410Z,42.483,43.507,10,4.5,mb,,,,1.1,us,usp0004r4w,2014-11-07T00:48:31.633Z,Russia-Georgia border region,earthquake,,,,17,reviewed,us,us
+1991-05-02T09:00:35.240Z,42.704,43.692,10,4.1,mb,,,,1.3,us,usp0004r4r,2014-11-07T00:48:31.614Z,"24 km NE of Oni, Georgia",earthquake,,,,6,reviewed,us,us
+1991-05-02T04:30:53.910Z,42.481,43.201,10,3.9,mb,,,,1.2,us,usp0004r4j,2014-11-07T00:48:31.462Z,"5 km SE of Ambrolauri, Georgia",earthquake,,,,4,reviewed,us,us
+1991-05-02T03:42:26.110Z,42.608,43.477,10,4,mb,,,,0.9,us,usp0004r4h,2014-11-07T00:48:31.456Z,"4 km NE of Oni, Georgia",earthquake,,,,4,reviewed,us,us
+1991-05-02T02:18:00.100Z,42.211,43.906,10,4.1,mb,,,,0.6,us,usp0004r4e,2014-11-07T00:48:31.423Z,"5 km WSW of Ts‚Äôkhinvali, Georgia",earthquake,,,,4,reviewed,us,us
+1991-05-02T02:07:31.620Z,41.344,45.173,10,4.3,mb,,,,1.2,us,usp0004r4d,2014-11-07T00:48:31.418Z,Georgia-Azerbaijan border region,earthquake,,,,3,reviewed,us,us
+1991-05-02T01:25:30.140Z,42.541,43.96,10,5.1,mb,,,,1.3,us,usp0004r4c,2022-04-28T19:12:50.187Z,"15 km N of Java, Georgia",earthquake,,,,46,reviewed,us,us
+1991-05-01T23:19:11.840Z,42.719,44.053,10,4.1,mb,,,,1.1,us,usp0004r47,2014-11-07T00:48:31.337Z,"14 km S of Mizur, Russia",earthquake,,,,6,reviewed,us,us
+1991-05-01T14:37:53.790Z,42.458,43.374,10,3.8,mb,,,,1.2,us,usp0004r3u,2014-11-07T00:48:31.237Z,"13 km NNW of Sach‚Äôkhere, Georgia",earthquake,,,,2,reviewed,us,us
+1991-05-01T14:04:54.090Z,42.957,42.677,10,3.9,mb,,,,0.6,us,usp0004r3t,2014-11-07T00:48:31.229Z,Georgia (Sak'art'velo),earthquake,,,,4,reviewed,us,us
+1991-05-01T05:13:35.350Z,42.505,43.434,10,4.8,mb,,,,1.3,us,usp0004r2z,2022-04-28T19:12:48.542Z,"8 km S of Oni, Georgia",earthquake,,,,18,reviewed,us,us
+1991-05-01T03:38:08.050Z,41.977,42.826,10,4,mb,,,,1.2,us,usp0004r2v,2014-11-07T00:48:30.236Z,"22 km SW of Zest‚Äôaponi, Georgia",earthquake,,,,4,reviewed,us,us
+1991-05-01T03:06:50.260Z,42.405,43.784,10,4.5,mb,,,,1.3,us,usp0004r2u,2014-11-07T00:48:30.201Z,"12 km W of Java, Georgia",earthquake,,,,7,reviewed,us,us
+1991-05-01T01:15:46.110Z,43.604,45.556,10,3.8,mb,,,,1.4,us,usp0004r2s,2014-11-07T00:48:30.149Z,"4 km NE of Kalinovskaya, Russia",earthquake,,,,3,reviewed,us,us
+1991-04-30T16:07:38.980Z,42.491,43.23,10,4.6,mb,,,,0.9,us,usp0004r28,2014-11-07T00:48:28.597Z,"6 km ESE of Ambrolauri, Georgia",earthquake,,,,15,reviewed,us,us
+1991-04-30T15:19:04.740Z,41.975,43.59,10,4.1,mb,,,,1,us,usp0004r22,2014-11-07T00:48:28.588Z,"2 km SSW of Khashuri, Georgia",earthquake,,,,3,reviewed,us,us
+1991-04-30T12:44:52.010Z,42.757,42.757,10,4.3,mb,,,,1.4,us,usp0004r1y,2014-11-07T00:48:28.545Z,"4 km SE of Lent‚Äôekhi, Georgia",earthquake,,,,3,reviewed,us,us
+1991-04-30T11:15:29.480Z,42.599,43.49,10,4.8,mb,,,,1,us,usp0004r1t,2022-04-28T19:20:27.685Z,"4 km ENE of Oni, Georgia",earthquake,,,,34,reviewed,us,us
+1991-04-30T10:39:44.350Z,42.551,43.268,10,3.8,mb,,,,0.7,us,usp0004r1r,2014-11-07T00:48:28.488Z,"9 km ENE of Ambrolauri, Georgia",earthquake,,,,4,reviewed,us,us
+1991-04-30T08:32:25.220Z,42.071,43.888,10,4.4,mb,,,,1,us,usp0004r1n,2014-11-07T00:48:28.483Z,"6 km NE of Agara, Georgia",earthquake,,,,4,reviewed,us,us
+1991-04-30T08:29:57.330Z,42.354,43.463,10,4.2,mb,,,,1.4,us,usp0004r1m,2014-11-07T00:48:28.480Z,"3 km ENE of Sach‚Äôkhere, Georgia",earthquake,,,,8,reviewed,us,us
+1991-04-30T02:28:26.520Z,41.947,44.006,10,3.9,mb,,,,1.2,us,usp0004r18,2014-11-07T00:48:28.444Z,"9 km WSW of Gori, Georgia",earthquake,,,,4,reviewed,us,us
+1991-04-29T23:32:29.050Z,42.571,43.891,10,4.6,ms,,,,1.3,us,usp0004r15,2014-11-07T00:48:28.416Z,"19 km N of Java, Georgia",earthquake,,,,4,reviewed,us,us
+1991-04-29T22:28:23.040Z,42.709,43.858,10,4.7,mb,,,,1.1,us,usp0004r11,2022-04-28T19:20:25.307Z,"22 km SW of Mizur, Russia",earthquake,,,,22,reviewed,us,us
+1991-04-29T21:24:09.370Z,42.205,43.676,10,4.5,mb,,,,1.4,us,usp0004r0x,2014-11-07T00:48:28.361Z,"22 km NNW of Agara, Georgia",earthquake,,,,15,reviewed,us,us
+1991-04-29T20:32:54.210Z,42.541,43.333,10,5.4,mb,,,,1.1,us,usp0004r0u,2022-04-28T19:20:24.206Z,"9 km WSW of Oni, Georgia",earthquake,,,,81,reviewed,us,us
+1991-04-29T20:24:43.160Z,42.557,43.809,10,4.7,mb,,,,1.2,us,usp0004r0t,2022-04-28T19:20:23.117Z,"20 km NNW of Java, Georgia",earthquake,,,,33,reviewed,us,us
+1991-04-29T20:19:48.620Z,42.705,43.308,10,3.8,mb,,,,0.4,us,usp0004r0s,2014-11-07T00:48:28.298Z,"17 km NW of Oni, Georgia",earthquake,,,,4,reviewed,us,us
+1991-04-29T20:11:59.750Z,41.834,44.606,10,4.3,mb,,,,1.2,us,usp0004r0r,2014-11-07T00:48:28.295Z,"1 km SSE of Dzegvi, Georgia",earthquake,,,,6,reviewed,us,us
+1991-04-29T19:44:54.770Z,42.585,43.966,10,4.5,mb,,,,1.3,us,usp0004r0q,2014-11-07T00:48:28.290Z,"20 km N of Java, Georgia",earthquake,,,,18,reviewed,us,us
+1991-04-29T19:19:57.820Z,43.065,44.03,10,4.4,mb,,,,1.3,us,usp0004r0n,2014-11-07T00:48:28.283Z,"14 km SW of Digora, Russia",earthquake,,,,9,reviewed,us,us
+1991-04-29T19:07:03.750Z,42.494,43.69,10,4.5,mb,,,,1.3,us,usp0004r0m,2014-11-07T00:48:28.278Z,Russia-Georgia border region,earthquake,,,,22,reviewed,us,us
+1991-04-29T18:30:41.520Z,42.503,43.899,14.3,6.1,mw,,,,1,us,usp0004r0h,2022-04-28T19:20:22.034Z,"11 km NNW of Java, Georgia",earthquake,,,,,reviewed,us,hrv
+1991-04-29T18:23:15.290Z,42.583,43.764,10,5.5,mb,,,,1.3,us,usp0004r0f,2022-04-28T19:20:20.883Z,"24 km NW of Java, Georgia",earthquake,,,,85,reviewed,us,us
+1991-04-29T17:55:00.280Z,42.774,44.029,10,4.4,mb,,,,1.2,us,usp0004r0c,2014-11-07T00:48:28.183Z,"8 km SSW of Mizur, Russia",earthquake,,,,11,reviewed,us,us
+1991-04-29T17:21:29.310Z,42.934,43.881,10,4.3,mb,,,,1.5,us,usp0004r0b,2014-11-07T00:48:28.181Z,"16 km WNW of Mizur, Russia",earthquake,,,,5,reviewed,us,us
+1991-04-29T17:10:27.240Z,42.224,43.409,10,4.6,mb,,,,0.3,us,usp0004r0a,2014-11-07T00:48:28.179Z,"12 km SE of Chiat‚Äôura, Georgia",earthquake,,,,8,reviewed,us,us
+1991-04-29T16:58:50.720Z,42.756,43.556,10,4,mb,,,,1.1,us,usp0004r09,2014-11-07T00:48:28.178Z,"21 km NNE of Oni, Georgia",earthquake,,,,3,reviewed,us,us
+1991-04-29T16:49:57.850Z,42.854,44.062,10,4.5,mb,,,,1.2,us,usp0004r07,2014-11-07T00:48:28.168Z,"0 km ENE of Mizur, Russia",earthquake,,,,7,reviewed,us,us
+1991-04-29T16:48:42.990Z,43.057,44.399,10,4.3,mb,,,,1.1,us,usp0004r06,2014-11-07T00:48:28.164Z,"10 km WSW of Arkhonskaya, Russia",earthquake,,,,6,reviewed,us,us
+1991-04-29T15:28:45.740Z,42.405,43.448,10,4.3,mb,,,,1,us,usp0004r02,2014-11-07T00:48:28.152Z,Russia-Georgia border region,earthquake,,,,5,reviewed,us,us
+1991-04-29T14:43:06.360Z,42.515,43.937,10,5.4,mb,,,,1.1,us,usp0004r00,2022-04-28T19:20:14.320Z,Russia-Georgia border region,earthquake,,,,79,reviewed,us,us
+1991-04-29T13:49:58.380Z,42.542,43.337,10,4.6,mb,,,,1.1,us,usp0004qzy,2014-11-07T00:48:28.119Z,"9 km WSW of Oni, Georgia",earthquake,,,,18,reviewed,us,us
+1991-04-29T13:27:09.300Z,41.643,44.044,10,4.2,mb,,,,1.1,us,usp0004qzx,2014-11-07T00:48:28.117Z,"6 km NW of Ts‚Äôalk‚Äôa, Georgia",earthquake,,,,6,reviewed,us,us
+1991-04-29T13:12:41.700Z,42.602,42.897,10,3.8,mb,,,,0.8,us,usp0004qzu,2014-11-07T00:48:28.113Z,"23 km WNW of Ambrolauri, Georgia",earthquake,,,,4,reviewed,us,us
+1991-04-29T11:59:54.830Z,42.625,43.962,10,4.5,mb,,,,1.2,us,usp0004qzr,2014-11-07T00:48:28.101Z,"25 km N of Java, Georgia",earthquake,,,,23,reviewed,us,us
+1991-04-29T11:51:10.320Z,42.572,43.816,10,4.9,ms,,,,1.1,us,usp0004qzq,2022-04-28T19:20:13.030Z,Russia-Georgia border region,earthquake,,,,1,reviewed,us,us
+1991-04-29T11:10:11.950Z,42.584,43.904,10,4.7,mb,,,,1,us,usp0004qzn,2022-04-28T19:20:07.105Z,"20 km N of Java, Georgia",earthquake,,,,17,reviewed,us,us
+1991-04-29T11:04:28.920Z,42.51,43.816,10,4.3,mb,,,,1,us,usp0004qzm,2014-11-07T00:48:28.080Z,"15 km NW of Java, Georgia",earthquake,,,,8,reviewed,us,us
+1991-04-29T10:52:42.260Z,42.712,44.102,10,4.6,mb,,,,1.2,us,usp0004qzk,2014-11-07T00:48:28.075Z,Russia-Georgia border region,earthquake,,,,19,reviewed,us,us
+1991-04-29T10:30:45.580Z,43.245,42.644,10,4.3,mb,,,,0.8,us,usp0004qzj,2014-11-07T00:48:28.073Z,"1 km S of El‚Äôbrus, Russia",earthquake,,,,6,reviewed,us,us
+1991-04-29T10:19:41.340Z,42.216,43.589,10,4.5,mb,,,,1.1,us,usp0004qzg,2014-11-07T00:48:28.068Z,"20 km SE of Sach‚Äôkhere, Georgia",earthquake,,,,13,reviewed,us,us
+1991-04-29T10:15:34.710Z,42.783,43.864,10,4.5,mb,,,,1.4,us,usp0004qzf,2014-11-07T00:48:28.062Z,"17 km WSW of Mizur, Russia",earthquake,,,,10,reviewed,us,us
+1991-04-29T10:01:12.430Z,42.356,43.864,10,4.8,mb,,,,1.1,us,usp0004qze,2022-04-28T19:20:01.753Z,"7 km SW of Java, Georgia",earthquake,,,,27,reviewed,us,us
+1991-04-29T09:59:24.080Z,42.617,43.4,10,4.6,mb,,,,1.1,us,usp0004qzd,2014-11-07T00:48:28.047Z,"5 km NW of Oni, Georgia",earthquake,,,,26,reviewed,us,us
+1991-04-29T09:37:37.260Z,42.568,43.881,10,4.9,mb,,,,1,us,usp0004qzc,2022-04-28T19:19:55.893Z,"19 km NNW of Java, Georgia",earthquake,,,,26,reviewed,us,us
+1991-04-29T09:12:48.100Z,42.453,43.673,17.2,7,mw,,,,1.2,us,usp0004qza,2022-04-28T19:19:50.183Z,"22 km WNW of Java, Georgia",earthquake,,,,,reviewed,us,hrv
+1991-04-27T03:31:58.530Z,40.093,43.719,10,4.2,mb,,,,1.5,us,usp0004qw9,2014-11-07T00:48:27.639Z,"18 km WNW of Shenavan, Armenia",earthquake,,,,8,reviewed,us,us
+1991-04-24T10:54:35.740Z,39.597,41.118,33,4.5,mb,,,,0.8,us,usp0004qs0,2020-08-29T00:42:03.144Z,"33 km W of Tekman, Turkey",earthquake,,,,19,reviewed,us,us
+1991-03-27T22:17:55.030Z,40.443,45.443,33,4.3,mb,,,,1.2,us,usp0004pn5,2014-11-07T00:48:14.727Z,"15 km SSE of Vahan, Armenia",earthquake,,,,8,reviewed,us,us
+1991-01-01T19:18:56.480Z,39.822,48.439,60.7,4.9,mb,,,,1.2,us,usp0004k2r,2014-11-07T00:47:43.964Z,"7 km SSE of ?hm?db?yli, Azerbaijan",earthquake,,,,43,reviewed,us,us
+1990-12-23T21:28:50.710Z,42.115,44.356,33,4.1,mb,,,,1.3,us,usp0004jpf,2014-11-07T00:47:39.049Z,"10 km W of Akhalgori, Georgia",earthquake,,,,4,reviewed,us,us
+1990-12-16T15:45:40.700Z,41.361,43.715,33,5.5,mw,,,,1.2,us,usp0004j77,2022-04-28T19:30:54.218Z,"14 km NE of Ninotsminda, Georgia",earthquake,,,,,reviewed,us,hrv
+1990-09-24T06:35:13.930Z,38.253,47.951,10,4.6,mb,,,,1.4,us,usp0004f0r,2014-11-07T00:47:08.095Z,"17 km WSW of Om?dcheh, Iran",earthquake,,,,7,reviewed,us,us
+1990-09-22T02:46:01.220Z,42.538,46.449,33,4.3,mb,,,,1.3,us,usp0004eyd,2014-11-07T00:47:07.806Z,"10 km SW of Siukh, Russia",earthquake,,,,5,reviewed,us,us
+1990-08-02T21:17:18.740Z,38.398,48.228,33,4.1,mb,,,,0.5,us,usp0004cwb,2014-11-07T00:46:52.264Z,"14 km NNE of Om?dcheh, Iran",earthquake,,,,2,reviewed,us,us
+1990-08-02T17:12:48.520Z,38.54,48.186,33,4.2,mb,,,,0.5,us,usp0004cvv,2014-11-07T00:46:52.162Z,"28 km N of Om?dcheh, Iran",earthquake,,,,2,reviewed,us,us
+1990-07-23T20:54:56.680Z,42.719,45.947,33,4.8,mb,,,,0.9,us,usp0004ceu,2014-11-07T00:46:45.754Z,"14 km WNW of Ansalta, Russia",earthquake,,,,11,reviewed,us,us
+1990-07-20T17:30:36.230Z,42.102,46.771,33,4.2,mb,,,,1.1,us,usp0004c9r,2014-11-07T00:46:44.411Z,"15 km SSW of Tsurib, Russia",earthquake,,,,3,reviewed,us,us
+1990-06-26T09:24:10.450Z,37.357,48.831,10,4.4,mb,,,,1.3,us,usp0004b14,2014-11-07T00:46:33.933Z,"37 km WSW of Ziabar (Gaskar), Iran",earthquake,,,,12,reviewed,us,us
+1990-06-21T22:26:01.360Z,42.198,45.607,89.1,4.4,mb,,,,1.4,us,usp0004au4,2014-11-07T00:46:33.109Z,"32 km NNW of Q‚Äôvareli, Georgia",earthquake,,19.3,,10,reviewed,us,us
+1990-06-20T21:30:12.120Z,37.495,48.792,10,4.7,mb,,,,1.1,us,usp0004ars,2014-11-07T00:46:32.833Z,"26 km ESE of Khalkh?l, Iran",earthquake,,,,13,reviewed,us,us
+1990-05-27T18:27:57.360Z,40.869,44.236,10,4.9,mb,,,,1.3,us,usp00049v4,2022-04-28T19:49:53.468Z,Armenia,earthquake,,,,55,reviewed,us,us
+1990-05-17T16:42:00.260Z,42.479,45.178,33,3.9,mb,,,,1.1,us,usp00049ea,2014-11-07T00:46:22.614Z,"42 km ENE of Pasanauri, Georgia",earthquake,,,,3,reviewed,us,us
+1990-01-03T08:25:06.430Z,42.243,48.303,10.3,4.9,mb,,,,1.4,us,usp00043vm,2014-11-07T00:45:27.902Z,"16 km NNE of Dagestanskiye Ogni, Russia",earthquake,,,,42,reviewed,us,us
+1989-12-03T07:39:06.630Z,38.315,45.216,10,4.7,mb,,,,1.1,us,usp00042ph,2014-11-07T00:45:18.407Z,"34 km SE of Khowy, Iran",earthquake,,,,32,reviewed,us,us
+1989-12-02T04:51:56.590Z,38.64,45.373,10,4.6,mb,,,,0.9,us,usp00042n0,2014-11-07T00:45:17.766Z,"37 km ENE of Khowy, Iran",earthquake,,,,6,reviewed,us,us
+1989-09-08T20:12:15.960Z,43.395,46.604,33,4.7,mb,,,,1.5,us,usp0003zc1,2014-11-07T00:44:50.891Z,"5 km N of Bammatyurt, Russia",earthquake,,,,8,reviewed,us,us
+1989-08-15T14:35:31.260Z,41.132,48.672,33,4.7,mb,,,,1.2,us,usp0003ygj,2014-11-07T00:44:43.181Z,"27 km WSW of Divichibazar, Azerbaijan",earthquake,,,,4,reviewed,us,us
+1989-08-13T19:05:58.960Z,43.103,45.672,33,4.4,mb,,,,0.3,us,usp0003yee,2014-11-07T00:44:41.841Z,"4 km NNE of Alkhazurovo, Russia",earthquake,,,,3,reviewed,us,us
+1989-08-04T09:22:57.710Z,43.574,45.413,33,4.2,mb,,,,1.4,us,usp0003y1p,2014-11-07T00:44:39.639Z,"8 km SE of Lakha N√´vre, Russia",earthquake,,,,8,reviewed,us,us
+1989-08-03T07:42:40.840Z,43.522,45.362,18.2,5.2,mw,,,,1.2,us,usp0003xzq,2022-04-28T20:12:00.535Z,"11 km S of Lakha N√´vre, Russia",earthquake,,,,,reviewed,us,hrv
+1989-06-04T10:39:08.040Z,38.759,45.315,33,3.6,mb,,,,1.1,us,usp0003vyy,2014-11-07T00:44:20.662Z,"29 km ESE of Qarah ???‚Äô od D?n, Iran",earthquake,,,,1,reviewed,us,us
+1989-04-13T07:49:20.380Z,41.764,45.855,33,4.8,mb,,,,1.2,us,usp0003tx6,2014-11-07T00:43:59.798Z,"5 km ENE of Gurjaani, Georgia",earthquake,,,,29,reviewed,us,us
+1989-03-30T16:36:24.580Z,41.081,43.915,10,4.6,mb,,,,1.2,us,usp0003tfa,2020-08-28T22:38:04.562Z,"17 km NE of Amasia, Armenia",earthquake,,,,18,reviewed,us,us
+1989-03-10T08:00:48.760Z,40.027,41.816,10,4.4,ms,,,,1.3,us,usp0003stb,2020-08-28T22:35:37.522Z,"13 km ENE of Pasinler, Turkey",earthquake,,,,1,reviewed,us,us
+1989-02-22T08:33:06.180Z,43.092,41.427,33,4.2,mb,,,,1.1,us,usp0003s67,2014-11-07T00:43:37.861Z,"31 km ENE of Kelasuri, Georgia",earthquake,,,,4,reviewed,us,us
+1989-01-09T20:01:35.170Z,41.008,43.182,10,4.1,mb,,,,1.7,us,usp0003qqa,2014-11-07T00:43:25.347Z,"21 km NW of Arpa√ßay, Turkey",earthquake,,,,3,reviewed,us,us
+1989-01-08T13:09:23.270Z,40.899,44.025,10,4.4,mb,,,,1.3,us,usp0003qna,2014-11-07T00:43:24.792Z,"10 km NW of Mets Parni, Armenia",earthquake,,,,4,reviewed,us,us
+1989-01-08T07:07:48.190Z,38.751,40.904,10,4.3,mb,,,,1.3,us,usp0003qn1,2014-11-07T00:43:24.761Z,"27 km SSW of Solhan, Turkey",earthquake,,,,5,reviewed,us,us
+1989-01-04T07:29:41.150Z,40.89,44.274,10,5,mb,,,,1.2,us,usp0003qgf,2022-04-28T20:27:23.506Z,"3 km N of Arevashogh, Armenia",earthquake,,,,19,reviewed,us,us
+1988-12-31T04:07:10.440Z,40.908,43.934,10,4.7,mb,,,,1.5,us,usp0003qbz,2014-11-07T00:43:19.801Z,"7 km NNE of Shirak, Armenia",earthquake,,,,18,reviewed,us,us
+1988-12-10T19:13:59.020Z,40.761,44.077,10,4.5,mb,,,,1,us,usp0003prd,2014-11-07T00:43:16.837Z,"4 km SSW of Tsaghkaber, Armenia",earthquake,,,,4,reviewed,us,us
+1988-12-08T20:32:06.410Z,41.147,44.206,10,4.8,mb,,,,1.3,us,usp0003ppv,2014-11-07T00:43:16.615Z,"6 km SSW of Metsavan, Armenia",earthquake,,,,19,reviewed,us,us
+1988-12-08T07:46:01.410Z,40.874,44.336,10,4.6,mb,,,,1.5,us,usp0003pp5,2014-11-07T00:43:16.502Z,"5 km ENE of Arevashogh, Armenia",earthquake,,,,18,reviewed,us,us
+1988-12-08T05:36:29.820Z,40.944,44.1,10,5,mb,,,,1,us,usp0003pp2,2014-11-07T00:43:16.410Z,"10 km NW of Gogaran, Armenia",earthquake,,,,6,reviewed,us,us
+1988-12-08T04:09:36.020Z,40.884,44.41,10,4.7,mb,,,,1.3,us,usp0003pnz,2014-11-07T00:43:16.334Z,"3 km NW of Bazum, Armenia",earthquake,,,,6,reviewed,us,us
+1988-12-08T01:49:41.050Z,40.955,43.401,10,4.3,mb,,,,1.1,us,usp0003pnw,2014-11-07T00:43:16.313Z,"13 km NNE of Arpa√ßay, Turkey",earthquake,,,,5,reviewed,us,us
+1988-12-08T01:15:54.030Z,40.755,44.817,10,4.9,mb,,,,1.5,us,usp0003pnu,2014-11-07T00:43:16.307Z,"3 km WNW of Dilijan, Armenia",earthquake,,,,5,reviewed,us,us
+1988-12-07T20:07:30.340Z,41.208,44.471,10,4.6,mb,,,,1.2,us,usp0003png,2014-11-07T00:43:16.277Z,"11 km E of Norashen, Armenia",earthquake,,,,4,reviewed,us,us
+1988-12-07T19:17:56.660Z,41.69,44.746,10,4.4,mb,,,,1.2,us,usp0003pnf,2014-11-07T00:43:16.275Z,"3 km E of Tsqnet‚Äôi, Georgia",earthquake,,,,3,reviewed,us,us
+1988-12-07T18:05:42.820Z,40.952,44.16,10,4.6,mb,,,,1.4,us,usp0003pnb,2014-11-07T00:43:16.256Z,"7 km NNW of Gogaran, Armenia",earthquake,,,,8,reviewed,us,us
+1988-12-07T09:34:34.050Z,40.956,44.078,10,5,mb,,,,1.4,us,usp0003pmu,2014-11-07T00:43:16.186Z,"12 km NW of Gogaran, Armenia",earthquake,,,,36,reviewed,us,us
+1988-12-07T09:28:51.380Z,40.69,45.37,10,4.6,mb,,,,0.5,us,usp0003pmt,2014-11-07T00:43:16.184Z,"10 km N of Chambarak, Armenia",earthquake,,,,4,reviewed,us,us
+1988-12-07T08:57:06.110Z,40.936,43.209,10,4.6,mb,,,,1.3,us,usp0003pmr,2014-11-07T00:43:16.176Z,"14 km NW of Arpa√ßay, Turkey",earthquake,,,,6,reviewed,us,us
+1988-12-07T08:06:28.110Z,40.903,44.396,10,4.8,mb,,,,0.9,us,usp0003pmp,2014-11-07T00:43:16.170Z,"5 km NW of Bazum, Armenia",earthquake,,,,8,reviewed,us,us
+1988-12-07T07:45:44.870Z,40.974,44.246,10,5.9,mb,,,,1.3,us,usp0003pmn,2022-04-28T20:28:55.889Z,"9 km NNE of Gogaran, Armenia",earthquake,,,,24,reviewed,us,us
+1988-12-07T07:41:24.200Z,40.987,44.185,5.4,6.8,ms,,,,1.3,us,usp0003pmm,2022-04-28T20:28:54.771Z,"10 km N of Gogaran, Armenia",earthquake,,,,24,reviewed,us,us
+1988-10-25T17:38:55.580Z,42.058,47.854,33,4.6,mb,,,,1,us,usp0003n70,2014-11-07T00:42:59.575Z,"7 km SSE of Madzhalis, Russia",earthquake,,,,9,reviewed,us,us
+1988-10-18T12:35:43.930Z,40.883,41.673,10,4.8,mb,,,,1.3,us,usp0003mxy,2014-11-07T00:42:58.521Z,"13 km ENE of Yusufeli, Turkey",earthquake,,,,8,reviewed,us,us
+1988-10-16T23:35:24.510Z,37.964,44.815,33,4.5,mb,,,,1.3,us,usp0003mwa,2014-11-07T00:42:58.287Z,"26 km S of Salm?s, Iran",earthquake,,,,5,reviewed,us,us
+1988-09-06T19:16:37.450Z,42.007,41.725,10,5,mb,,,,1.2,us,usp0003krc,2014-11-07T00:42:47.727Z,"4 km WNW of Urek‚Äôi, Georgia",earthquake,,,,43,reviewed,us,us
+1988-08-08T13:35:14.740Z,43.803,41.853,10,4,mb,,,,0.9,us,usp0003jsd,2014-11-07T00:42:38.936Z,"4 km WSW of Novyy Karachay, Russia",earthquake,,,,2,reviewed,us,us
+1988-08-03T17:05:26.060Z,40.692,41.42,10,4.3,ms,,,,1.5,us,usp0003jkx,2014-11-07T00:42:37.416Z,"17 km SW of Yusufeli, Turkey",earthquake,,,,1,reviewed,us,us
+1988-07-22T16:49:34.090Z,38.928,45.417,33,4,mb,,,,0.8,us,usp0003j3p,2014-11-07T00:42:31.747Z,"18 km W of Culfa, Azerbaijan",earthquake,,,,3,reviewed,us,us
+1988-07-22T16:31:26.460Z,38.715,44.901,65.8,4.1,mb,,,,1.2,us,usp0003j3m,2014-11-07T00:42:31.743Z,"18 km NNW of Khowy, Iran",earthquake,,18.4,,4,reviewed,us,us
+1988-07-05T03:44:43.480Z,39.059,44.164,55.6,4.3,mb,,,,1,us,usp0003hkh,2014-11-07T00:42:28.545Z,"47 km NNE of √ñzalp, Turkey",earthquake,,15,,5,reviewed,us,us
+1988-06-29T02:32:00.970Z,40.615,41.404,36.4,4.3,mb,,,,1.3,us,usp0003he6,2014-11-07T00:42:22.770Z,"14 km NW of Uzundere, Turkey",earthquake,,13.5,,17,reviewed,us,us
+1988-06-25T16:15:38.340Z,38.458,43.038,50.9,5.5,mw,,,,1.1,us,usp0003h9v,2022-04-28T20:45:23.381Z,"19 km NNW of Geva?, Turkey",earthquake,,5.5,,,reviewed,us,hrv
+1988-06-24T20:43:30.700Z,40.433,44.528,10,3.6,mb,,,,1.2,us,usp0003h8y,2014-11-07T00:42:21.507Z,"2 km SSE of Buzhakan, Armenia",earthquake,,,,1,reviewed,us,us
+1988-06-19T06:40:45.110Z,42.004,48.006,33,4.3,mb,,,,1.3,us,usp0003h3m,2014-11-07T00:42:19.998Z,"7 km NE of Khuchni, Russia",earthquake,,,,3,reviewed,us,us
+1988-05-17T11:40:46.240Z,40.621,41.96,10,4.4,mb,,,,1.4,us,usp0003g16,2014-11-07T00:42:09.494Z,"9 km NNW of Oltu, Turkey",earthquake,,,,5,reviewed,us,us
+1988-05-07T07:50:53.200Z,44.446,43.415,33,4.4,mb,,,,1.4,us,usp0003fr5,2014-11-07T00:42:06.348Z,"24 km NNE of Aleksandriyskaya, Russia",earthquake,,,,6,reviewed,us,us
+1988-05-06T00:14:41.770Z,39.17,43.979,10,4.3,mb,,,,1.3,us,usp0003fpq,2020-08-28T22:01:16.180Z,"42 km SSW of Do?ubayaz?t, Turkey",earthquake,,,,8,reviewed,us,us
+1988-05-04T02:51:18.140Z,42.134,47.149,33,4.4,mb,,,,0.6,us,usp0003fn0,2014-11-07T00:42:03.842Z,"4 km SE of Kumukh, Russia",earthquake,,,,5,reviewed,us,us
+1988-05-03T10:07:51.170Z,42.368,47.906,33,4.3,mb,,,,1.2,us,usp0003fmk,2014-11-07T00:42:03.458Z,"2 km S of Kayakent, Russia",earthquake,,,,5,reviewed,us,us
+1988-05-03T09:15:21.740Z,42.469,47.663,22.4,5.3,mw,,,,1.2,us,usp0003fmh,2022-04-28T20:45:37.687Z,"1 km N of Sergokala, Russia",earthquake,,,,,reviewed,us,hrv
+1988-05-03T08:41:22.750Z,42.501,47.639,33,4.6,mb,,,,1.3,us,usp0003fme,2014-11-07T00:42:03.323Z,"Caucasus region, Russia",earthquake,,,,18,reviewed,us,us
+1988-04-21T10:01:48.070Z,39.045,44.05,47.3,4.7,mb,,,,1.1,us,usp0003f7g,2014-11-07T00:41:58.335Z,"43 km N of √ñzalp, Turkey",earthquake,,10,,9,reviewed,us,us
+1988-04-20T03:50:08.390Z,39.109,44.123,55.2,5.5,mw,,,,1.1,us,usp0003f6d,2022-04-28T20:49:40.595Z,Turkey-Iran border region,earthquake,,6,,,reviewed,us,hrv
+1988-04-19T15:41:55.670Z,40.599,42.806,10,3.7,mb,,,,1.4,us,usp0003f5u,2014-11-07T00:41:58.029Z,"15 km N of Selim, Turkey",earthquake,,,,1,reviewed,us,us
+1988-01-27T03:46:59.530Z,39.829,45.15,33,4.6,mb,,,,1.2,us,usp0003cf8,2014-11-07T00:41:33.063Z,"7 km NNW of Rrind, Armenia",earthquake,,,,15,reviewed,us,us
+1988-01-07T10:59:38.780Z,38.346,45.476,33,4.7,mb,,,,1.4,us,usp0003bvv,2014-11-07T00:41:29.508Z,"27 km WSW of Marand, Iran",earthquake,,,,9,reviewed,us,us
+1987-12-07T00:07:32.510Z,37.956,42.879,33,4.7,mb,,,,1,us,usp0003b15,2014-11-07T00:41:21.448Z,"20 km SSE of Bah√ßesaray, Turkey",earthquake,,,,32,reviewed,us,us
+1987-10-23T06:50:37.620Z,42.363,43.308,33,4.4,mb,,,,1.4,us,usp00039h3,2014-11-07T00:41:06.292Z,"7 km N of Chiat‚Äôura, Georgia",earthquake,,,,12,reviewed,us,us
+1987-09-13T01:23:13.910Z,40.627,40.95,10,4.4,mb,,,,1.5,us,usp00038bq,2014-11-07T00:40:56.290Z,"16 km NNW of ?spir, Turkey",earthquake,,,,6,reviewed,us,us
+1987-08-14T02:13:56.460Z,40.986,48.251,33,4.3,mb,,,,1,us,usp00037gv,2014-11-07T00:40:48.561Z,"23 km NNE of ?smay?ll?, Azerbaijan",earthquake,,,,6,reviewed,us,us
+1987-07-22T18:05:08.700Z,38.063,46.62,20.2,4.2,mb,,,,1.4,us,usp00036vp,2014-11-07T00:40:41.813Z,"28 km E of Tabriz, Iran",earthquake,,11.8,,4,reviewed,us,us
+1987-07-13T12:54:29.620Z,39.153,43.574,10,4.4,mb,,,,1.4,us,usp00036mm,2014-11-07T00:40:40.779Z,"23 km NE of Erci?, Turkey",earthquake,,,,6,reviewed,us,us
+1987-05-05T10:40:44.650Z,42.527,46.909,33,4.6,mb,,,,1.1,us,usp00034r9,2014-11-07T00:40:22.652Z,"13 km W of Gergebil‚Äô, Russia",earthquake,,,,9,reviewed,us,us
+1987-04-12T16:55:21.390Z,38.141,48.674,33,3.9,mb,,,,0.6,us,usp0003446,2014-11-07T00:40:14.099Z,"35 km ESE of Ardab?l, Iran",earthquake,,,,1,reviewed,us,us
+1986-11-05T01:15:39.840Z,38.694,48.617,86.2,4.5,mb,,,,1.3,us,usp0002zpr,2014-11-07T00:39:19.036Z,"14 km WSW of Haftoni, Azerbaijan",earthquake,,15.8,,5,reviewed,us,us
+1986-09-03T09:28:18.200Z,41.59,43.468,10,4.7,mb,,,,1.3,us,usp0002xsp,2014-11-07T00:38:57.832Z,"15 km S of Bak‚Äôurianis Andezit‚Äôi, Georgia",earthquake,,,,33,reviewed,us,us
+1986-08-10T17:47:55.770Z,38.537,43.436,43.1,4.7,mb,,,,1,us,usp0002x18,2014-11-07T00:38:50.826Z,"6 km NE of Van, Turkey",earthquake,,8.1,,35,reviewed,us,us
+1986-07-17T00:12:01.420Z,38.444,45.397,33,4.5,mb,,,,1.4,us,usp0002w34,2014-11-07T00:38:42.144Z,"33 km W of Marand, Iran",earthquake,,,,4,reviewed,us,us
+1986-07-12T17:00:53.130Z,38.438,45.164,35.7,4.8,mb,,,,1,us,usp0002vyw,2014-11-07T00:38:41.194Z,"22 km SE of Khowy, Iran",earthquake,,10.2,,25,reviewed,us,us
+1986-07-10T18:57:17.240Z,38.376,45.114,33,4.7,mb,,,,1.5,us,usp0002vwu,2014-11-07T00:38:40.864Z,Northwestern Iran,earthquake,,,,15,reviewed,us,us
+1986-06-09T05:49:28.530Z,39.013,48.67,33,4.4,mb,,,,1.3,us,usp0002ux1,2020-08-28T20:27:04.454Z,"2 km S of Masally, Azerbaijan",earthquake,,,,5,reviewed,us,us
+1986-06-02T22:16:29.660Z,40.622,41.881,10,4.2,mb,,,,1.6,us,usp0002uqd,2014-11-07T00:38:30.174Z,"12 km NW of Oltu, Turkey",earthquake,,,,4,reviewed,us,us
+1986-06-02T15:16:17.970Z,40.996,47.861,33,4.6,mb,,,,1.3,us,usp0002uq5,2014-11-07T00:38:29.916Z,"1 km NNE of Qutqashen, Azerbaijan",earthquake,,,,14,reviewed,us,us
+1986-05-13T08:44:02.140Z,41.431,43.737,10,5.8,mw,,,,1.1,us,usp0002tyq,2022-04-27T22:17:07.905Z,"21 km E of Akhalk‚Äôalak‚Äôi, Georgia",earthquake,,,,,reviewed,us,hrv
+1986-04-11T04:10:31.250Z,40.127,43.397,10,5,mb,,,,0.9,us,usp0002su7,2014-11-07T00:38:12.594Z,"22 km E of Ka??zman, Turkey",earthquake,,,,18,reviewed,us,us
+1986-03-30T20:31:05.300Z,38.984,44.632,33,4.4,mb,,,,1.1,us,usp0002sfa,2014-11-07T00:38:06.599Z,"35 km WNW of Qarah ???‚Äô od D?n, Iran",earthquake,,,,5,reviewed,us,us
+1986-01-27T16:35:52.870Z,38.885,48.62,71.2,5.3,mb,,,,0.9,us,usp0002qgb,2022-04-27T22:27:22.364Z,"9 km WSW of Boradigah, Azerbaijan",earthquake,,6,,55,reviewed,us,us
+1986-01-01T06:09:06.720Z,39.119,41.715,45.2,4.8,mb,,,,1,us,usp0002pnm,2022-04-27T22:25:04.847Z,"23 km ESE of Varto, Turkey",earthquake,,9.1,,23,reviewed,us,us
+1985-12-29T00:55:24.540Z,38.887,44.44,33,4.4,mb,,,,0.7,us,usp0002phv,2014-11-07T00:37:41.242Z,"46 km ENE of √ñzalp, Turkey",earthquake,,,,1,reviewed,us,us
+1985-11-07T08:26:21.440Z,40.31,42.307,33,5.2,mw,,,,1.2,us,usp0002mhd,2022-04-27T22:30:48.319Z,"23 km W of Sar?kam??, Turkey",earthquake,,,,,reviewed,us,hrv
+1985-10-22T01:26:07.980Z,42.64,46.48,33,4.7,mb,,,,1.4,us,usp0002m0g,2014-11-07T00:37:20.361Z,"6 km NW of Siukh, Russia",earthquake,,,,9,reviewed,us,us
+1985-09-20T06:29:40.290Z,40.776,42.588,10,4.5,mb,,,,1.1,us,usp0002jxr,2014-11-07T00:37:11.250Z,"1 km SW of G√∂le, Turkey",earthquake,,,,6,reviewed,us,us
+1985-09-02T02:13:34.260Z,43.245,46.873,33,4.7,mb,,,,0.2,us,usp0002jbt,2014-11-07T00:37:06.371Z,"3 km ESE of Temiraul, Russia",earthquake,,,,3,reviewed,us,us
+1985-07-04T05:08:31.580Z,42.132,45.86,33,5.4,mw,,,,1.3,us,usp0002gdp,2022-04-27T22:43:10.863Z,"19 km N of Q‚Äôvareli, Georgia",earthquake,,,,,reviewed,us,hrv
+1985-07-03T23:30:39.990Z,42.052,46.971,33,4.3,mb,,,,1.2,us,usp0002gdf,2020-08-27T00:20:08.894Z,"17 km SW of Kumukh, Russia",earthquake,,,,4,reviewed,us,us
+1985-05-09T18:50:22.980Z,39.299,48.771,33,4.5,mb,,,,1.1,us,usp0002eky,2020-08-27T00:14:26.658Z,"25 km NE of Prishibinskoye, Azerbaijan",earthquake,,,,2,reviewed,us,us
+1985-04-18T16:34:41.130Z,39.783,44.799,33,4.5,mb,,,,1.3,us,usp0002dxa,2014-11-07T00:36:27.260Z,"2 km NNW of Armash, Armenia",earthquake,,,,3,reviewed,us,us
+1985-04-09T03:31:03.100Z,39.206,46.598,33,4.2,mb,,,,1.3,us,usp0002dm7,2020-08-27T00:10:54.714Z,"4 km E of Agarak, Armenia",earthquake,,,,5,reviewed,us,us
+1985-04-03T01:44:26.830Z,38.099,48.422,26.3,4.7,mb,,,,1.2,us,usp0002ddn,2014-11-07T00:36:23.743Z,"20 km SE of Ardab?l, Iran",earthquake,,6.9,,13,reviewed,us,us
+1985-03-01T02:59:33.940Z,38.035,43.077,10,4.2,mb,,,,1.1,us,usp0002caa,2014-11-07T00:36:13.814Z,"19 km N of Konalga, Turkey",earthquake,,,,2,reviewed,us,us
+1985-02-27T16:34:19.460Z,37.956,43.073,42.9,4.6,mb,,,,1.2,us,usp0002c96,2014-11-07T00:36:12.096Z,Turkey-Iraq border region,earthquake,,11.8,,14,reviewed,us,us
+1985-02-16T21:33:29.100Z,39.842,41.816,10,4.9,mb,,,,1.4,us,usp0002byw,2014-11-07T00:36:10.856Z,"19 km SE of Pasinler, Turkey",earthquake,,,,22,reviewed,us,us
+1984-12-08T03:19:09.970Z,38.093,43.101,35.3,4.4,mb,,,,1,us,usp00029vj,2014-11-07T00:35:50.295Z,"22 km S of Geva?, Turkey",earthquake,,8,,14,reviewed,us,us
+1984-12-03T07:38:10.340Z,37.971,43.147,35.6,5.7,ms,,,,1.1,us,usp00029re,2022-04-27T22:58:45.406Z,"13 km NNE of Konalga, Turkey",earthquake,,5.8,,2,reviewed,us,us
+1984-10-26T15:08:04.270Z,40.401,41.57,64.1,4.6,mb,,,,0.9,us,usp00028hm,2014-11-07T00:35:36.618Z,"12 km N of Tortum, Turkey",earthquake,,6.8,,22,reviewed,us,us
+1984-10-22T22:26:01.610Z,40.61,42.387,50,4.3,mb,,,,1.1,us,usp00028df,2014-11-07T00:35:36.065Z,"7 km NNE of ?enkaya, Turkey",earthquake,,9,,12,reviewed,us,us
+1984-10-21T18:04:26.920Z,40.723,42.452,32.1,4.7,mb,,,,1.2,us,usp00028c6,2014-11-07T00:35:35.917Z,"14 km WSW of G√∂le, Turkey",earthquake,,8.8,,43,reviewed,us,us
+1984-10-19T12:59:58.370Z,40.589,42.222,10,4.6,mb,,,,1.2,us,usp00028a6,2014-11-07T00:35:35.545Z,"10 km WNW of ?enkaya, Turkey",earthquake,,,,7,reviewed,us,us
+1984-10-18T09:46:24.610Z,40.545,42.403,60.2,5.4,mw,,,,1.1,us,usp000288u,2022-04-27T23:10:51.574Z,"5 km ESE of ?enkaya, Turkey",earthquake,,3.7,,,reviewed,us,hrv
+1984-10-17T20:45:04.640Z,40.848,42.442,33,4.5,mb,,,,0.9,us,usp000288a,2014-11-07T00:35:35.299Z,"15 km WNW of G√∂le, Turkey",earthquake,,,,12,reviewed,us,us
+1984-10-17T14:16:06.310Z,40.869,42.702,33,4.7,mb,,,,0.8,us,usp0002882,2014-11-07T00:35:35.282Z,"12 km NE of G√∂le, Turkey",earthquake,,,,6,reviewed,us,us
+1984-09-18T13:26:01.880Z,40.885,42.219,10,5.5,mw,,,,1.2,us,usp00027g4,2022-04-27T23:13:06.711Z,"10 km NE of Olur, Turkey",earthquake,,,,,reviewed,us,hrv
+1984-09-02T01:15:57.220Z,42.506,48.853,33,4.6,mb,,,,0.9,us,usp00026ys,2014-11-07T00:35:23.867Z,"67 km NE of Derbent, Russia",earthquake,,,,3,reviewed,us,us
+1984-08-24T11:31:41.680Z,38.46,45.943,10,4.9,mb,,,,1.2,us,usp00026pj,2014-11-07T00:35:20.073Z,"14 km ENE of Marand, Iran",earthquake,,,,5,reviewed,us,us
+1984-08-11T16:33:42.270Z,38.442,46.699,10,3.7,mb,,,,1.9,us,usp00026bn,2014-11-07T00:35:18.268Z,"32 km W of Ahar, Iran",earthquake,,,,1,reviewed,us,us
+1984-07-18T00:19:07.960Z,40.858,42.394,10,4.2,mb,,,,1.3,us,usp00025ts,2014-11-07T00:35:11.941Z,"19 km WNW of G√∂le, Turkey",earthquake,,,,2,reviewed,us,us
+1984-07-04T21:25:54.490Z,42.781,41.139,33,4.7,mb,,,,1,us,usp00025gf,2014-11-07T00:35:09.649Z,"10 km S of Dranda, Georgia",earthquake,,,,15,reviewed,us,us
+1984-06-29T19:55:17.150Z,38.388,45.167,33,4.6,mb,,,,1.1,us,usp00025d6,2014-11-07T00:35:05.675Z,"26 km SE of Khowy, Iran",earthquake,,,,21,reviewed,us,us
+1984-04-26T22:36:01.950Z,43.132,45.992,33,4.6,mb,,,,1,us,usp00023xh,2014-11-07T00:34:48.111Z,"1 km NNE of Serzhen‚Äô-Yurt, Russia",earthquake,,,,8,reviewed,us,us
+1984-04-04T19:41:40.420Z,40.703,42.013,10,4.2,mb,,,,1.3,us,usp0002395,2014-11-07T00:34:44.076Z,"16 km SW of Olur, Turkey",earthquake,,,,4,reviewed,us,us
+1984-04-02T21:59:28.520Z,37.731,42.775,10,4.4,mb,,,,1.3,us,usp000237e,2014-11-07T00:34:43.559Z,"3 km SSW of Do?ank√∂y, Turkey",earthquake,,,,5,reviewed,us,us
+1984-03-27T01:21:20.810Z,42.981,45.653,33,4.7,mb,,,,1.2,us,usp000230z,2014-11-07T00:34:40.080Z,"8 km SW of Duba-Yurt, Russia",earthquake,,,,13,reviewed,us,us
+1984-03-25T02:44:58.120Z,38.488,45.231,33,4.5,mb,,,,1.3,us,usp00022z9,2014-11-07T00:34:39.534Z,"25 km ESE of Khowy, Iran",earthquake,,,,5,reviewed,us,us
+1984-03-12T19:58:10.360Z,42.983,45.429,33,4.7,mb,,,,1,us,usp00022ks,2014-11-07T00:34:37.850Z,"12 km S of Roshni-Chu, Russia",earthquake,,,,14,reviewed,us,us
+1984-03-11T23:58:22.790Z,43.359,41.078,10,4.8,mb,,,,1.2,us,usp00022k8,2022-04-27T23:29:15.098Z,"36 km NNE of Stantsiya Novyy Afon, Georgia",earthquake,,,,48,reviewed,us,us
+1984-03-08T23:22:05.240Z,42.907,45.409,33,4.4,mb,,,,1,us,usp00022gw,2014-11-07T00:34:37.352Z,"19 km WNW of Borzoy, Russia",earthquake,,,,11,reviewed,us,us
+1984-03-07T23:29:32.240Z,38.981,43.212,10,4.6,mb,,,,1.3,us,usp00022gd,2014-11-07T00:34:37.135Z,"13 km WSW of Erci?, Turkey",earthquake,,,,8,reviewed,us,us
+1984-03-04T19:24:46.160Z,43.07,45.614,33,5.3,mb,,,,1.2,us,usp00022ek,2022-04-27T23:28:26.602Z,"3 km WNW of Alkhazurovo, Russia",earthquake,,,,72,reviewed,us,us
+1984-03-04T16:32:23.960Z,43.898,46.354,33,4.2,mb,,,,1.1,us,usp00022ef,2014-11-07T00:34:35.542Z,"19 km NNW of Kargalinskaya, Russia",earthquake,,,,4,reviewed,us,us
+1984-03-04T14:51:06.750Z,42.997,45.565,33,4.8,mb,,,,1.3,us,usp00022eb,2014-11-07T00:34:35.499Z,"7 km S of Martan-Chu, Russia",earthquake,,,,19,reviewed,us,us
+1984-03-04T10:01:34.740Z,43.058,45.49,33,5.2,ms,,,,1.2,us,usp00022e9,2022-04-27T23:28:21.242Z,"4 km SE of Roshni-Chu, Russia",earthquake,,,,4,reviewed,us,us
+1984-02-12T04:54:48.470Z,40.743,41.938,10,4.8,mb,,,,0.9,us,usp00021xm,2014-11-07T00:34:30.207Z,"18 km WSW of Olur, Turkey",earthquake,,,,1,reviewed,us,us
+1984-01-30T05:58:25.790Z,42.904,45.549,33,4.7,mb,,,,1.3,us,usp00021ny,2014-11-07T00:34:24.959Z,"9 km NW of Borzoy, Russia",earthquake,,,,9,reviewed,us,us
+1984-01-19T09:21:34.630Z,41.38,43.73,33,4.5,mb,,,,1.3,us,usp00021cj,2014-11-07T00:34:23.530Z,"17 km NE of Ninotsminda, Georgia",earthquake,,,,8,reviewed,us,us

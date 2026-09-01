@@ -148,3 +148,9 @@ def test_bootstrap_size_follows_the_constant(monkeypatch):
     monkeypatch.setattr(constants, "N_BOOT", 12)
     t = omori_sample(500, 1.15, 0.5, t_end=180.0, seed=0)
     assert bootstrap_omori(t).n_boot == 12
+
+
+def test_a_negative_bootstrap_count_is_refused():
+    t = omori_sample(500, 1.15, 0.5, t_end=180.0, seed=0)
+    with pytest.raises(ValueError, match="cannot be negative"):
+        bootstrap_omori(t, n_boot=-5)

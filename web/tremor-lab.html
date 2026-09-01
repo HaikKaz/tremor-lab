@@ -786,8 +786,18 @@ function fitOmori(times, T) {
   var t = times.filter(function (x) { return x > 0; }).sort(function (a, b) { return a - b; });
   if (t.length === 0) return { p: NaN, c: NaN, k: NaN, n: 0 };
   if (!T) T = t[t.length - 1];
-  var r = nelderMead(function (par) { return omoriNLL(par, t, T); }, [100, 0.5, 1.1]);
-  return { p: round3(r[2]), c: round3(r[1]), k: round1(r[0]), n: t.length };
+  var f = function (par) { return omoriNLL(par, t, T); };
+  // One simplex can settle short of the maximum likelihood on a real sequence,
+  // so the search is restarted from several points and the best fit kept.
+  var starts = [[100, 0.5, 1.1], [t.length / 10, 0.05, 1.0],
+                [t.length, 1.0, 1.3], [10, 0.01, 0.8]];
+  var best = null, bestF = Infinity;
+  for (var i = 0; i < starts.length; i++) {
+    var r = nelderMead(f, starts[i]);
+    var v = f(r);
+    if (v < bestF) { bestF = v; best = r; }
+  }
+  return { p: round3(best[2]), c: round3(best[1]), k: round1(best[0]), n: t.length };
 }
 
 /* Seeded pseudo-random generator, so a reported uncertainty is reproducible.
@@ -801,11 +811,12 @@ function mulberry32(a) {
   };
 }
 
-function bootstrapOmoriChunk(times, nBoot, T, seed, onProgress, done) {
+function bootstrapOmoriChunk(times, nBoot, T, seed, onProgress, done, cancelled) {
   var t = times.filter(function (x) { return x > 0; });
   if (t.length < CONST.MIN_FOR_B || nBoot < 2) { done({ pStd: NaN, cStd: NaN, nBoot: 0 }); return; }
   var rand = mulberry32(seed >>> 0), ps = [], cs = [], b = 0;
   function step() {
+    if (cancelled && cancelled()) return;   // a newer run has superseded this one
     var until = Math.min(b + 10, nBoot);
     for (; b < until; b++) {
       var s = new Array(t.length);
@@ -1067,7 +1078,7 @@ function analyse(events, s) {
     return out;
   }
 
-  var above = post.filter(function (e) { return e.mw >= out.threshold - s.dm / 2; });
+  var above = post.filter(function (e) { return e.mw >= out.threshold; });
   out.nAbove = above.length;
   if (above.length <= CONST.MIN_FOR_B) {
     out.note = "Only " + above.length + " events at or above M " + out.threshold +
@@ -1135,9 +1146,10 @@ function logTicks(d0, d1) {
   return out.length >= 2 ? out : [d0, d1];
 }
 
-function fmtTick(v) {
+function fmtTick(v, isLog) {
   var a = Math.abs(v);
   if (a === 0) return "0";
+  if (!isLog) return a >= 1e5 || a < 1e-4 ? v.toExponential(1) : String(Math.round(v * 1e4) / 1e4);
   if (a >= 1000 || a < 0.01) {
     var e = Math.round(Math.log10(a));
     return "10" + String(e).replace(/[-0-9]/g, function (d) {
@@ -1150,6 +1162,12 @@ function fmtTick(v) {
 
 /* Build an SVG with axes and return the plot geometry. */
 function newPlot(frame, opts) {
+  // innerHTML clears children but not listeners bound to the frame itself.
+  if (frame.tlHandlers) {
+    frame.removeEventListener("pointermove", frame.tlHandlers.move);
+    frame.removeEventListener("pointerleave", frame.tlHandlers.leave);
+    frame.tlHandlers = null;
+  }
   frame.innerHTML = "";
   var W = 760, H = opts.height || 340;
   var svg = el("svg", {
@@ -1176,7 +1194,7 @@ function newPlot(frame, opts) {
       fill: "var(--ink-muted)", "font-size": 11, "font-family": "var(--sans)"
     }, gGrid);
     t.style.fontVariantNumeric = "tabular-nums";
-    t.textContent = fmtTick(v);
+    t.textContent = fmtTick(v, !!opts.yLog);
   });
 
   xt.forEach(function (v) {
@@ -1187,7 +1205,7 @@ function newPlot(frame, opts) {
       fill: "var(--ink-muted)", "font-size": 11, "font-family": "var(--sans)"
     }, gGrid);
     t.style.fontVariantNumeric = "tabular-nums";
-    t.textContent = fmtTick(v);
+    t.textContent = fmtTick(v, !!opts.xLog);
   });
 
   el("line", { x1: x0, x2: x1, y1: y0, y2: y0, stroke: "var(--axis)", "stroke-width": 1 }, svg);
@@ -1261,6 +1279,7 @@ function attachHover(frame, plot, points) {
 
   frame.addEventListener("pointermove", move);
   frame.addEventListener("pointerleave", hide);
+  frame.tlHandlers = { move: move, leave: hide };
 }
 
 function legend(node, items) {
@@ -1671,7 +1690,7 @@ function computeSelfTest() {
   var post = ev.filter(function (e) { return e.dt > 0 && e.dt <= 180; });
   var mags = post.map(function (e) { return e.mw; });
   var mc = mcMaxCurvature(mags, 0.1, 0.2);
-  var above = post.filter(function (e) { return e.mw >= 3.5 - 0.05; });
+  var above = post.filter(function (e) { return e.mw >= 3.5; });
   var bv = bValueAki(above.map(function (e) { return e.mw; }), 3.5, 0.1);
   var om = fitOmori(above.map(function (e) { return e.dt; }));
 
@@ -1797,6 +1816,8 @@ function escapeAttr(s) { return escapeHtml(s); }
 
 function loadText(text, name) {
   showError("");
+  clearResults();
+  STATE.header = []; STATE.rows = []; STATE.cols = {}; STATE.name = "";
   try {
     var parsed = parseCsv(text);
     STATE.header = parsed.header;
@@ -1826,6 +1847,8 @@ var bootToken = 0;
 
 function recompute() {
   if (!STATE.rows.length) return;
+  // Supersede any bootstrap already running, whichever way this call returns.
+  var token = ++bootToken;
   showError("");
   var s = readSettings();
   var mainshock = {
@@ -1858,8 +1881,7 @@ function recompute() {
     return;
   }
 
-  // Bootstrap in slices so the page stays responsive; a later run cancels this one.
-  var token = ++bootToken;
+  // Bootstrap in slices so the page stays responsive.
   var bar = $("bootProgress");
   if (result.omori && s.nBoot >= 2) {
     bar.hidden = false;
@@ -1874,7 +1896,8 @@ function recompute() {
         bar.hidden = true;
         result.boot = boot;
         renderResults(result, s);
-      });
+      },
+      function () { return token !== bootToken; });
   } else {
     bar.hidden = true;
   }

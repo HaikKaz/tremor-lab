@@ -79,14 +79,14 @@ def test_a_sparse_catalogue_reports_no_completeness_magnitude():
     result = analyze_case(sparse_catalog(20), MAINSHOCK)
     assert result["mc"] is None
     assert result["b_value"] is None and result["omori"] is None
-    assert "fewer than 50 events" in result["note"]
+    assert "needs more than 50" in result["note"]
 
 
 def test_a_catalogue_too_thin_above_the_threshold_reports_no_fit():
     result = analyze_case(sparse_catalog(80), MAINSHOCK, mc_threshold=3.0)
     assert result["mc"] is not None
     assert result["b_value"] is None and result["omori"] is None
-    assert "stable fit" in result["note"]
+    assert "a stable fit " in result["note"]
 
 
 def test_the_density_rules_are_configurable():
@@ -114,6 +114,10 @@ def test_the_bootstrap_is_reproducible_from_its_seed(kahramanmaras):
     first = analyze_case(kahramanmaras, MAINSHOCK, mc_threshold=3.5, n_boot=8, seed=3)
     again = analyze_case(kahramanmaras, MAINSHOCK, mc_threshold=3.5, n_boot=8, seed=3)
     assert first["omori_bootstrap"] == again["omori_bootstrap"]
+    # Repeating one seed proves determinism but not that the seed is used at all;
+    # a different seed must reach the resampler and give a different spread.
+    other = analyze_case(kahramanmaras, MAINSHOCK, mc_threshold=3.5, n_boot=8, seed=9)
+    assert other["omori_bootstrap"] != first["omori_bootstrap"]
 
 
 def test_the_frequency_magnitude_table_covers_every_event(kahramanmaras):
@@ -125,3 +129,33 @@ def test_the_frequency_magnitude_table_covers_every_event(kahramanmaras):
 def test_the_bin_width_reaches_the_completeness_estimate(kahramanmaras):
     coarse = analyze_case(kahramanmaras, MAINSHOCK, dm=0.5, n_boot=0)
     assert coarse["mc"] != 3.4
+
+
+def test_a_sound_fit_carries_no_caution(kahramanmaras):
+    result = analyze_case(kahramanmaras, MAINSHOCK, mc_threshold=3.5, n_boot=0)
+    assert result["omori_warning"] is None
+
+
+def test_a_fit_whose_offset_collapses_is_flagged(monkeypatch, kahramanmaras):
+    # Raising the floor above the fitted c is the cheapest way to exercise the
+    # boundary case deterministically; the real trigger is a catalogue whose
+    # first events sit on the origin time.
+    monkeypatch.setattr(constants, "OMORI_C_FLOOR", 1.0)
+    result = analyze_case(kahramanmaras, MAINSHOCK, mc_threshold=3.5, n_boot=0)
+    assert "collapsed" in result["omori_warning"]
+
+
+def test_a_decay_exponent_outside_the_reported_range_is_flagged(monkeypatch, kahramanmaras):
+    monkeypatch.setattr(constants, "OMORI_P_MIN", 1.5)
+    result = analyze_case(kahramanmaras, MAINSHOCK, mc_threshold=3.5, n_boot=0)
+    assert "outside 1.5" in result["omori_warning"]
+
+
+def test_rows_with_a_missing_magnitude_are_dropped_and_counted(kahramanmaras):
+    holed = kahramanmaras.copy()
+    holed.loc[10, "mw"] = np.nan
+    holed.loc[20, "dt_days"] = np.nan
+    result = analyze_case(holed, MAINSHOCK, mc_threshold=3.5, n_boot=0)
+    assert result["n_unusable"] == 2
+    assert result["n_events"] == 3467
+    assert result["mc"] == 3.4

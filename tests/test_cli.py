@@ -77,7 +77,7 @@ def test_a_raw_catalogue_is_read_windowed_and_analysed(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "events in window     4" in out
     # Four events cannot support an estimate, and the tool says so rather than fitting.
-    assert "fewer than 50 events" in out
+    assert "needs more than 50" in out
 
 
 def test_the_frequency_magnitude_table_can_be_written(tmp_path, capsys):
@@ -126,3 +126,35 @@ def test_malformed_settings_are_refused(tmp_path, capsys):
     settings = write_settings(tmp_path / "broken.toml", "[catalog\npath = 'x.csv'\n")
     assert main(["run", str(settings)]) == 2
     assert "tremor-lab:" in capsys.readouterr().err
+
+
+def test_a_shorter_window_in_the_settings_file_changes_the_result(tmp_path, capsys):
+    # Without this the CLI could stop forwarding window_days and the suite would
+    # not notice, because every other CLI test uses the default 180.
+    settings = write_settings(
+        tmp_path / "w30.toml",
+        f'[catalog]\npath = "{FIXTURE}"\n'
+        '[catalog.columns]\ndt_days = "dt_days"\nmag = "mw"\n'
+        "[mainshock]\nmw = 7.8\n"
+        "[analysis]\nwindow_days = 30\nthreshold = 3.5\nn_boot = 0\n",
+    )
+    assert main(["run", str(settings)]) == 0
+    out = capsys.readouterr().out
+    assert "events in window     2501" in out
+    assert "b-value              0.819 +/- 0.020  on 1207 events" in out
+
+
+def test_the_report_says_how_much_of_the_file_was_usable(tmp_path, capsys):
+    settings = write_settings(
+        tmp_path / "raw.toml",
+        f'[catalog]\npath = "{RAW_KOERI}"\n'
+        '[catalog.columns]\ndate = "Tarih"\ntime = "Saat"\nlat = "Enlem"\n'
+        'lon = "Boylam"\nmag = "Mag"\nmag_type = "Tip"\n'
+        '[mainshock]\nt = "2023-02-06 01:17:32"\nlat = 37.0\nlon = 37.0\nmw = 7.8\n'
+        "[analysis]\nwindow_days = 180\n",
+    )
+    assert main(["run", str(settings)]) == 0
+    out = capsys.readouterr().out
+    # three of the ten rows are deliberately unreadable in that fixture
+    assert "10 read, 7 usable, 3 unreadable and left out" in out
+    assert "converted to Mw by the Scordilis relations" in out
