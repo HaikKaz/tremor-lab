@@ -93,6 +93,9 @@
 /* ----------------------------------------------------------------- reset */
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; }
+/* .card and fieldset set `display`, which outranks the user-agent rule for
+   [hidden]; without this every hidden section renders on first paint. */
+[hidden] { display: none !important; }
 button, input, select { font: inherit; color: inherit; }
 
 body {
@@ -864,65 +867,117 @@ function parseCsv(text) {
     var cells = splitLine(lines[i], sep);
     if (cells.length < 2) continue;
     var row = {};
-    for (var j = 0; j < header.length; j++) row[header[j]] = cells[j] === undefined ? "" : cells[j];
+    for (var j = 0; j < header.length; j++) {
+      var cell = cells[j] === undefined ? "" : cells[j];
+      // A semicolon- or tab-separated export is normally European and writes
+      // 7,5 for 7.5. parseFloat would read that as 7 and say nothing.
+      if (sep !== "," && /^[+-]?\d+,\d+$/.test(cell)) cell = cell.replace(",", ".");
+      row[header[j]] = cell;
+    }
     rows.push(row);
   }
   if (!rows.length) throw new Error("That file has a header but no data rows.");
-  return { header: header, rows: rows };
+  return { header: header, rows: rows, sep: sep };
+}
+
+/* Agencies punctuate headings differently: "Origin Time", "origin_time",
+   "xM (Biggest Mag)". Matching is done on a normalised form with every
+   non-alphanumeric character removed, so spacing and punctuation cannot decide
+   whether a column is recognised. */
+function normHeader(h) {
+  return String(h == null ? "" : h).toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
 var PATTERNS = {
-  dtDays:  /^(dt_?days?|elapsed_?days?|days?)$/i,
-  mag:     /^(mw|mag|magnitude|ml|md|ms|mb|m)$/i,
-  magType: /^(magtype|mag_?type|type|tip|scale)$/i,
-  lat:     /^(lat|latitude|enlem)$/i,
-  lon:     /^(lon|long|longitude|boylam)$/i,
-  date:    /^(date|tarih|origin_?date)$/i,
-  time:    /^(time|saat|origin_?time|datetime|date_?time|origintime)$/i
+  dtDays:  /^(dtdays?|elapseddays?|days?|dt)$/,
+  magType: /^(magtype|magscale|scale|type|tip)$/,
+  lat:     /^(lat|latitude|enlem)$/,
+  lon:     /^(lon|long|longitude|boylam)$/,
+  date:    /^(date|tarih|origindate)$/,
+  time:    /^(time|saat|origintime|datetime|origin)$/,
+  depth:   /^(depth|depthkm|derinlik)/
 };
+
+/* Magnitude columns, most preferred first. KOERI's "xM (Biggest Mag)" is the
+   agency's own pick of the best magnitude for each event, and is preferred over
+   the per-scale columns beside it, several of which hold zero where that scale
+   was never computed. */
+var MAG_NAMES = [
+  "xmbiggestmag", "xm", "mag", "magnitude", "magnitud",
+  "mw", "mwmoment", "mww", "mwb", "mwc", "mwr",
+  "ml", "mllocal", "md", "mdduration",
+  "ms", "mssurfacewave", "mb", "mbbodywave", "m"
+];
 
 function looksLikeFullDate(v) {
   return /\d{4}/.test(String(v)) && /[-/.T]/.test(String(v));
 }
 
+/* A scale-label column is only useful if it holds scale labels. KOERI's "Type"
+   column holds "Earthquake", which is not one. */
+function looksLikeScaleLabels(rows, name) {
+  var seen = 0, ok = 0;
+  rows.slice(0, 50).forEach(function (r) {
+    var v = String(r[name] == null ? "" : r[name]).trim();
+    if (!v) return;
+    seen++;
+    if (/^(mw|ms|mb|ml|md|mh|mi|me)[a-z_]*$/i.test(v)) ok++;
+  });
+  return seen > 0 && ok / seen >= 0.8;
+}
+
 function detectColumns(header, rows) {
-  var found = {};
+  var norm = header.map(normHeader);
+  var found = { dtDays: "", mag: "", magType: "", lat: "", lon: "",
+                date: "", time: "", datetime: "", magGuessed: false };
+  var i, k;
+
+  function used(name) {
+    for (var key in found) if (found[key] === name) return true;
+    return false;
+  }
   function pick(key) {
-    for (var i = 0; i < header.length; i++) {
-      if (PATTERNS[key].test(header[i]) && !usedValue(header[i])) return header[i];
+    for (var j = 0; j < header.length; j++) {
+      if (PATTERNS[key].test(norm[j]) && !used(header[j])) return header[j];
     }
     return "";
   }
-  function usedValue(name) {
-    for (var k in found) if (found[k] === name) return true;
-    return false;
-  }
+
   found.dtDays = pick("dtDays");
-  found.mag = pick("mag");
-  found.magType = pick("magType");
+
+  for (k = 0; k < MAG_NAMES.length && !found.mag; k++) {
+    for (i = 0; i < header.length; i++) {
+      if (norm[i] === MAG_NAMES[k] && !used(header[i])) { found.mag = header[i]; break; }
+    }
+  }
+
   found.lat = pick("lat");
   found.lon = pick("lon");
   found.date = pick("date");
   found.time = pick("time");
+
+  var scaleCol = pick("magType");
+  if (scaleCol && looksLikeScaleLabels(rows, scaleCol)) found.magType = scaleCol;
 
   // "time" is a clock in KOERI exports and a full ISO stamp in USGS exports.
   // Decide from the data, not the heading.
   if (found.time && !found.date && looksLikeFullDate(rows[0][found.time])) {
     found.datetime = found.time;
     found.time = "";
-  } else {
-    found.datetime = "";
   }
+
   if (!found.mag) {
-    // Fall back to the first column whose values all parse as plausible magnitudes.
-    for (var i = 0; i < header.length; i++) {
+    // Last resort: the first unused column whose values all look like
+    // magnitudes. Depth is excluded by name, because shallow crustal depths in
+    // km share that range and depth usually sits left of the magnitude.
+    for (i = 0; i < header.length; i++) {
+      if (used(header[i]) || PATTERNS.depth.test(norm[i])) continue;
       var name = header[i];
-      if (usedValue(name)) continue;
-      var ok = rows.slice(0, 50).every(function (r) {
+      var plausible = rows.slice(0, 50).every(function (r) {
         var x = parseFloat(r[name]);
         return isFinite(x) && x > -2 && x < 11;
       });
-      if (ok) { found.mag = name; break; }
+      if (plausible) { found.mag = name; found.magGuessed = true; break; }
     }
   }
   return found;
@@ -1156,16 +1211,20 @@ function newPlot(frame, opts) {
 }
 
 /* A vertical annotation rule with a label at the top. */
-function marker(plot, xValue, label, color) {
+function marker(plot, xValue, label, color, row) {
   if (!isFinite(xValue)) return;
   var x = plot.xs(xValue);
   if (x < plot.x0 || x > plot.x1) return;
+  // Mc and the threshold are often a tenth of a magnitude apart, so their
+  // labels are stacked rather than left to overprint each other.
+  var dy = (row || 0) * 13;
   el("line", {
-    x1: x, x2: x, y1: plot.y0, y2: plot.y1 + 12,
+    x1: x, x2: x, y1: plot.y0, y2: plot.y1 + 12 + dy,
     stroke: color, "stroke-width": 1, opacity: .55
   }, plot.layer);
   var t = el("text", {
-    x: x + 4, y: plot.y1 + 8, fill: color, "font-size": 10.5, "font-family": "var(--sans)"
+    x: x + 4, y: plot.y1 + 8 + dy, fill: color,
+    "font-size": 10.5, "font-family": "var(--sans)"
   }, plot.layer);
   t.textContent = label;
 }
@@ -1366,24 +1425,28 @@ function drawFmd(result, s) {
       var b = result.b.b;
       var a = Math.log10(f.cum[thrIndex]) + b * f.edges[thrIndex];
       var mHi = f.edges[f.edges.length - 1];
+      // Stop the line where it reaches the bottom of the axis. Clamping its
+      // endpoint instead would bend it away from the b it is meant to show.
+      var yFloor = plot.ys.domain[0];
+      var mEnd = Math.min(mHi, (a - Math.log10(yFloor)) / b);
       var y1v = Math.pow(10, a - b * result.threshold);
-      var y2v = Math.pow(10, a - b * mHi);
+      var y2v = Math.pow(10, a - b * mEnd);
       el("line", {
         x1: plot.xs(result.threshold), y1: plot.ys(y1v),
-        x2: plot.xs(mHi), y2: plot.ys(Math.max(y2v, plot.ys.domain[0])),
+        x2: plot.xs(mEnd), y2: plot.ys(y2v),
         stroke: "var(--series-2)", "stroke-width": 2
       }, plot.layer);
       var lt = el("text", {
-        x: plot.xs(mHi) - 4, y: plot.ys(Math.max(y2v, plot.ys.domain[0])) - 8,
+        x: plot.xs(mEnd) - 4, y: plot.ys(y2v) - 8,
         "text-anchor": "end", fill: "var(--series-2)", "font-size": 11, "font-family": "var(--sans)"
       }, plot.layer);
       lt.textContent = "b = " + b.toFixed(3);
     }
   }
 
-  if (result.mc != null) marker(plot, result.mc, "Mc " + result.mc, "var(--ink-muted)");
+  if (result.mc != null) marker(plot, result.mc, "Mc " + result.mc, "var(--ink-muted)", 0);
   if (result.threshold != null && result.threshold !== result.mc) {
-    marker(plot, result.threshold, "threshold " + result.threshold, "var(--ink-2)");
+    marker(plot, result.threshold, "threshold " + result.threshold, "var(--ink-2)", 1);
   }
 
   attachHover(frame, plot, hoverPoints);
@@ -1533,11 +1596,14 @@ function renderResults(result, s) {
     return "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>";
   }).join("");
 
-  document.getElementById("seqCard").hidden = false;
+  // With no events the magnitude domain collapses to +/-Infinity, which would
+  // write NaN coordinates into the SVG.
+  var hasEvents = !!(result.post && result.post.length);
+  document.getElementById("seqCard").hidden = !hasEvents;
   document.getElementById("fmdCard").hidden = !result.fmd;
   document.getElementById("omoriCard").hidden = !result.omori;
 
-  drawSequence(result, s);
+  if (hasEvents) drawSequence(result, s);
   if (result.fmd) drawFmd(result, s);
   if (result.omori) drawOmori(result, s);
 }
@@ -1660,7 +1726,7 @@ function readSettings() {
   return {
     windowDays: numOr($("windowDays").value, 180),
     threshold: thrRaw === "" ? null : parseFloat(thrRaw),
-    dm: numOr($("dm").value, 0.1),
+    dm: Math.max(0.001, numOr($("dm").value, 0.1)),
     mcCorr: numOr($("mcCorr").value, 0.2),
     deltaMb: numOr($("deltaMb").value, 1.15),
     nBoot: Math.max(0, Math.min(1000, Math.round(numOr($("nBoot").value, 100)))),
@@ -1670,10 +1736,25 @@ function readSettings() {
 }
 function numOr(v, d) { var x = parseFloat(v); return isFinite(x) ? x : d; }
 
-function showError(msg) {
+function showError(msg, isWarning) {
   var b = $("loadError");
   b.hidden = !msg;
   b.textContent = msg || "";
+  b.className = "banner" + (isWarning ? "" : " error");
+}
+
+/* Take the previous catalogue's results off the screen. Anything that stops the
+   analysis must call this, or published-looking numbers sit under controls that
+   no longer describe them. */
+function clearResults() {
+  LAST.result = null;
+  LAST.settings = null;
+  ["resultsCard", "seqCard", "fmdCard", "omoriCard"].forEach(function (id) {
+    $(id).hidden = true;
+  });
+  ["seqFrame", "fmdFrame", "omoriFrame"].forEach(function (id) {
+    $(id).innerHTML = "";
+  });
 }
 
 function buildMappingUi() {
@@ -1727,8 +1808,16 @@ function loadText(text, name) {
     buildMappingUi();
     $("loadedChip").textContent = name + " \u00B7 " + parsed.rows.length.toLocaleString() + " rows";
     recompute();
+    // Only when nothing more urgent is already on screen.
+    if (STATE.cols.magGuessed && $("loadError").hidden) {
+      showError("No column was recognised as the magnitude, so \"" + STATE.cols.mag +
+                "\" was used because its values look like magnitudes. Check that " +
+                "choice above before trusting these numbers.", true);
+    }
   } catch (err) {
+    clearResults();
     showError(err.message);
+    $("loadedChip").textContent = "No catalogue loaded";
     if (STATE.header.length) buildMappingUi();
   }
 }
@@ -1749,6 +1838,7 @@ function recompute() {
   try {
     built = buildEvents(STATE.rows, STATE.cols, mainshock, $("dayFirst").checked);
   } catch (err) {
+    clearResults();
     showError(err.message);
     return;
   }
@@ -1757,9 +1847,16 @@ function recompute() {
               " rows could not be read and were left out. Check the column choices.");
   }
 
-  var result = analyse(built.events, s);
-  result.boot = null;
-  renderResults(result, s);
+  var result;
+  try {
+    result = analyse(built.events, s);
+    result.boot = null;
+    renderResults(result, s);
+  } catch (err) {
+    clearResults();
+    showError("The analysis could not be completed with these settings: " + err.message);
+    return;
+  }
 
   // Bootstrap in slices so the page stays responsive; a later run cancels this one.
   var token = ++bootToken;
