@@ -1,0 +1,1869 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tremor Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+
+<style>
+/* ---------------------------------------------------------------- tokens */
+:root {
+  color-scheme: light;
+
+  --plane:        #eef1f5;
+  --surface:      #fbfcfd;
+  --surface-sunk: #f4f6f9;
+  --ink:          #0f1216;
+  --ink-2:        #4d545e;
+  --ink-muted:    #666f7d;
+  --rule:         #dde3ea;
+  --rule-strong:  #c3ccd6;
+  --accent:       #2a78d6;
+  --accent-soft:  #e7f0fc;
+
+  --series-1:     #2a78d6;  /* observed data      */
+  --series-2:     #eb6834;  /* fitted model       */
+  --series-3:     #1baf7a;  /* incremental counts */
+  --grid:         #e3e8ee;
+  --axis:         #c3ccd6;
+
+  --good:     #0ca30c;
+  --critical: #d03b3b;
+  --warning:  #fab219;
+
+  --shadow: 0 1px 2px rgba(15, 18, 22, .05), 0 8px 24px -12px rgba(15, 18, 22, .12);
+
+  --sans:  "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --serif: "IBM Plex Serif", ui-serif, Georgia, serif;
+  --mono:  "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --step--1: .78rem;
+  --step-0:  .94rem;
+  --step-1:  1.12rem;
+  --step-2:  1.42rem;
+  --step-3:  1.9rem;
+  --step-4:  2.6rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --plane:        #0c0e11;
+    --surface:      #16181c;
+    --surface-sunk: #101216;
+    --ink:          #eef2f7;
+    --ink-2:        #a8b2be;
+    --ink-muted:    #79828f;
+    --rule:         #262b32;
+    --rule-strong:  #39404a;
+    --accent:       #3987e5;
+    --accent-soft:  #162334;
+
+    --series-1:     #3987e5;
+    --series-2:     #d95926;
+    --series-3:     #199e70;
+    --grid:         #22272e;
+    --axis:         #39404a;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane:        #0c0e11;
+  --surface:      #16181c;
+  --surface-sunk: #101216;
+  --ink:          #eef2f7;
+  --ink-2:        #a8b2be;
+  --ink-muted:    #79828f;
+  --rule:         #262b32;
+  --rule-strong:  #39404a;
+  --accent:       #3987e5;
+  --accent-soft:  #162334;
+
+  --series-1:     #3987e5;
+  --series-2:     #d95926;
+  --series-3:     #199e70;
+  --grid:         #22272e;
+  --axis:         #39404a;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+}
+
+/* ----------------------------------------------------------------- reset */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+
+body {
+  background: var(--plane);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* --------------------------------------------------------------- shell */
+.wrap {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* The calibration rule: a drum-recorder tick strip, used to open the page
+   and to separate its movements. The ticks are structural, not decorative -
+   they mark the same interval throughout. */
+.calibration {
+  height: 9px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--rule-strong) 0 1px,
+    transparent 1px 12px
+  );
+  opacity: .8;
+}
+.calibration.tall { height: 14px; }
+
+/* -------------------------------------------------------------- header */
+.masthead { display: flex; flex-direction: column; gap: .55rem; }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: var(--step-4);
+  line-height: 1.05;
+  letter-spacing: -.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.standfirst {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--ink-2);
+  font-size: var(--step-1);
+  text-wrap: pretty;
+}
+
+.masthead-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem .75rem;
+  margin-top: .25rem;
+}
+
+/* ---------------------------------------------------------------- chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .22rem .6rem;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.chip .dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--ink-muted); flex: none; }
+.chip.is-good     { border-color: color-mix(in srgb, var(--good) 45%, var(--rule)); }
+.chip.is-good .dot     { background: var(--good); }
+.chip.is-bad      { border-color: color-mix(in srgb, var(--critical) 45%, var(--rule)); }
+.chip.is-bad .dot      { background: var(--critical); }
+.chip.is-running .dot  { background: var(--warning); }
+
+/* ---------------------------------------------------------------- cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 1.15rem 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem 1rem; }
+
+h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: var(--step-2);
+  letter-spacing: -.01em;
+  margin: 0;
+}
+h3 {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: var(--step-0);
+  margin: 0;
+}
+
+.note { margin: 0; color: var(--ink-2); font-size: var(--step--1); max-width: 68ch; text-wrap: pretty; }
+.note.tight { font-size: var(--step--1); color: var(--ink-muted); }
+
+/* --------------------------------------------------------------- source */
+.source-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: stretch; }
+
+.dropzone {
+  flex: 1 1 22rem;
+  min-height: 6.5rem;
+  border: 1.5px dashed var(--rule-strong);
+  border-radius: 8px;
+  background: var(--surface-sunk);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.dropzone:hover, .dropzone.is-over { border-color: var(--accent); background: var(--accent-soft); }
+.dropzone strong { font-weight: 600; }
+.dropzone span { color: var(--ink-muted); font-size: var(--step--1); }
+
+.source-aside { flex: 1 1 16rem; display: flex; flex-direction: column; gap: .6rem; justify-content: center; }
+
+button.action {
+  appearance: none;
+  border: 1px solid var(--rule-strong);
+  background: var(--surface);
+  color: var(--ink);
+  padding: .5rem .85rem;
+  border-radius: 7px;
+  font-size: var(--step-0);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s, background .15s;
+}
+button.action:hover { border-color: var(--accent); background: var(--accent-soft); }
+button.action.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.action.primary:hover { filter: brightness(1.08); }
+button.action:disabled { opacity: .5; cursor: not-allowed; }
+button.action .sub { display: block; font-weight: 400; font-size: var(--step--1); color: var(--ink-muted); }
+button.action.primary .sub { color: rgba(255, 255, 255, .8); }
+
+/* -------------------------------------------------------------- fields */
+.fieldgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: .8rem 1rem;
+}
+
+.field { display: flex; flex-direction: column; gap: .28rem; min-width: 0; }
+.field label {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .04em;
+  color: var(--ink-2);
+}
+.field input, .field select {
+  width: 100%;
+  padding: .38rem .5rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--surface-sunk);
+  font-family: var(--mono);
+  font-size: var(--step-0);
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+.field input:focus-visible, .field select:focus-visible { border-color: var(--accent); }
+.field .hint { font-size: var(--step--1); color: var(--ink-muted); }
+
+.checkrow { display: flex; align-items: center; gap: .45rem; font-size: var(--step--1); color: var(--ink-2); }
+.checkrow input { width: auto; }
+
+fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
+legend {
+  padding: 0;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* -------------------------------------------------------------- results */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: .75rem;
+}
+.tile {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface-sunk);
+  padding: .7rem .85rem .8rem;
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  min-width: 0;
+}
+.tile .k {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  letter-spacing: .05em;
+  color: var(--ink-muted);
+}
+.tile .v {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: var(--step-3);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+.tile .u { font-size: var(--step--1); color: var(--ink-2); font-family: var(--mono); }
+
+table.readout { width: 100%; border-collapse: collapse; font-size: var(--step-0); }
+table.readout th, table.readout td { text-align: left; padding: .32rem .5rem .32rem 0; border-bottom: 1px solid var(--rule); }
+table.readout th { font-weight: 500; color: var(--ink-2); }
+table.readout td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+table.readout tr:last-child th, table.readout tr:last-child td { border-bottom: 0; }
+
+.scroller { overflow-x: auto; }
+
+/* --------------------------------------------------------------- charts */
+.chart-card { gap: .75rem; }
+.chart-frame { position: relative; width: 100%; }
+.chart-frame svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.legend { display: flex; flex-wrap: wrap; gap: .35rem .95rem; }
+.legend-item { display: inline-flex; align-items: center; gap: .38rem; font-size: var(--step--1); color: var(--ink-2); }
+.swatch { width: 12px; height: 12px; flex: none; }
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  padding: .4rem .55rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .1s;
+}
+.tooltip.on { opacity: 1; }
+.tooltip .tt-title { color: var(--ink-muted); }
+
+.table-toggle {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font-size: var(--step--1);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  align-self: flex-start;
+}
+.data-table { display: none; max-height: 18rem; overflow: auto; border: 1px solid var(--rule); border-radius: 7px; }
+.data-table.on { display: block; }
+.data-table table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: var(--step--1); font-variant-numeric: tabular-nums; }
+.data-table th, .data-table td { padding: .25rem .55rem; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.data-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  text-align: right;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.data-table th:first-child, .data-table td:first-child { text-align: left; }
+
+/* ------------------------------------------------------------ self-test */
+.checklist { display: flex; flex-direction: column; gap: 0; }
+.check {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr auto auto;
+  gap: .5rem;
+  align-items: baseline;
+  padding: .34rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--step--1);
+}
+.check:last-child { border-bottom: 0; }
+.check .mark { font-family: var(--mono); font-weight: 500; }
+.check.pass .mark { color: var(--good); }
+.check.fail .mark { color: var(--critical); }
+.check .what { color: var(--ink-2); }
+.check .got, .check .want { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.check .want { color: var(--ink-muted); }
+
+/* -------------------------------------------------------------- banners */
+.banner {
+  border-left: 3px solid var(--warning);
+  background: var(--surface-sunk);
+  padding: .6rem .8rem;
+  border-radius: 0 6px 6px 0;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+.banner.error { border-left-color: var(--critical); }
+.banner[hidden] { display: none; }
+
+.progress { height: 3px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .12s linear; }
+
+footer.colophon {
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  max-width: 72ch;
+}
+footer.colophon strong { color: var(--ink-2); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+</style>
+
+<div class="wrap">
+
+  <div class="calibration tall" aria-hidden="true"></div>
+
+  <header class="masthead">
+    <div class="eyebrow">Aftershock sequence statistics</div>
+    <h1>Tremor Lab</h1>
+    <p class="standfirst">
+      Load an earthquake catalogue and get the magnitude of completeness, the
+      Gutenberg&ndash;Richter b&#8209;value, the modified Omori&ndash;Utsu decay and the
+      radiated&#8209;energy diagnostics &mdash; with the plots that go with them. Nothing to install.
+    </p>
+    <div class="masthead-foot">
+      <span class="chip" id="verifyChip"><span class="dot"></span><span id="verifyChipText">Self-test not yet run</span></span>
+      <span class="chip"><span class="dot"></span><span id="loadedChip">No catalogue loaded</span></span>
+    </div>
+  </header>
+
+  <!-- ============================================================ source -->
+  <section class="card" aria-labelledby="h-source">
+    <div class="card-head">
+      <h2 id="h-source">1 &middot; The catalogue</h2>
+      <p class="note tight">Your file is read in the browser and never leaves this device.</p>
+    </div>
+
+    <div class="source-row">
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose a catalogue file, or drop one here">
+        <strong>Drop a CSV here</strong>
+        <span>or press to choose a file</span>
+        <span id="dropHint">KOERI, USGS, or any catalogue with magnitudes and times</span>
+      </div>
+      <div class="source-aside">
+        <button class="action primary" id="loadExample" type="button">
+          Load the 2023 Kahramanmara&#351; sequence
+          <span class="sub">3,469 events &middot; the catalogue behind the reference values</span>
+        </button>
+        <button class="action" id="runSelfTest" type="button">
+          Run the self-test
+          <span class="sub">Checks 13 known values, including all eight reference numbers</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="banner error" id="loadError" hidden></div>
+
+    <fieldset id="mappingFields" hidden>
+      <legend>Columns detected</legend>
+      <div class="fieldgrid" id="mappingGrid"></div>
+      <label class="checkrow"><input type="checkbox" id="dayFirst"> Dates are day&#8209;first (06.02.2023 means 6 February)</label>
+    </fieldset>
+
+    <fieldset id="mainshockFields" hidden>
+      <legend>Mainshock</legend>
+      <div class="fieldgrid">
+        <div class="field">
+          <label for="msTime">origin time</label>
+          <input id="msTime" type="text" value="2023-02-06 01:17:32" spellcheck="false">
+          <span class="hint">same clock as the catalogue</span>
+        </div>
+        <div class="field"><label for="msLat">latitude</label><input id="msLat" type="number" step="any" value="37.1578"></div>
+        <div class="field"><label for="msLon">longitude</label><input id="msLon" type="number" step="any" value="36.8092"></div>
+        <div class="field"><label for="msMw">Mw</label><input id="msMw" type="number" step="any" value="7.8"></div>
+      </div>
+    </fieldset>
+  </section>
+
+  <!-- ========================================================== settings -->
+  <section class="card" aria-labelledby="h-settings">
+    <div class="card-head">
+      <h2 id="h-settings">2 &middot; Settings</h2>
+      <p class="note tight">These scope everything below. Every value is a published default you can change.</p>
+    </div>
+    <div class="fieldgrid">
+      <div class="field">
+        <label for="windowDays">window (days)</label>
+        <input id="windowDays" type="number" step="any" min="0" value="180">
+      </div>
+      <div class="field">
+        <label for="threshold">threshold M</label>
+        <input id="threshold" type="text" value="3.5" spellcheck="false">
+        <span class="hint">blank to use the estimated Mc</span>
+      </div>
+      <div class="field">
+        <label for="dm">bin width dM</label>
+        <input id="dm" type="number" step="any" min="0.001" value="0.1">
+      </div>
+      <div class="field">
+        <label for="mcCorr">Mc correction</label>
+        <input id="mcCorr" type="number" step="any" value="0.2">
+        <span class="hint">Wiemer &amp; Wyss, +0.2</span>
+      </div>
+      <div class="field">
+        <label for="deltaMb">Bath &Delta;M</label>
+        <input id="deltaMb" type="number" step="any" value="1.15">
+        <span class="hint">plausible 1.1&ndash;1.2</span>
+      </div>
+      <div class="field">
+        <label for="nBoot">bootstrap runs</label>
+        <input id="nBoot" type="number" step="1" min="0" max="1000" value="100">
+        <span class="hint">0 to skip</span>
+      </div>
+      <div class="field">
+        <label for="seed">seed</label>
+        <input id="seed" type="number" step="1" value="0">
+        <span class="hint">same seed, same error bars</span>
+      </div>
+    </div>
+    <div class="progress" id="bootProgress" hidden><i></i></div>
+  </section>
+
+  <!-- =========================================================== results -->
+  <section class="card" aria-labelledby="h-results" id="resultsCard" hidden>
+    <div class="card-head">
+      <h2 id="h-results">3 &middot; Results</h2>
+      <button class="table-toggle" id="copyResults" type="button">Copy these results</button>
+    </div>
+    <div class="banner" id="resultNote" hidden></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="scroller"><table class="readout" id="readout"></table></div>
+  </section>
+
+  <!-- ============================================================ charts -->
+  <section class="card chart-card" aria-labelledby="h-seq" id="seqCard" hidden>
+    <div class="card-head">
+      <h2 id="h-seq">The sequence</h2>
+      <p class="note tight">Every event in the window, magnitude against days since the mainshock.</p>
+    </div>
+    <div class="chart-frame" id="seqFrame"></div>
+    <div class="legend" id="seqLegend"></div>
+    <button class="table-toggle" data-table="seqTable" type="button">Show the data behind this chart</button>
+    <div class="data-table" id="seqTable"></div>
+  </section>
+
+  <section class="card chart-card" aria-labelledby="h-fmd" id="fmdCard" hidden>
+    <div class="card-head">
+      <h2 id="h-fmd">Frequency and magnitude</h2>
+      <p class="note tight">How event counts fall away as magnitude rises. The slope above the threshold is the b&#8209;value.</p>
+    </div>
+    <div class="chart-frame" id="fmdFrame"></div>
+    <div class="legend" id="fmdLegend"></div>
+    <button class="table-toggle" data-table="fmdTable" type="button">Show the data behind this chart</button>
+    <div class="data-table" id="fmdTable"></div>
+  </section>
+
+  <section class="card chart-card" aria-labelledby="h-omori" id="omoriCard" hidden>
+    <div class="card-head">
+      <h2 id="h-omori">Decay of the aftershock rate</h2>
+      <p class="note tight">Events per day against time since the mainshock, both on logarithmic scales.</p>
+    </div>
+    <div class="chart-frame" id="omoriFrame"></div>
+    <div class="legend" id="omoriLegend"></div>
+    <button class="table-toggle" data-table="omoriTable" type="button">Show the data behind this chart</button>
+    <div class="data-table" id="omoriTable"></div>
+  </section>
+
+  <div class="calibration" aria-hidden="true"></div>
+
+  <!-- ========================================================= self-test -->
+  <section class="card" aria-labelledby="h-verify" id="verifyCard" hidden>
+    <div class="card-head">
+      <h2 id="h-verify">Self-test</h2>
+      <p class="note tight" id="verifySummary"></p>
+    </div>
+    <div class="checklist" id="checklist"></div>
+  </section>
+
+  <footer class="colophon">
+    <div class="calibration" aria-hidden="true"></div>
+    <p class="note">
+      <strong>What this is.</strong> Tremor Lab runs the estimators of catalogue seismology:
+      the completeness magnitude by maximum curvature (Wiemer &amp; Wyss 2000), the b&#8209;value by
+      the Aki (1965) maximum&#8209;likelihood estimator with the Shi &amp; Bolt (1982) standard error,
+      the modified Omori&ndash;Utsu decay by maximum likelihood (Ogata 1983; Utsu, Ogata &amp;
+      Matsuura 1995) optimised with a Nelder&ndash;Mead simplex, radiated energy
+      log<sub>10</sub>E = 1.5M + 4.8, the B&aring;th energy screen, and magnitude homogenisation to
+      Mw by the Scordilis (2006) relations.
+    </p>
+    <p class="note">
+      <strong>Which numbers to publish.</strong> This page runs the JavaScript implementation.
+      The companion Python package is the authority for published values; the two agree to three
+      decimals on the reference catalogue, and the self&#8209;test above shows this page reproducing
+      all eight of those values live.
+    </p>
+    <p class="note">
+      <strong>Two deliberate differences from the spreadsheet version.</strong> The bootstrap is
+      seeded, so the same seed gives the same error bars instead of a new answer each run. Times
+      are handled in UTC, so elapsed days do not depend on the viewer&rsquo;s time zone or on
+      daylight saving.
+    </p>
+    <p class="note tight">MIT licence &middot; H. Kazarian &middot; Tremor Lab 1.0.0</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ==========================================================================
+   1. NUMERIC CORE
+   Transplanted from SeismoSheet.gs, the validated Google Apps Script
+   implementation. The estimator bodies are unchanged; the constants are
+   arguments rather than globals, and the bootstrap takes a seed.
+   ========================================================================== */
+
+var CONST = {
+  DELTA_MB: 1.15,   // Bath magnitude deficit (central; plausible 1.1-1.2)
+  E_A: 1.5,         // energy relation slope,  log10 E = E_A*M + E_B
+  E_B: 4.8,         // energy relation intercept (E in joules)
+  DM: 0.1,          // magnitude bin width
+  MC_CORR: 0.2,     // maximum-curvature Mc correction
+  MIN_FOR_MC: 50,   // minimum events to attempt Mc
+  MIN_FOR_B: 100    // minimum events above threshold to attempt b and Omori
+};
+
+function ENERGY_J(mw, a, b) {
+  a = a == null ? CONST.E_A : a;
+  b = b == null ? CONST.E_B : b;
+  return Math.pow(10, a * mw + b);
+}
+
+function BATH_MAG(mwMain, deltaMB) {
+  return mwMain - (deltaMB == null ? CONST.DELTA_MB : deltaMB);
+}
+
+function BATH_RATIO(mwSec, mwMain, deltaMB) {
+  deltaMB = deltaMB == null ? CONST.DELTA_MB : deltaMB;
+  return Math.pow(10, CONST.E_A * (mwSec - (mwMain - deltaMB)));
+}
+
+function MW_FROM_MS(ms) { return (ms <= 6.1) ? 0.67 * ms + 2.07 : 0.99 * ms + 0.08; }
+function MW_FROM_MB(mb) { return 0.85 * mb + 1.03; }
+
+function toMw(mag, type) {
+  var t = String(type == null ? "" : type).trim().toLowerCase();
+  if (t.indexOf("mw") === 0) return mag;
+  if (t === "ms") return MW_FROM_MS(mag);
+  if (t === "mb") return MW_FROM_MB(mag);
+  return mag; // ml, md, or unspecified: taken as reported
+}
+
+function HAVERSINE_KM(lat1, lon1, lat2, lon2) {
+  var R = 6371, r = Math.PI / 180;
+  var dla = (lat2 - lat1) * r, dlo = (lon2 - lon1) * r;
+  var h = Math.sin(dla / 2) * Math.sin(dla / 2) +
+          Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dlo / 2) * Math.sin(dlo / 2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+/* Frequency-magnitude distribution. Each magnitude goes to the nearest bin
+   centre: reported magnitudes sit on a decimal grid that binary floating point
+   cannot represent, so a half-open interval can misfile a value on a boundary. */
+function freqMag(mags, dm) {
+  dm = dm || CONST.DM;
+  var mn = Math.floor(minOf(mags) / dm) * dm, mx = Math.ceil(maxOf(mags) / dm) * dm;
+  var nb = Math.round((mx - mn) / dm) + 1;
+  var edges = [], inc = [], i;
+  for (i = 0; i < nb; i++) { edges[i] = round2(mn + i * dm); inc[i] = 0; }
+  mags.forEach(function (m) { var j = Math.round((m - mn) / dm); if (j >= 0 && j < nb) inc[j]++; });
+  var cum = [], s = 0;
+  for (i = nb - 1; i >= 0; i--) { s += inc[i]; cum[i] = s; }
+  return { edges: edges, inc: inc, cum: cum };
+}
+
+function mcMaxCurvature(mags, dm, corr) {
+  dm = dm || CONST.DM;
+  corr = (corr == null) ? CONST.MC_CORR : corr;
+  var f = freqMag(mags, dm), im = 0;
+  for (var i = 1; i < f.inc.length; i++) if (f.inc[i] > f.inc[im]) im = i;
+  return round2(f.edges[im] + corr);
+}
+
+/* b = 1 / (ln10 (mean(M) - (Mc - dm/2))), sigma by Shi & Bolt (1982). */
+function bValueAki(mags, mc, dm) {
+  dm = dm == null ? CONST.DM : dm;
+  var m = mags.filter(function (x) { return x >= mc - dm / 2; });
+  var n = m.length;
+  if (n < 2) return { b: NaN, sigma: NaN, n: n };
+  var mean = sum(m) / n;
+  var b = 1 / (Math.LN10 * (mean - (mc - dm / 2)));
+  var ss = m.reduce(function (a, x) { return a + (x - mean) * (x - mean); }, 0);
+  var sigma = 2.30 * b * b * Math.sqrt(ss / (n * (n - 1)));
+  return { b: b, sigma: sigma, n: n };
+}
+
+/* Negative log-likelihood of n(t) = k/(c+t)^p observed on [0, T]. */
+function omoriNLL(par, t, T) {
+  var k = par[0], c = par[1], p = par[2];
+  if (k <= 0 || c <= 0 || p <= 0) return 1e12;
+  var I = (Math.abs(p - 1) < 1e-8) ? k * Math.log((T + c) / c)
+                                   : k / (1 - p) * (Math.pow(T + c, 1 - p) - Math.pow(c, 1 - p));
+  var s = 0;
+  for (var i = 0; i < t.length; i++) s += Math.log(k) - p * Math.log(t[i] + c);
+  return -(s - I);
+}
+
+/* Dependency-free Nelder-Mead simplex (Nelder & Mead 1965). */
+function nelderMead(f, x0, maxIter, tol) {
+  maxIter = maxIter || 3000; tol = tol || 1e-7;
+  var n = x0.length, al = 1, ga = 2, rho = 0.5, si = 0.5, i, j;
+  var S = [x0.slice()];
+  for (i = 0; i < n; i++) { var x = x0.slice(); x[i] = x[i] !== 0 ? x[i] * 1.05 : 0.00025; S.push(x); }
+  var F = S.map(f);
+  for (var it = 0; it < maxIter; it++) {
+    var idx = F.map(function (v, q) { return q; }).sort(function (a, b) { return F[a] - F[b]; });
+    S = idx.map(function (q) { return S[q]; });
+    F = idx.map(function (q) { return F[q]; });
+    var cen = [];
+    for (j = 0; j < n; j++) cen[j] = 0;
+    for (i = 0; i < n; i++) for (j = 0; j < n; j++) cen[j] += S[i][j] / n;
+    var xr = cen.map(function (c, q) { return c + al * (c - S[n][q]); }), fr = f(xr);
+    if (fr < F[0]) {
+      var xe = cen.map(function (c, q) { return c + ga * (xr[q] - c); }), fe = f(xe);
+      if (fe < fr) { S[n] = xe; F[n] = fe; } else { S[n] = xr; F[n] = fr; }
+    } else if (fr < F[n - 1]) { S[n] = xr; F[n] = fr; }
+    else {
+      var xc = cen.map(function (c, q) { return c + rho * (S[n][q] - c); }), fc = f(xc);
+      if (fc < F[n]) { S[n] = xc; F[n] = fc; }
+      else {
+        for (i = 1; i <= n; i++) {
+          S[i] = S[0].map(function (x0v, q) { return x0v + si * (S[i][q] - x0v); });
+          F[i] = f(S[i]);
+        }
+      }
+    }
+    if (Math.abs(F[n] - F[0]) < tol) break;
+  }
+  return S[0];
+}
+
+function fitOmori(times, T) {
+  var t = times.filter(function (x) { return x > 0; }).sort(function (a, b) { return a - b; });
+  if (t.length === 0) return { p: NaN, c: NaN, k: NaN, n: 0 };
+  if (!T) T = t[t.length - 1];
+  var r = nelderMead(function (par) { return omoriNLL(par, t, T); }, [100, 0.5, 1.1]);
+  return { p: round3(r[2]), c: round3(r[1]), k: round1(r[0]), n: t.length };
+}
+
+/* Seeded pseudo-random generator, so a reported uncertainty is reproducible.
+   The spreadsheet used Math.random and gave different error bars every run. */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function bootstrapOmoriChunk(times, nBoot, T, seed, onProgress, done) {
+  var t = times.filter(function (x) { return x > 0; });
+  if (t.length < CONST.MIN_FOR_B || nBoot < 2) { done({ pStd: NaN, cStd: NaN, nBoot: 0 }); return; }
+  var rand = mulberry32(seed >>> 0), ps = [], cs = [], b = 0;
+  function step() {
+    var until = Math.min(b + 10, nBoot);
+    for (; b < until; b++) {
+      var s = new Array(t.length);
+      for (var i = 0; i < t.length; i++) s[i] = t[(rand() * t.length) | 0];
+      var f = fitOmori(s, T);
+      if (!isNaN(f.p)) { ps.push(f.p); cs.push(f.c); }
+    }
+    onProgress(b / nBoot);
+    if (b < nBoot) setTimeout(step, 0);
+    else done({ pStd: round3(std(ps)), cStd: round3(std(cs)), nBoot: ps.length });
+  }
+  step();
+}
+
+function sum(a) { return a.reduce(function (x, y) { return x + y; }, 0); }
+function minOf(a) { return a.reduce(function (x, y) { return y < x ? y : x; }, Infinity); }
+function maxOf(a) { return a.reduce(function (x, y) { return y > x ? y : x; }, -Infinity); }
+function std(a) {
+  if (a.length < 2) return NaN;
+  var m = sum(a) / a.length;
+  return Math.sqrt(a.reduce(function (s, x) { return s + (x - m) * (x - m); }, 0) / (a.length - 1));
+}
+function round1(x) { return Math.round(x * 10) / 10; }
+function round2(x) { return Math.round(x * 100) / 100; }
+function round3(x) { return Math.round(x * 1000) / 1000; }
+
+/* ==========================================================================
+   2. READING A CATALOGUE
+   ========================================================================== */
+
+/* Split one CSV line, honouring quoted fields. */
+function splitLine(line, sep) {
+  var out = [], cur = "", q = false, i, ch;
+  for (i = 0; i < line.length; i++) {
+    ch = line[i];
+    if (q) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; } else { q = false; }
+      } else cur += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === sep) { out.push(cur); cur = ""; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out.map(function (s) { return s.trim(); });
+}
+
+function parseCsv(text) {
+  text = text.replace(/^\uFEFF/, "");
+  var lines = text.split(/\r\n|\n|\r/).filter(function (l) { return l.trim() !== ""; });
+  if (lines.length < 2) throw new Error("That file has no data rows under a header row.");
+  var counts = [",", ";", "\t", "|"].map(function (s) { return { sep: s, n: splitLine(lines[0], s).length }; });
+  counts.sort(function (a, b) { return b.n - a.n; });
+  var sep = counts[0].sep;
+  if (counts[0].n < 2) throw new Error("Could not find separate columns in that file. Is it a CSV?");
+  var header = splitLine(lines[0], sep);
+  var rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    var cells = splitLine(lines[i], sep);
+    if (cells.length < 2) continue;
+    var row = {};
+    for (var j = 0; j < header.length; j++) row[header[j]] = cells[j] === undefined ? "" : cells[j];
+    rows.push(row);
+  }
+  if (!rows.length) throw new Error("That file has a header but no data rows.");
+  return { header: header, rows: rows };
+}
+
+var PATTERNS = {
+  dtDays:  /^(dt_?days?|elapsed_?days?|days?)$/i,
+  mag:     /^(mw|mag|magnitude|ml|md|ms|mb|m)$/i,
+  magType: /^(magtype|mag_?type|type|tip|scale)$/i,
+  lat:     /^(lat|latitude|enlem)$/i,
+  lon:     /^(lon|long|longitude|boylam)$/i,
+  date:    /^(date|tarih|origin_?date)$/i,
+  time:    /^(time|saat|origin_?time|datetime|date_?time|origintime)$/i
+};
+
+function looksLikeFullDate(v) {
+  return /\d{4}/.test(String(v)) && /[-/.T]/.test(String(v));
+}
+
+function detectColumns(header, rows) {
+  var found = {};
+  function pick(key) {
+    for (var i = 0; i < header.length; i++) {
+      if (PATTERNS[key].test(header[i]) && !usedValue(header[i])) return header[i];
+    }
+    return "";
+  }
+  function usedValue(name) {
+    for (var k in found) if (found[k] === name) return true;
+    return false;
+  }
+  found.dtDays = pick("dtDays");
+  found.mag = pick("mag");
+  found.magType = pick("magType");
+  found.lat = pick("lat");
+  found.lon = pick("lon");
+  found.date = pick("date");
+  found.time = pick("time");
+
+  // "time" is a clock in KOERI exports and a full ISO stamp in USGS exports.
+  // Decide from the data, not the heading.
+  if (found.time && !found.date && looksLikeFullDate(rows[0][found.time])) {
+    found.datetime = found.time;
+    found.time = "";
+  } else {
+    found.datetime = "";
+  }
+  if (!found.mag) {
+    // Fall back to the first column whose values all parse as plausible magnitudes.
+    for (var i = 0; i < header.length; i++) {
+      var name = header[i];
+      if (usedValue(name)) continue;
+      var ok = rows.slice(0, 50).every(function (r) {
+        var x = parseFloat(r[name]);
+        return isFinite(x) && x > -2 && x < 11;
+      });
+      if (ok) { found.mag = name; break; }
+    }
+  }
+  return found;
+}
+
+/* Parse a date and an optional clock into epoch milliseconds, in UTC so that
+   elapsed times do not depend on the viewer's time zone or on daylight saving. */
+function parseStamp(dateStr, timeStr, dayFirst) {
+  var s = String(dateStr == null ? "" : dateStr).trim();
+  if (!s) return NaN;
+  if (timeStr != null && String(timeStr).trim() !== "") s += " " + String(timeStr).trim();
+  s = s.replace(/[T]/g, " ").replace(/Z$/i, "").replace(/[+-]\d{2}:?\d{2}$/, "");
+
+  var dm = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  var y, mo, d;
+  if (dm) {
+    y = +dm[1]; mo = +dm[2]; d = +dm[3];
+  } else {
+    dm = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+    if (!dm) return NaN;
+    y = +dm[3];
+    if (dayFirst) { d = +dm[1]; mo = +dm[2]; } else { mo = +dm[1]; d = +dm[2]; }
+  }
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return NaN;
+
+  var tm = s.match(/(\d{1,2}):(\d{2})(?::(\d{1,2}(?:\.\d+)?))?/);
+  var h = tm ? +tm[1] : 0, mi = tm ? +tm[2] : 0, se = tm && tm[3] ? parseFloat(tm[3]) : 0;
+  if (h > 23 || mi > 59 || se >= 61) return NaN;
+  return Date.UTC(y, mo - 1, d, h, mi, Math.floor(se), Math.round((se % 1) * 1000));
+}
+
+/* Turn parsed rows into events carrying elapsed days and magnitude on the
+   moment scale. Returns the events plus a count of what could not be read. */
+function buildEvents(rows, cols, mainshock, dayFirst) {
+  var events = [], skipped = 0;
+  var msMs = cols.dtDays ? 0 : parseStamp(mainshock.timeText, "", dayFirst);
+  if (!cols.dtDays && !isFinite(msMs)) {
+    throw new Error("The mainshock origin time could not be read. Try 2023-02-06 01:17:32.");
+  }
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i], dt, mag;
+    mag = parseFloat(r[cols.mag]);
+    if (!isFinite(mag)) { skipped++; continue; }
+    if (cols.magType) mag = toMw(mag, r[cols.magType]);
+
+    if (cols.dtDays) {
+      dt = parseFloat(r[cols.dtDays]);
+    } else {
+      var ms = cols.datetime ? parseStamp(r[cols.datetime], "", dayFirst)
+                             : parseStamp(r[cols.date], cols.time ? r[cols.time] : "", dayFirst);
+      dt = isFinite(ms) ? (ms - msMs) / 86400000 : NaN;
+    }
+    if (!isFinite(dt)) { skipped++; continue; }
+
+    var lat = cols.lat ? parseFloat(r[cols.lat]) : NaN;
+    var lon = cols.lon ? parseFloat(r[cols.lon]) : NaN;
+    var dist = (isFinite(lat) && isFinite(lon) && isFinite(mainshock.lat) && isFinite(mainshock.lon))
+      ? HAVERSINE_KM(mainshock.lat, mainshock.lon, lat, lon) : NaN;
+    events.push({ dt: dt, mw: mag, lat: lat, lon: lon, dist: dist });
+  }
+  if (!events.length) throw new Error("No rows could be read. Check the column choices above.");
+  return { events: events, skipped: skipped };
+}
+
+/* ==========================================================================
+   3. THE ANALYSIS
+   ========================================================================== */
+
+function analyse(events, s) {
+  var post = events.filter(function (e) { return e.dt > 0 && e.dt <= s.windowDays; });
+  var mags = post.map(function (e) { return e.mw; });
+  var out = {
+    nEvents: post.length, post: post, mc: null, threshold: null, nAbove: null,
+    b: null, omori: null, boot: null, fmd: null, note: null,
+    energy: ENERGY_J(s.mainshockMw), bathMag: BATH_MAG(s.mainshockMw, s.deltaMb)
+  };
+  if (!post.length) { out.note = "No events fall inside the window."; return out; }
+
+  out.fmd = freqMag(mags, s.dm);
+  if (post.length > CONST.MIN_FOR_MC) out.mc = mcMaxCurvature(mags, s.dm, s.mcCorr);
+  out.threshold = (s.threshold == null) ? out.mc : s.threshold;
+
+  if (out.threshold == null) {
+    out.note = "Too few events in the window to estimate a completeness magnitude; " +
+               "more than " + CONST.MIN_FOR_MC + " are needed and there are " + post.length +
+               ". Set a threshold by hand to analyse anyway.";
+    return out;
+  }
+
+  var above = post.filter(function (e) { return e.mw >= out.threshold - s.dm / 2; });
+  out.nAbove = above.length;
+  if (above.length <= CONST.MIN_FOR_B) {
+    out.note = "Only " + above.length + " events at or above M " + out.threshold +
+               ". A stable fit needs more than " + CONST.MIN_FOR_B +
+               ", so the b-value and the decay are not reported.";
+    return out;
+  }
+
+  out.b = bValueAki(above.map(function (e) { return e.mw; }), out.threshold, s.dm);
+  out.times = above.map(function (e) { return e.dt; });
+  out.omori = fitOmori(out.times);
+  return out;
+}
+
+/* ==========================================================================
+   4. CHART PRIMITIVES
+   ========================================================================== */
+
+var SVG_NS = "http://www.w3.org/2000/svg";
+var PAD = { l: 58, r: 16, t: 14, b: 42 };
+
+function el(name, attrs, parent) {
+  var n = document.createElementNS(SVG_NS, name);
+  for (var k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+function linScale(d0, d1, r0, r1) {
+  if (d1 === d0) d1 = d0 + 1;
+  var f = function (v) { return r0 + (v - d0) / (d1 - d0) * (r1 - r0); };
+  f.invert = function (px) { return d0 + (px - r0) / (r1 - r0) * (d1 - d0); };
+  f.domain = [d0, d1];
+  return f;
+}
+
+function logScale(d0, d1, r0, r1) {
+  d0 = Math.max(d0, 1e-12); d1 = Math.max(d1, d0 * 10);
+  var l0 = Math.log10(d0), l1 = Math.log10(d1);
+  var f = function (v) { return r0 + (Math.log10(Math.max(v, 1e-12)) - l0) / (l1 - l0) * (r1 - r0); };
+  f.invert = function (px) { return Math.pow(10, l0 + (px - r0) / (r1 - r0) * (l1 - l0)); };
+  f.domain = [d0, d1];
+  f.isLog = true;
+  return f;
+}
+
+function niceTicks(d0, d1, count) {
+  var span = d1 - d0;
+  if (!(span > 0)) return [d0];
+  var raw = span / Math.max(count, 2);
+  var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  var norm = raw / mag;
+  var step = (norm >= 5 ? 10 : norm >= 2 ? 5 : norm >= 1 ? 2 : 1) * mag;
+  var out = [], v = Math.ceil(d0 / step) * step;
+  for (; v <= d1 + step * 1e-9; v += step) out.push(Math.round(v / step) * step);
+  return out;
+}
+
+function logTicks(d0, d1) {
+  var out = [];
+  for (var e = Math.floor(Math.log10(d0)); e <= Math.ceil(Math.log10(d1)); e++) {
+    var v = Math.pow(10, e);
+    if (v >= d0 * 0.999 && v <= d1 * 1.001) out.push(v);
+  }
+  return out.length >= 2 ? out : [d0, d1];
+}
+
+function fmtTick(v) {
+  var a = Math.abs(v);
+  if (a === 0) return "0";
+  if (a >= 1000 || a < 0.01) {
+    var e = Math.round(Math.log10(a));
+    return "10" + String(e).replace(/[-0-9]/g, function (d) {
+      return { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3",
+               "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" }[d];
+    });
+  }
+  return String(Math.round(v * 1000) / 1000);
+}
+
+/* Build an SVG with axes and return the plot geometry. */
+function newPlot(frame, opts) {
+  frame.innerHTML = "";
+  var W = 760, H = opts.height || 340;
+  var svg = el("svg", {
+    viewBox: "0 0 " + W + " " + H,
+    role: "img",
+    "aria-label": opts.ariaLabel
+  }, frame);
+
+  var x0 = PAD.l, x1 = W - PAD.r, y0 = H - PAD.b, y1 = PAD.t;
+  var xs = opts.xLog ? logScale(opts.xDomain[0], opts.xDomain[1], x0, x1)
+                     : linScale(opts.xDomain[0], opts.xDomain[1], x0, x1);
+  var ys = opts.yLog ? logScale(opts.yDomain[0], opts.yDomain[1], y0, y1)
+                     : linScale(opts.yDomain[0], opts.yDomain[1], y0, y1);
+
+  var gGrid = el("g", {}, svg);
+  var xt = opts.xLog ? logTicks(xs.domain[0], xs.domain[1]) : niceTicks(xs.domain[0], xs.domain[1], 7);
+  var yt = opts.yLog ? logTicks(ys.domain[0], ys.domain[1]) : niceTicks(ys.domain[0], ys.domain[1], 5);
+
+  yt.forEach(function (v) {
+    var y = ys(v);
+    el("line", { x1: x0, x2: x1, y1: y, y2: y, stroke: "var(--grid)", "stroke-width": 1 }, gGrid);
+    var t = el("text", {
+      x: x0 - 8, y: y, "text-anchor": "end", "dominant-baseline": "middle",
+      fill: "var(--ink-muted)", "font-size": 11, "font-family": "var(--sans)"
+    }, gGrid);
+    t.style.fontVariantNumeric = "tabular-nums";
+    t.textContent = fmtTick(v);
+  });
+
+  xt.forEach(function (v) {
+    var x = xs(v);
+    el("line", { x1: x, x2: x, y1: y0, y2: y1, stroke: "var(--grid)", "stroke-width": 1 }, gGrid);
+    var t = el("text", {
+      x: x, y: y0 + 17, "text-anchor": "middle",
+      fill: "var(--ink-muted)", "font-size": 11, "font-family": "var(--sans)"
+    }, gGrid);
+    t.style.fontVariantNumeric = "tabular-nums";
+    t.textContent = fmtTick(v);
+  });
+
+  el("line", { x1: x0, x2: x1, y1: y0, y2: y0, stroke: "var(--axis)", "stroke-width": 1 }, svg);
+  el("line", { x1: x0, x2: x0, y1: y0, y2: y1, stroke: "var(--axis)", "stroke-width": 1 }, svg);
+
+  var xl = el("text", {
+    x: (x0 + x1) / 2, y: H - 6, "text-anchor": "middle",
+    fill: "var(--ink-2)", "font-size": 11.5, "font-family": "var(--sans)"
+  }, svg);
+  xl.textContent = opts.xLabel;
+
+  var yl = el("text", {
+    x: 12, y: (y0 + y1) / 2, "text-anchor": "middle",
+    fill: "var(--ink-2)", "font-size": 11.5, "font-family": "var(--sans)",
+    transform: "rotate(-90 12 " + ((y0 + y1) / 2) + ")"
+  }, svg);
+  yl.textContent = opts.yLabel;
+
+  var layer = el("g", {}, svg);
+  return { svg: svg, layer: layer, xs: xs, ys: ys, x0: x0, x1: x1, y0: y0, y1: y1, W: W, H: H };
+}
+
+/* A vertical annotation rule with a label at the top. */
+function marker(plot, xValue, label, color) {
+  if (!isFinite(xValue)) return;
+  var x = plot.xs(xValue);
+  if (x < plot.x0 || x > plot.x1) return;
+  el("line", {
+    x1: x, x2: x, y1: plot.y0, y2: plot.y1 + 12,
+    stroke: color, "stroke-width": 1, opacity: .55
+  }, plot.layer);
+  var t = el("text", {
+    x: x + 4, y: plot.y1 + 8, fill: color, "font-size": 10.5, "font-family": "var(--sans)"
+  }, plot.layer);
+  t.textContent = label;
+}
+
+/* Nearest-point hover. points: [{px, py, html}] */
+function attachHover(frame, plot, points) {
+  if (!points.length) return;
+  var tip = document.createElement("div");
+  tip.className = "tooltip";
+  frame.appendChild(tip);
+
+  var ring = el("circle", { r: 6, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5, opacity: 0 }, plot.layer);
+
+  function move(ev) {
+    var box = frame.getBoundingClientRect();
+    var sx = plot.W / box.width, sy = plot.H / box.height;
+    var mx = (ev.clientX - box.left) * sx, my = (ev.clientY - box.top) * sy;
+    var best = null, bestD = Infinity;
+    for (var i = 0; i < points.length; i++) {
+      var dx = points[i].px - mx, dy = points[i].py - my, d = dx * dx + dy * dy;
+      if (d < bestD) { bestD = d; best = points[i]; }
+    }
+    if (!best || bestD > 3600) { hide(); return; }
+    ring.setAttribute("cx", best.px);
+    ring.setAttribute("cy", best.py);
+    ring.setAttribute("opacity", 1);
+    tip.innerHTML = best.html;
+    tip.classList.add("on");
+    var lx = best.px / sx, ly = best.py / sy;
+    tip.style.left = Math.min(Math.max(lx + 12, 4), box.width - tip.offsetWidth - 4) + "px";
+    tip.style.top = Math.max(ly - tip.offsetHeight - 10, 4) + "px";
+  }
+  function hide() { tip.classList.remove("on"); ring.setAttribute("opacity", 0); }
+
+  frame.addEventListener("pointermove", move);
+  frame.addEventListener("pointerleave", hide);
+}
+
+function legend(node, items) {
+  node.innerHTML = "";
+  items.forEach(function (it) {
+    var s = document.createElement("span");
+    s.className = "legend-item";
+    var sw = document.createElement("span");
+    sw.className = "swatch";
+    if (it.shape === "line") {
+      sw.style.background = it.color;
+      sw.style.height = "2px";
+    } else if (it.shape === "square") {
+      sw.style.border = "1.5px solid " + it.color;
+      sw.style.background = "transparent";
+    } else {
+      sw.style.background = it.color;
+      sw.style.borderRadius = "50%";
+    }
+    s.appendChild(sw);
+    s.appendChild(document.createTextNode(it.label));
+    node.appendChild(s);
+  });
+}
+
+function dataTable(node, columns, rows, limit) {
+  var shown = rows.slice(0, limit || 500);
+  var html = "<table><thead><tr>";
+  columns.forEach(function (c) { html += "<th>" + c + "</th>"; });
+  html += "</tr></thead><tbody>";
+  shown.forEach(function (r) {
+    html += "<tr>";
+    r.forEach(function (v) { html += "<td>" + v + "</td>"; });
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  if (rows.length > shown.length) {
+    html += '<p class="note tight" style="padding:.4rem .55rem;margin:0">' +
+            "Showing the first " + shown.length + " of " + rows.length + " rows.</p>";
+  }
+  node.innerHTML = html;
+}
+
+/* ==========================================================================
+   5. THE THREE CHARTS
+   ========================================================================== */
+
+function drawSequence(result, s) {
+  var frame = document.getElementById("seqFrame");
+  var pts = result.post;
+  var maxM = maxOf(pts.map(function (e) { return e.mw; }));
+  var minM = minOf(pts.map(function (e) { return e.mw; }));
+  var plot = newPlot(frame, {
+    height: 300,
+    xDomain: [0, s.windowDays],
+    yDomain: [Math.floor(minM * 2) / 2 - 0.2, Math.ceil(maxM * 2) / 2],
+    xLabel: "days since the mainshock",
+    yLabel: "magnitude",
+    ariaLabel: "Magnitude against days since the mainshock for every event in the window."
+  });
+
+  // Stems, drawn like a drum-recorder trace: the sequence is the subject.
+  var base = plot.ys(plot.ys.domain[0]);
+  var g = el("g", { stroke: "var(--series-1)", "stroke-width": 1, opacity: .38 }, plot.layer);
+  pts.forEach(function (e) {
+    var x = plot.xs(e.dt);
+    el("line", { x1: x, x2: x, y1: base, y2: plot.ys(e.mw) }, g);
+  });
+
+  if (result.threshold != null) {
+    var yT = plot.ys(result.threshold);
+    el("line", {
+      x1: plot.x0, x2: plot.x1, y1: yT, y2: yT,
+      stroke: "var(--series-2)", "stroke-width": 1.5
+    }, plot.layer);
+    var lab = el("text", {
+      x: plot.x1, y: yT - 5, "text-anchor": "end",
+      fill: "var(--series-2)", "font-size": 10.5, "font-family": "var(--sans)"
+    }, plot.layer);
+    lab.textContent = "threshold M " + result.threshold;
+  }
+
+  // Emphasise the largest events; they are the ones a reader will ask about.
+  var big = pts.slice().sort(function (a, b) { return b.mw - a.mw; }).slice(0, 12);
+  var hoverPoints = big.map(function (e) {
+    var px = plot.xs(e.dt), py = plot.ys(e.mw);
+    el("circle", {
+      cx: px, cy: py, r: 3.2, fill: "var(--series-1)",
+      stroke: "var(--surface)", "stroke-width": 2
+    }, plot.layer);
+    return {
+      px: px, py: py,
+      html: '<div class="tt-title">M ' + e.mw.toFixed(1) + "</div>" +
+            fmtDays(e.dt) + " after the mainshock"
+    };
+  });
+  attachHover(frame, plot, hoverPoints);
+
+  legend(document.getElementById("seqLegend"), [
+    { label: "every event in the window", color: "var(--series-1)", shape: "line" },
+    { label: "the twelve largest", color: "var(--series-1)", shape: "dot" },
+    { label: "analysis threshold", color: "var(--series-2)", shape: "line" }
+  ]);
+
+  dataTable(
+    document.getElementById("seqTable"),
+    ["days", "magnitude", "km from mainshock"],
+    pts.slice().sort(function (a, b) { return a.dt - b.dt; }).map(function (e) {
+      return [e.dt.toFixed(4), e.mw.toFixed(1), isFinite(e.dist) ? e.dist.toFixed(1) : "\u2014"];
+    })
+  );
+}
+
+function drawFmd(result, s) {
+  var frame = document.getElementById("fmdFrame");
+  var f = result.fmd;
+  var maxCount = maxOf(f.cum);
+  var plot = newPlot(frame, {
+    height: 340,
+    xDomain: [f.edges[0] - s.dm, f.edges[f.edges.length - 1] + s.dm],
+    yDomain: [0.8, maxCount * 1.6],
+    yLog: true,
+    xLabel: "magnitude",
+    yLabel: "number of events",
+    ariaLabel: "Gutenberg-Richter frequency-magnitude distribution."
+  });
+
+  var hoverPoints = [];
+
+  // Incremental counts: open squares, so identity does not rest on colour alone.
+  f.edges.forEach(function (m, i) {
+    if (f.inc[i] <= 0) return;
+    var px = plot.xs(m), py = plot.ys(f.inc[i]);
+    el("rect", {
+      x: px - 3, y: py - 3, width: 6, height: 6,
+      fill: "none", stroke: "var(--series-3)", "stroke-width": 1.4
+    }, plot.layer);
+    hoverPoints.push({
+      px: px, py: py,
+      html: '<div class="tt-title">M ' + m.toFixed(1) + "</div>" + f.inc[i] + " events in this bin"
+    });
+  });
+
+  // Cumulative counts: filled circles.
+  f.edges.forEach(function (m, i) {
+    if (f.cum[i] <= 0) return;
+    var px = plot.xs(m), py = plot.ys(f.cum[i]);
+    el("circle", { cx: px, cy: py, r: 2.6, fill: "var(--series-1)" }, plot.layer);
+    hoverPoints.push({
+      px: px, py: py,
+      html: '<div class="tt-title">M ' + m.toFixed(1) + "</div>" + f.cum[i] + " events at or above"
+    });
+  });
+
+  // The Gutenberg-Richter fit, anchored at the threshold count.
+  if (result.b && isFinite(result.b.b) && result.threshold != null) {
+    var thrIndex = -1, i;
+    for (i = 0; i < f.edges.length; i++) {
+      if (f.edges[i] >= result.threshold - 1e-9) { thrIndex = i; break; }
+    }
+    if (thrIndex >= 0 && f.cum[thrIndex] > 0) {
+      var b = result.b.b;
+      var a = Math.log10(f.cum[thrIndex]) + b * f.edges[thrIndex];
+      var mHi = f.edges[f.edges.length - 1];
+      var y1v = Math.pow(10, a - b * result.threshold);
+      var y2v = Math.pow(10, a - b * mHi);
+      el("line", {
+        x1: plot.xs(result.threshold), y1: plot.ys(y1v),
+        x2: plot.xs(mHi), y2: plot.ys(Math.max(y2v, plot.ys.domain[0])),
+        stroke: "var(--series-2)", "stroke-width": 2
+      }, plot.layer);
+      var lt = el("text", {
+        x: plot.xs(mHi) - 4, y: plot.ys(Math.max(y2v, plot.ys.domain[0])) - 8,
+        "text-anchor": "end", fill: "var(--series-2)", "font-size": 11, "font-family": "var(--sans)"
+      }, plot.layer);
+      lt.textContent = "b = " + b.toFixed(3);
+    }
+  }
+
+  if (result.mc != null) marker(plot, result.mc, "Mc " + result.mc, "var(--ink-muted)");
+  if (result.threshold != null && result.threshold !== result.mc) {
+    marker(plot, result.threshold, "threshold " + result.threshold, "var(--ink-2)");
+  }
+
+  attachHover(frame, plot, hoverPoints);
+
+  legend(document.getElementById("fmdLegend"), [
+    { label: "events at or above each magnitude", color: "var(--series-1)", shape: "dot" },
+    { label: "events in each 0.1 bin", color: "var(--series-3)", shape: "square" },
+    { label: "Gutenberg-Richter fit", color: "var(--series-2)", shape: "line" }
+  ]);
+
+  dataTable(
+    document.getElementById("fmdTable"),
+    ["magnitude", "in bin", "at or above"],
+    f.edges.map(function (m, i) { return [m.toFixed(1), f.inc[i], f.cum[i]]; })
+  );
+}
+
+function drawOmori(result, s) {
+  var frame = document.getElementById("omoriFrame");
+  var times = result.times.slice().sort(function (a, b) { return a - b; })
+                   .filter(function (t) { return t > 0; });
+  var tMin = Math.max(times[0], 1e-4), tMax = times[times.length - 1];
+
+  // Log-spaced bins, so the early decay is not swamped by the long tail.
+  var nBins = 26, l0 = Math.log10(tMin), l1 = Math.log10(tMax);
+  var edges = [], i;
+  for (i = 0; i <= nBins; i++) edges.push(Math.pow(10, l0 + (l1 - l0) * i / nBins));
+  var obs = [];
+  for (i = 0; i < nBins; i++) {
+    var lo = edges[i], hi = edges[i + 1], width = hi - lo;
+    if (width <= 0) continue;
+    var n = 0;
+    for (var j = 0; j < times.length; j++) if (times[j] >= lo && times[j] < hi) n++;
+    if (n > 0) obs.push({ t: Math.sqrt(lo * hi), rate: n / width, n: n, lo: lo, hi: hi });
+  }
+  if (!obs.length) { frame.innerHTML = ""; return; }
+
+  var rates = obs.map(function (o) { return o.rate; });
+  var om = result.omori;
+  var fitLo = om ? om.k / Math.pow(om.c + tMax, om.p) : 0;
+  var yLo = Math.max(Math.min(minOf(rates), fitLo || Infinity) * 0.5, 1e-6);
+  var yHi = maxOf(rates) * 2;
+
+  var plot = newPlot(frame, {
+    height: 340,
+    xDomain: [tMin * 0.7, tMax * 1.3],
+    yDomain: [yLo, yHi],
+    xLog: true, yLog: true,
+    xLabel: "days since the mainshock",
+    yLabel: "events per day",
+    ariaLabel: "Aftershock rate against time, with the fitted Omori-Utsu decay."
+  });
+
+  // The fitted decay curve.
+  if (om && isFinite(om.p)) {
+    var d = "", steps = 160;
+    for (i = 0; i <= steps; i++) {
+      var t = Math.pow(10, Math.log10(plot.xs.domain[0]) +
+              (Math.log10(plot.xs.domain[1]) - Math.log10(plot.xs.domain[0])) * i / steps);
+      var rate = om.k / Math.pow(om.c + t, om.p);
+      d += (i ? "L" : "M") + plot.xs(t).toFixed(2) + " " + plot.ys(rate).toFixed(2);
+    }
+    el("path", { d: d, fill: "none", stroke: "var(--series-2)", "stroke-width": 2 }, plot.layer);
+  }
+
+  var hoverPoints = obs.map(function (o) {
+    var px = plot.xs(o.t), py = plot.ys(o.rate);
+    el("circle", {
+      cx: px, cy: py, r: 3, fill: "var(--series-1)",
+      stroke: "var(--surface)", "stroke-width": 1.5
+    }, plot.layer);
+    return {
+      px: px, py: py,
+      html: '<div class="tt-title">' + fmtDays(o.t) + "</div>" +
+            o.rate.toFixed(o.rate < 1 ? 3 : 1) + " events per day &middot; " + o.n + " in bin"
+    };
+  });
+  attachHover(frame, plot, hoverPoints);
+
+  legend(document.getElementById("omoriLegend"), [
+    { label: "observed rate", color: "var(--series-1)", shape: "dot" },
+    { label: om ? "fitted decay, p = " + om.p : "fitted decay", color: "var(--series-2)", shape: "line" }
+  ]);
+
+  dataTable(
+    document.getElementById("omoriTable"),
+    ["from (days)", "to (days)", "events", "rate per day"],
+    obs.map(function (o) {
+      return [o.lo.toFixed(4), o.hi.toFixed(4), o.n, o.rate.toFixed(o.rate < 1 ? 4 : 2)];
+    })
+  );
+}
+
+function fmtDays(d) {
+  if (d < 1 / 24) return Math.round(d * 1440) + " min";
+  if (d < 1) return (d * 24).toFixed(1) + " h";
+  return d.toFixed(d < 10 ? 2 : 1) + " days";
+}
+
+/* ==========================================================================
+   6. RENDERING THE RESULTS
+   ========================================================================== */
+
+var LAST = { result: null, settings: null };
+
+function renderResults(result, s) {
+  LAST.result = result;
+  LAST.settings = s;
+  document.getElementById("resultsCard").hidden = false;
+
+  var note = document.getElementById("resultNote");
+  note.hidden = !result.note;
+  if (result.note) note.textContent = result.note;
+
+  var tiles = [
+    { k: "completeness Mc", v: result.mc == null ? "\u2014" : result.mc.toFixed(1), u: "magnitude" },
+    { k: "b-value", v: result.b ? result.b.b.toFixed(3) : "\u2014",
+      u: result.b ? "\u00B1 " + result.b.sigma.toFixed(3) + " on " + result.b.n + " events" : "not estimated" },
+    { k: "Omori p", v: result.omori ? result.omori.p.toFixed(3) : "\u2014",
+      u: result.omori ? "decay exponent" : "not estimated" },
+    { k: "events in window", v: result.nEvents.toLocaleString(), u: s.windowDays + " days" }
+  ];
+  document.getElementById("tiles").innerHTML = tiles.map(function (t) {
+    return '<div class="tile"><span class="k">' + t.k + '</span><span class="v">' + t.v +
+           '</span><span class="u">' + t.u + "</span></div>";
+  }).join("");
+
+  var rows = [];
+  rows.push(["events in window", result.nEvents.toLocaleString()]);
+  rows.push(["completeness Mc", result.mc == null ? "not estimated" : result.mc.toFixed(1)]);
+  rows.push(["threshold used", result.threshold == null ? "not set" : result.threshold.toFixed(2)]);
+  rows.push(["events at or above it", result.nAbove == null ? "\u2014" : result.nAbove.toLocaleString()]);
+  if (result.b) {
+    rows.push(["b-value", result.b.b.toFixed(3) + "  \u00B1 " + result.b.sigma.toFixed(3)]);
+  }
+  if (result.omori) {
+    var bp = result.boot;
+    rows.push(["Omori p", result.omori.p.toFixed(3) + (bp && isFinite(bp.pStd) ? "  \u00B1 " + bp.pStd.toFixed(3) : "")]);
+    rows.push(["Omori c", result.omori.c.toFixed(3) + (bp && isFinite(bp.cStd) ? "  \u00B1 " + bp.cStd.toFixed(3) : "")]);
+    rows.push(["Omori k", result.omori.k.toFixed(1)]);
+    rows.push(["observation interval", maxOf(result.times).toFixed(3) + " days"]);
+  }
+  rows.push(["mainshock energy", result.energy.toExponential(3) + " J"]);
+  rows.push(["B\u00E5th expectation", "M " + result.bathMag.toFixed(2)]);
+
+  document.getElementById("readout").innerHTML = rows.map(function (r) {
+    return "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>";
+  }).join("");
+
+  document.getElementById("seqCard").hidden = false;
+  document.getElementById("fmdCard").hidden = !result.fmd;
+  document.getElementById("omoriCard").hidden = !result.omori;
+
+  drawSequence(result, s);
+  if (result.fmd) drawFmd(result, s);
+  if (result.omori) drawOmori(result, s);
+}
+
+function resultsAsText(result, s) {
+  var lines = ["Tremor Lab 1.0.0"];
+  lines.push("window " + s.windowDays + " days, threshold " +
+             (result.threshold == null ? "none" : "M " + result.threshold) +
+             ", bin " + s.dm + ", Mc correction " + s.mcCorr);
+  lines.push("events in window        " + result.nEvents);
+  lines.push("completeness Mc         " + (result.mc == null ? "not estimated" : result.mc));
+  if (result.b) lines.push("b-value                 " + result.b.b.toFixed(3) + " +/- " +
+                           result.b.sigma.toFixed(3) + " on " + result.b.n + " events");
+  if (result.omori) {
+    lines.push("Omori p                 " + result.omori.p + (result.boot && isFinite(result.boot.pStd) ? " +/- " + result.boot.pStd : ""));
+    lines.push("Omori c                 " + result.omori.c + (result.boot && isFinite(result.boot.cStd) ? " +/- " + result.boot.cStd : ""));
+    lines.push("Omori k                 " + result.omori.k);
+  }
+  lines.push("mainshock energy        " + result.energy.toExponential(3) + " J");
+  lines.push("Bath expectation        M " + result.bathMag.toFixed(2));
+  return lines.join("\n");
+}
+
+/* ==========================================================================
+   7. SELF-TEST
+   ========================================================================== */
+
+var REFERENCE_CSV = "0.003993,4.5,37.1578,36.8092;0.00647,5.6,37.265,36.8442;0.007465,6.6,37.2127,36.777;0.011586,4.3,38.8125,37.5283;0.012234,3.5,36.578,35.6228;0.013183,5.6,37.0485,36.4047;0.015405,3.9,37.8912,37.72;0.015903,4.2,35.1208,35.248;0.016389,4,37.7075,36.708;0.016458,4.6,37.9462,38.207;0.020035,3.9,38.2057,37.8035;0.020428,4.1,36.2877,36.2773;0.020949,4.4,38.5715,40.5307;0.021308,5.1,38.0322,38.1033;0.02265,4.7,38.2158,38.6605;0.023484,4.4,36.8127,36.565;0.023762,4.9,37.4805,37.118;0.025718,4.6,36.2105,36.2737;0.02647,4.3,37.0915,36.6922;0.02706,3.7,37.772,37.4872;0.028368,5.3,36.9258,36.6683;0.030694,4.9,37.2733,36.9843;0.031991,5.5,37.9008,37.8448;0.033935,4.7,38.0735,38.1987;0.03662,4.4,38.2667,38.5573;0.037685,3.8,37.7573,37.9748;0.039016,3.8,37.5182,37.2138;0.04059,4,37.4733,37.9585;0.041759,4.9,37.0905,36.7435;0.042419,4,38.1577,37.6867;0.043067,3.5,36.1822,36.1448;0.043461,3.4,37.5165,37.0862;0.044271,4.4,37.5562,37.2987;0.045625,5.4,37.1433,36.9688;0.046829,4.2,37.2953,37.0002;0.047917,4.3,38.0853,38.238;0.049468,3.6,37.4982,36.9438;0.051192,4.7,36.3767,37.2012;0.051296,4,37.34,36.803;0.051806,3.7,37.5812,37.2493;0.052708,3.6,38.2383,38.6043;0.053345,4.4,37.6815,37.133;0.053681,4.6,37.1313,36.9215;0.055127,3.2,37.458,36.9022;0.055903,3.7,37.6547,37.3115;0.056389,4,38.1248,38.4055;0.057836,3.7,37.4722,37.102;0.057859,3.7,36.5135,36.2818;0.059896,3.5,36.7347,36.4497;0.063079,4.1,36.1583,36.1225;0.064687,3.6,37.1775,36.9448;0.065752,4,38.527,40.399;0.066817,3.8,38.458,39.3553;0.066979,4.6,36.636,36.4728;0.067778,4.8,37.3553,37.0323;0.068704,3.5,36.7328,36.9902;0.069016,4.4,39.3388,38.9445;0.071713,3.7,36.2873,36.183;0.072002,4.2,38.2137,38.5413;0.072766,3.6,37.8825,37.8112;0.073345,3.3,37.4278,36.842;0.074444,4.9,38.1708,38.528;0.075521,3.7,37.5455,37.2415;0.076528,3.8,37.9418,37.828;0.078333,4.3,37.9545,37.8323;0.079236,3.8,37.4975,37.3083;0.079653,3.9,37.5252,37.1133;0.081493,3.2,37.3813,36.9768;0.082442,4.5,38.112,38.4548;0.082998,3.2,38.242,37.0208;0.083993,3.5,37.4608,37.0835;0.086447,3.6,37.1255,36.3817;0.086933,4.2,38.1263,38.5332;0.088171,4.3,37.9073,37.7883;0.088634,4.1,37.0925,36.5758;0.090278,3,38.0042,37.9538;0.091123,4.6,38.1292,38.5233;0.092049,3.9,37.4273,36.9562;0.093958,3.6,37.3327,36.9085;0.095926,3.9,38.2893,38.6803;0.097731,3.7,37.2847,36.738;0.099942,4.1,37.3835,37.1407;0.101146,3.8,38.0635,38.0997;0.102951,4.9,38.2888,38.5832;0.104988,3.6,37.3647,36.9802;0.105498,3.6,37.3445,36.9395;0.107778,3.6,37.6775,36.5522;0.108681,3.9,37.7357,37.3495;0.110648,3.7,37.282,36.8147;0.111597,4.2,36.0993,36.4767;0.113692,4,37.2323,36.8512;0.11515,3.7,37.4925,37.5815;0.11588,4.4,37.9562,37.3555;0.116493,4.2,37.822,37.5243;0.116921,4.2,36.9732,36.8783;0.119144,3.2,37.4035,36.847;0.120255,3.9,37.6282,37.34;0.121944,3.5,36.4907,36.2228;0.122315,3.7,37.6135,37.1768;0.122731,4,38.1443,38.5257;0.123819,3,37.3172,37.0372;0.124525,4.5,37.378,37.0698;0.125833,5,38.1287,38.5703;0.12963,3.3,36.3012,36.259;0.130012,4.2,37.5337,37.2512;0.130764,3.4,37.1363,36.8545;0.132269,3.7,36.6152,36.5677;0.134375,4.5,37.2892,36.809;0.13463,4.3,36.4372,36.2405;0.138669,3.2,36.2395,36.2485;0.140428,4.5,37.886,37.642;0.142662,3.6,37.3058,36.8728;0.144005,3.8,37.4188,36.689;0.146123,4.6,36.687,36.3987;0.147743,3.6,36.5193,36.3412;0.150787,3.4,37.4797,37.2412;0.151782,4.4,37.4705,37.0332;0.153206,3.8,37.6997,37.3367;0.155752,4.5,37.8882,37.7873;0.157014,3.9,38.3037,38.724;0.157627,3.9,37.3258,37.0567;0.159051,3.4,37.0135,36.3662;0.160463,4.1,37.3347,36.8597;0.162928,3.4,37.226,36.7573;0.163414,3.9,37.493,37.2012;0.165266,3,36.2335,36.2193;0.166238,4.2,37.8865,37.7202;0.168241,4,38.1052,38.32;0.169583,3.4,37.507,37.1567;0.170359,4.4,38.0342,38.2685;0.172072,3.3,37.4135,36.966;0.17228,3.2,37.3263,37.0448;0.172986,3.3,38.7835,38.0315;0.174155,3,37.4772,36.8313;0.176273,4.3,38.1558,38.239;0.176933,3.4,37.929,38.6862;0.177512,4.3,37.9782,38.0628;0.179039,4,36.4978,36.3498;0.179873,4.7,36.3173,36.124;0.181852,3.4,37.9477,37.8;0.18228,3.2,37.1518,36.9678;0.182685,4.2,38.0347,38.083;0.184352,3.9,38.1623,38.4415;0.184942,4.1,36.186,35.866;0.185671,4.2,36.3343,36.227;0.187257,3.2,37.5488,37.1953;0.187812,3.6,37.02,36.756;0.188819,3.3,38.3305,38.3823;0.189456,3.6,38.644,38.6262;0.190671,3.1,37.4883,37.2175;0.192014,3.1,37.9968,38.092;0.193264,4.4,38.1153,38.4452;0.193704,3.8,37.1873,36.8387;0.196204,3.7,37.4305,37.0862;0.199028,3.2,37.2238,36.7377;0.2011,3.4,37.6225,37.2347;0.201539,3.1,37.359,36.838;0.202477,3.3,37.3928,36.8643;0.205255,3.3,37.5037,37.2027;0.206331,4.1,37.3487,36.9488;0.207488,3.4,37.0535,36.9965;0.208669,3.9,38.142,38.33;0.211204,3.3,37.7322,37.5113;0.212512,3.2,37.2673,37.0315;0.214375,4.5,36.1603,36.097;0.214549,4.4,37.291,37.0777;0.215498,4,38.0872,38.2455;0.216505,3.1,38.081,37.9498;0.216829,3.1,37.4308,36.9383;0.217801,3,36.2033,36.6133;0.21816,3.1,37.9742,37.9742;0.219294,3.2,37.2708,37.0222;0.219884,3.6,38.2105,38.5593;0.221713,3.3,37.3068,36.8703;0.222662,3.7,36.7598,36.4468;0.223854,3,37.8998,37.9218;0.226181,3.9,38.0098,37.424;0.226343,4,37.9727,38.1468;0.226562,3.3,37.4213,36.9542;0.229803,3.4,37.9627,37.9283;0.230347,3.5,38.321,38.6752;0.230764,3.6,38.1667,38.5882;0.232859,3.3,38.1777,38.5287;0.234317,4.9,37.705,37.3625;0.237187,4.3,37.5012,37.1373;0.237847,3.2,36.2875,36.5018;0.23794,3.6,37.1358,36.8428;0.238889,3.1,37.2815,37.0283;0.239873,3.6,37.8828,37.3558;0.240671,3.6,37.4772,37.1005;0.242373,3.6,38.1895,38.4745;0.243738,4.4,36.5962,36.4158;0.243866,4.2,37.4602,36.8688;0.244884,3.8,36.6237,36.3885;0.245775,3.2,37.3845,36.8902;0.246273,3.4,37.2513,37.045;0.251354,3.8,37.9775,37.9663;0.252477,4,37.4755,37.137;0.254039,3.6,37.3613,36.8668;0.254769,3.6,36.0547,35.9725;0.255799,3.9,37.508,37.0777;0.257708,3.2,36.9842,36.9332;0.259352,3.7,37.3412,37.0908;0.260833,3,37.464,37.1045;0.262558,3.6,37.3247,36.9647;0.264688,3.1,37.1638,36.9292;0.265405,3.4,37.1533,36.7498;0.266458,4.1,37.9828,37.9285;0.267755,3.5,37.6048,37.4277;0.268125,3.3,37.463,37.3798;0.270891,3.5,38.0918,38.1343;0.271956,3.4,37.7347,37.3093;0.272824,3.2,37.5123,37.295;0.273137,3.5,39.1035,40.4055;0.275069,3.1,37.9527,38.03;0.280729,4.2,36.6043,36.5467;0.281053,4.2,37.942,37.9558;0.28265,3.2,37.5385,37.3545;0.285498,3.5,37.2553,36.9637;0.288403,3.1,37.263,37.0312;0.289792,3,37.8777,37.7362;0.291111,3.4,37.1602,36.8215;0.291898,3.1,37.4487,36.7677;0.292905,3.3,37.5575,37.5843;0.294468,3.6,37.7658,37.5878;0.297419,3.8,37.2052,36.9383;0.298021,3.5,36.0308,35.8438;0.306157,3.8,38.2237,38.4998;0.3075,3.7,38.0863,38.2015;0.308634,3.5,37.1192,36.9277;0.310521,4.2,38.2048,38.3557;0.311123,3.5,37.413,37.0718;0.31213,3.3,36.7295,36.1765;0.313056,3,37.2823,36.3738;0.314919,3.2,37.424,37.1102;0.316019,4.6,37.4877,37.1302;0.317407,3.1,38.0225,38.2483;0.318681,3,37.3422,37.0518;0.32015,4.5,38.1288,38.3557;0.322292,4,36.8702,36.4042;0.323565,3.2,37.1337,36.7178;0.324826,3.5,37.2698,36.8738;0.325208,3.5,37.492,37.0923;0.328299,3.5,37.2812,36.9263;0.329282,3.7,37.338,36.843;0.329815,3.4,37.3805,36.933;0.335752,4.4,38.1602,38.2385;0.33765,4.9,36.9412,36.421;0.34265,3,38.6875,35.3037;0.343519,3.4,38.3887,35.5108;0.346331,4.7,37.2655,36.7483;0.351609,4,38.3243,38.7642;0.354965,4.2,38.827,39.4907;0.358889,3.8,37.8305,37.5308;0.360949,3.6,37.139,36.9362;0.361759,3.3,37.1233,36.6615;0.368079,3.8,38.1263,38.2488;0.369248,3.7,37.3818,36.8372;0.371331,4.2,38.1272,38.3498;0.373194,3.2,37.5235,37.1988;0.377836,3.4,37.5417,37.4918;0.380035,7.6,38.0818,37.1773;0.381435,5.7,38.3543,38.2823;0.38397,4.8,37.9745,36.3452;0.385139,5.4,38.0392,37.0478;0.387801,5.8,38.1433,37.7937;0.389873,4.2,38.1212,37.5037;0.393912,4.4,38.197,37.8608;0.395417,4.5,38.1678,36.8755;0.395949,4.4,38.0585,36.5362;0.397963,4.4,38.1405,37.7047;0.3986,5.8,38.1855,37.9793;0.401065,3.9,38.291,38.3668;0.402014,4.3,38.0508,37.4558;0.403912,3.6,38.2578,37.7368;0.404572,3.9,38.0242,36.465;0.405081,4.2,38.176,37.7892;0.405625,4.2,37.8932,37.32;0.406354,3.3,38.0947,37.2777;0.407674,4.2,38.0642,36.7998;0.408391,4.8,38.1308,36.4318;0.412593,4.8,38.0655,37.2945;0.415903,4.1,38.0988,36.6077;0.416053,4.3,38.0583,36.5323;0.417257,3.6,38.4548,40.2772;0.418646,3.8,38.1523,37.8617;0.420926,3.9,38.0058,37.043;0.423924,4.7,38.06,38.1768;0.424352,3.9,37.985,36.7705;0.425822,4.4,38.2515,37.9625;0.42831,4.1,38.1552,37.6912;0.429109,4.5,38.0275,37.4738;0.432049,4.4,38.1133,36.4683;0.434606,3.8,38.0588,37.0498;0.435127,4.5,38.3002,38.149;0.438414,3.4,38.272,37.877;0.439259,4.5,38.052,36.3645;0.440127,4.1,38.1953,37.8298;0.443356,4.2,38.0657,36.4678;0.445197,4.9,38.0832,37.6983;0.447685,6,38.0243,36.5085;0.4514,4.2,38.0432,36.3895;0.455718,4.9,38.0033,37.4815;0.457569,3.2,37.2218,37.0037;0.459491,4,37.9442,37.4725;0.460949,4.3,38.0958,36.4045;0.46544,3.9,37.1333,36.9713;0.466053,3.9,38.216,38.4473;0.46735,3.9,38.1117,36.7747;0.468137,3.8,38.0415,37.3765;0.469248,4,38.1167,38.54;0.470255,4.8,38.2663,38.2253;0.471539,4.8,37.8098,37.795;0.471667,4.6,38.037,36.5622;0.473426,3.9,38.2913,38.22;0.477639,4.3,38.0772,36.4573;0.479479,4.5,38.158,37.0353;0.482824,3.8,37.3875,36.962;0.484097,4.6,38.1908,36.6173;0.484907,3.3,38.1048,36.4003;0.487905,4.4,38.3375,37.3762;0.489502,3.6,37.6563,37.368;0.490104,4.2,38.069,37.3847;0.492419,4.3,38.073,37.4315;0.493148,4.7,38.0262,37.5938;0.494236,4,38.0018,36.0977;0.496123,4.5,38.0007,36.6105;0.496447,4.3,38.0845,36.5935;0.497546,4.1,37.978,38.0678;0.499259,3.8,37.999,36.7518;0.500127,4.9,38.081,36.4812;0.501817,3,38.1218,36.5982;0.502604,3,38.1422,36.7082;0.50309,4,38.1767,36.9337;0.507859,3,38.108,37.7035;0.509803,4,36.4858,36.2212;0.510185,4.2,38.2602,38.6558;0.510914,4.2,38.0715,37.5673;0.512894,4.1,36.324,36.2645;0.515185,5.3,38.1483,37.5448;0.518935,5.1,38.018,37.6235;0.523993,4.2,38.3255,38.1803;0.528669,4.1,38.0937,36.5123;0.52941,3.5,37.7443,37.5558;0.530903,3.1,38.3037,37.133;0.531667,3.8,38.1523,37.731;0.532824,4.3,38.0237,36.3902;0.534005,3.3,38.0728,36.4835;0.536551,4.6,37.9982,37.4315;0.537199,4.1,38.177,39.4857;0.539803,4.1,37.3848,36.8235;0.541505,4,38.0418,37.4437;0.543958,4.1,38.2397,38.1477;0.545255,3.7,38.3003,38.2097;0.546725,4.2,37.4743,37.1982;0.548264,3.6,38.104,36.721;0.54875,4.8,36.8283,36.5308;0.550289,4.7,38.003,36.4248;0.552477,3.7,38.0423,37.8922;0.556227,3.5,38.3178,38.1587;0.558611,4.2,38.1705,37.7658;0.56088,3.2,38.5918,40.2917;0.563102,3.4,38.1622,36.532;0.563576,3.3,38.3292,37.1433;0.565069,4.4,38.1317,38.484;0.56684,3.5,37.0078,36.6653;0.568079,4.1,38.2103,37.799;0.569595,4.5,38.1175,37.8218;0.57066,3.6,38.1832,36.9207;0.57213,3.6,38.031,36.6095;0.57559,3.6,38.044,37.534;0.576794,4.1,37.9847,37.5438;0.578576,3.8,38.1048,36.577;0.581204,5.2,38.4495,37.7962;0.585197,3.3,38.1857,37.8055;0.586042,3.3,38.1007,36.935;0.590081,3,38.0397,36.561;0.594433,5.5,38.2742,38.1295;0.597604,3.2,37.737,37.5895;0.598935,3.2,37.8498,36.6482;0.599988,3.6,38.0927,36.5673;0.604514,3.5,37.9862,36.6228;0.605718,3.4,38.1237,36.8595;0.606817,4.1,38.1242,37.7553;0.607755,3.8,37.8948,37.7343;0.608704,3.5,37.3088,37.0648;0.610301,3.7,38.011,36.5975;0.611979,3.3,38.1067,36.5947;0.612419,4.2,38.0372,37.5755;0.614352,4,38.0775,37.2913;0.617477,3.9,38.0972,37.061;0.618241,3.6,38.2653,38.1622;0.620231,3.7,38.2063,37.136;0.621817,3.8,37.3875,36.9275;0.62331,3.3,37.357,36.8722;0.62794,3.9,38.1455,36.3053;0.628611,3.9,38.0405,36.5582;0.630174,4.1,38.0585,36.4357;0.631053,4.4,38.1505,36.9143;0.631343,4.7,38.0697,36.5073;0.631806,4.2,38.1357,36.3535;0.632361,4.8,37.3382,36.8552;0.635185,4.7,36.6822,36.3547;0.637315,4.4,38.3002,39.1113;0.64147,3.2,38.1322,37.1875;0.642998,5.3,37.963,36.45;0.645197,3.8,38.0573,36.388;0.647083,3.6,38.2743,38.0923;0.648912,3.4,38.1652,37.662;0.650127,4.1,38.14,36.7917;0.651412,4.4,37.9845,37.3282;0.654097,3.6,38.1035,36.3012;0.655382,3.5,38.2013,36.9392;0.657766,3.3,38.0812,37.5877;0.659259,3,36.9282,36.443;0.661551,3,37.9442,37.8497;0.662674,4.2,38.1108,37.3967;0.665382,3.8,37.9867,36.81;0.665787,3.6,38.056,36.5008;0.666782,3.9,38.6095,39.7695;0.667766,3.7,38.1658,37.8308;0.669352,3.4,38.1223,38.006;0.669792,4.1,38.1213,36.507;0.671678,3.4,37.3742,36.8353;0.672824,4.6,38.1315,36.6465;0.675081,3.5,38.2118,37.7387;0.6764,4.7,37.1105,36.7333;0.677442,3.5,37.5013,37.1303;0.680463,4,38.1675,36.9203;0.682662,3.7,38.0997,37.626;0.684375,3.4,38.1997,36.8208;0.685382,3.9,38.1623,36.9058;0.687002,4.6,38.1993,37.8262;0.688507,3.5,38.254,37.9805;0.690266,3.6,38.381,37.6918;0.692373,3.9,37.4322,36.9958;0.695856,3.3,38.1017,36.4118;0.698056,4.5,38.1738,36.6123;0.698866,5.2,38.0725,36.4693;0.699641,3.6,38.0642,36.4627;0.701134,3.7,38.0193,36.3887;0.703426,3.4,38.1708,38.5608;0.705752,3.1,38.0315,36.5365;0.706898,3.8,38.1502,37.7123;0.70853,4.3,38.1755,38.5422;0.710012,3.5,37.985,37.4033;0.711921,3.5,38.0403,37.6342;0.714734,3.5,38.0422,37.2627;0.716829,3.6,38.2332,37.9723;0.717963,4,37.887,36.643;0.718843,4.1,38.069,38.2485;0.722118,3.3,37.9998,36.5402;0.724005,3.3,38.0708,36.4712;0.725081,3.2,38.1145,36.8202;0.727755,3.5,38.1277,36.8345;0.730046,4.3,38.2785,38.1673;0.730856,3,37.4038,36.9612;0.731759,3.6,36.6468,36.7792;0.733391,3.5,38.0192,38.0767;0.734965,3.9,38.0662,38.0835;0.745104,3.1,38.0582,36.4303;0.746505,4.1,38.0642,37.4463;0.748356,3.6,38.3297,38.2675;0.748785,4.4,38.06,36.3278;0.750995,3.4,38.0705,37.3158;0.755174,4.1,37.8637,36.955;0.75934,4.3,38.1233,37.2257;0.762708,4.4,37.4657,37.1223;0.763935,3.6,38.1755,37.8148;0.765787,4.7,38.0678,38.0545;0.76816,3.8,38.1448,37.744;0.77015,4.2,38.1815,38.4278;0.771123,3.7,37.9777,36.631;0.772303,4.4,38.0822,36.5477;0.778102,3.6,37.8822,36.5338;0.781181,3.6,37.8693,36.5155;0.783229,4.8,38.1727,37.727;0.783368,3.4,38.0008,36.3035;0.785405,3.8,38.1925,37.7913;0.787685,4.3,38.071,37.6453;0.788646,3.3,38.1992,37.8412;0.789329,4.4,38.0327,36.4248;0.792604,3.3,38.1412,36.9555;0.793993,3,38.0725,37.5613;0.794687,3.4,38.0473,36.4293;0.795602,4.4,38.2977,38.7828;0.797685,4.1,38.0512,38.1093;0.799051,3,38.3302,38.1405;0.803819,3.3,38.005,37.6615;0.804456,3.5,38.3375,37.9778;0.805764,5.4,37.2528,37.0375;0.807338,4.5,38.2898,38.0705;0.80831,3.4,37.6595,37.3373;0.810046,4.9,37.9578,36.505;0.810208,4.4,37.4157,35.4068;0.81125,4.1,36.2113,35.9503;0.816562,5.1,38.1835,38.2753;0.816979,4.4,38.0372,36.4702;0.818229,3.4,38.0023,36.4328;0.819907,4.2,37.9598,36.2998;0.821852,3.2,38.8183,37.3047;0.822593,4.4,36.7137,36.4628;0.823403,3.2,37.4138,36.9863;0.824745,3.6,38.1088,36.712;0.825683,3.2,37.394,37.1207;0.830162,3.3,37.3837,37.07;0.830718,3.5,37.4523,37.019;0.831759,5.1,38.0752,37.052;0.833403,3.3,37.9972,37.6025;0.834884,3.6,38.271,38.1552;0.835822,3,37.982,37.9608;0.8386,3.1,38.281,37.3337;0.840718,3.5,38.053,37.539;0.845197,4,35.8837,36.1253;0.848067,3.8,37.1695,36.7247;0.848588,3.4,36.7115,36.495;0.848981,3.7,37.3393,36.9367;0.849907,4,38.0722,36.5113;0.85941,3.4,38.1663,36.8992;0.861238,5.1,38.0673,36.487;0.863646,3.5,38.0963,36.9277;0.864757,3.4,37.8938,37.8737;0.866088,4,37.4665,37.1243;0.867164,3.4,37.8965,37.7422;0.869664,3.9,38.1042,36.9348;0.870868,4.4,38.3308,38.177;0.872558,3.6,38.055,37.3188;0.874039,3.4,38.2522,37.3278;0.876644,3.3,38.0518,37.4538;0.877222,3.3,37.5245,37.1955;0.879201,3.6,38.0833,37.3492;0.881088,4.4,37.9838,37.4182;0.882338,4.2,38.341,37.6973;0.883414,4.4,38.1092,36.5365;0.886678,3.8,38.0297,37.4267;0.888958,3.3,38.0652,37.5907;0.890787,3.2,37.2413,38.9283;0.891331,3.4,38.2373,37.2522;0.891863,4,37.7237,37.4783;0.893993,3.7,38.028,36.5312;0.898438,3.2,38.0048,36.4657;0.901319,3.9,37.9303,36.6048;0.903021,3.3,37.354,36.8825;0.903854,3.3,38.2885,38.128;0.905833,3.3,38.1237,37.7282;0.908588,3.5,38.5078,37.687;0.910116,3.4,38.0847,37.6845;0.911991,3.2,38.0517,37.6032;0.912569,3.2,38.1047,37.1343;0.913484,3.2,37.4592,37.0197;0.913843,4.2,38.0238,37.3937;0.914699,3.6,37.601,37.3555;0.916424,3.3,38.0518,36.559;0.919155,3.4,38.2655,37.1445;0.923368,3.4,38.1092,37.757;0.924861,3.8,35.8555,35.0695;0.925347,3.7,37.9403,36.1265;0.926377,3.1,37.229,36.954;0.926759,3.3,38.1367,38.2027;0.929757,3.5,38.2412,37.2243;0.933102,3.4,38.1505,38.1208;0.934688,3.4,37.3437,37.5077;0.936227,3.3,38.1017,37.176;0.938218,3,38.078,37.3925;0.939144,3.5,36.1393,36.1488;0.942164,3.8,38.1027,36.7155;0.942616,3.4,38.4375,40.3718;0.943414,3.9,38.0468,37.4412;0.946875,3.3,37.4355,37.0942;0.948762,3.5,38.4125,37.2062;0.950093,3.5,36.3912,36.2452;0.95419,3.4,37.8715,37.7063;0.954699,3.3,38.0353,36.5263;0.956794,3.6,37.2922,36.8048;0.958611,3.4,38.1228,36.5548;0.960208,3.9,37.8597,36.5975;0.960822,3,37.82,37.5637;0.962627,4,38.0992,36.8243;0.964074,3.3,38.1035,37.7162;0.964444,3.7,38.149,36.6908;0.96647,3.8,37.4472,37.0528;0.9689,3.3,37.993,36.5067;0.971481,3.8,38.118,36.7155;0.972731,3.6,38.1825,38.539;0.974028,3.8,38.1198,36.6132;0.975313,3.5,36.8753,36.5307;0.978623,3.4,38.3835,39.2537;0.978646,3.2,37.8832,37.8902;0.981169,3.8,38.1668,38.619;0.983322,3.2,38.191,37.873;0.984745,3.5,38.0333,37.4068;0.985058,3.4,38.1717,38.3357;0.988009,3.2,38.0393,37.5035;0.991563,3.3,36.701,36.4135;0.993681,3,38.0643,37.4573;1.00042,3.8,38.0412,36.525;1.00139,3.1,38.0537,36.6035;1.00464,3.4,38.2315,38.0247;1.00683,3.5,38.137,37.754;1.00816,4.2,38.0993,36.7803;1.01005,3.8,38.0495,36.444;1.01141,4.1,38.0612,37.5938;1.01175,4.1,37.3865,36.9783;1.01727,3.1,38.1272,37.6297;1.02274,3.2,38.1055,37.7463;1.02341,3,37.4415,37.0272;1.02377,3.3,37.4157,37.1307;1.02815,3.7,38.001,37.9798;1.0308,3.3,38.1525,38.0107;1.03344,3.3,38.1122,37.6775;1.03428,3.6,38.0257,37.4482;1.03777,3.2,36.87,36.5637;1.03837,3.4,38.095,36.6542;1.04049,3,38.2818,38.0415;1.04144,3.6,38.5585,37.3725;1.04681,3,38.1028,37.2417;1.04815,3.3,38.3125,37.4822;1.04897,3.5,36.6992,36.4545;1.04917,3.8,38.0252,37.4362;1.05234,3.2,38.0485,37.559;1.05354,3.8,37.8287,36.5978;1.05547,3,37.1482,36.7062;1.0566,4.3,38.574,37.4423;1.05861,3.3,37.198,36.6912;1.05966,4.2,38.0852,36.9202;1.06252,4.7,35.922,36.0167;1.06662,4.8,38.0712,36.6312;1.06832,3.6,38.1847,37.9253;1.07146,3.4,38.2873,38.119;1.07316,3.9,37.2917,37.0812;1.07503,3.2,38.045,37.3767;1.07623,3.4,38.13,37.7062;1.07737,5.1,37.9495,37.606;1.07931,3.3,38.1862,38.0402;1.08034,5.6,37.8225,37.6303;1.08245,4.2,37.6527,37.2252;1.08521,3.2,37.2957,36.8748;1.08878,3.3,38.1292,36.638;1.08955,3.1,37.62,37.2867;1.09132,3.7,38.0807,37.4462;1.09201,4.1,37.8233,37.5912;1.09605,3.3,37.815,37.5655;1.09688,4.1,36.5005,36.139;1.10048,3,37.3362,37.0028;1.10535,3.1,38.2087,37.8275;1.10607,3,38.1197,36.7712;1.10711,3.5,35.8277,35.9708;1.10873,3.6,38.2413,37.5985;1.10993,4.1,38.0877,38.1492;1.11207,4.3,37.5538,37.216;1.11439,3.8,37.4245,37.0515;1.11836,3.8,38.0113,37.4152;1.12203,3.2,38.199,38.462;1.12439,4.2,37.9955,37.541;1.1259,3.2,38.031,36.4992;1.12704,3.2,38.1568,36.9937;1.12966,3.5,38.0497,36.735;1.13066,3.4,38.5822,40.8083;1.13733,3.4,37.9522,37.4432;1.13888,3.1,37.9833,37.4913;1.142,4.4,36.8282,36.5265;1.14525,3.5,37.1775,36.739;1.14586,3.1,38.204,37.9742;1.14706,3.4,38.0967,37.4198;1.15528,3,39.2617,36.6488;1.15677,3.1,38.023,38.021;1.16042,3.2,38.1882,37.8165;1.16216,3.4,36.1265,36.343;1.1688,3.9,38.1462,38.4847;1.17291,4.7,36.3017,36.1045;1.17998,3,38.256,37.3365;1.18301,3,38.0347,37.563;1.18398,3.4,38.0255,37.5208;1.18765,3.5,38.0315,37.9812;1.18827,3.1,38.2642,36.9227;1.19191,3.3,38.0995,37.8515;1.19303,3.9,38.1302,37.4613;1.19336,3.4,38.136,36.642;1.20335,3,36.384,36.1863;1.20433,3.3,38.0957,37.3608;1.20582,4.1,37.9972,37.54;1.20681,4.2,38.2572,38.1493;1.2103,3.3,38.1047,36.5137;1.21286,3.4,36.3175,35.915;1.21434,3.9,37.3395,36.9032;1.21645,3.1,38.0688,37.5677;1.21809,3.1,38.2287,37.4732;1.22112,3.5,38.1462,37.765;1.22336,3.2,38.1662,37.75;1.22454,4.5,38.0238,36.507;1.22693,3.3,37.5057,37.1042;1.22874,3.7,38.0712,37.5135;1.23008,4.7,38.3283,37.6547;1.23664,3.2,37.1458,36.743;1.24031,3,38.1555,37.0933;1.24094,3,39.12,38.472;1.24299,3,37.9403,36.7615;1.24487,3.2,36.187,35.6335;1.2456,5.5,38.1468,38.606;1.24929,3.2,38.3072,37.6602;1.25521,3.4,35.5915,35.372;1.25627,4.5,38.1255,37.6252;1.25953,3.2,38.0592,36.501;1.26266,3.2,38.2873,38.0965;1.26571,3.1,38.23,38.6908;1.26629,3.2,38.253,38.0983;1.26913,3.8,36.8892,36.5175;1.27257,3.4,37.9777,38.042;1.27347,3.1,38.0758,37.5142;1.2756,4,36.7455,36.4308;1.2798,3.2,38.185,36.9827;1.28338,3.1,37.4082,36.9408;1.28563,3.5,38.1607,37.1993;1.28733,3.5,38.0545,36.5028;1.28867,3.8,38.0735,37.5393;1.29208,3.9,38.1935,38.5772;1.29369,3.5,38.0228,37.4525;1.29737,4.4,38.0172,37.4867;1.30138,4,38.2317,38.6147;1.30178,3.8,38.0027,37.606;1.30333,3.4,38.23,37.9908;1.30964,3.7,38.0283,36.5798;1.31157,3.1,38.1972,36.9698;1.31936,3.4,38.2837,38.029;1.32277,3.3,38.2585,38.9385;1.32659,3,38.1317,37.7873;1.32801,3.5,36.5127,36.5998;1.33192,3.4,38.1,36.5087;1.33264,3.4,37.2248,36.7603;1.33514,3.2,37.7528,37.7145;1.33564,3.6,38.2688,37.8682;1.34604,3.1,38.0127,37.4615;1.34897,3.5,38.2932,38.1872;1.35375,3.2,38.066,37.4127;1.35831,3.8,38.1197,36.3807;1.36338,3.3,37.8393,37.5802;1.36509,3.9,38.0715,36.4735;1.36558,3.3,38.5448,38.1392;1.3667,3.6,38.0937,37.2172;1.36788,3.9,37.411,37.124;1.3703,3.4,38.2762,38.1527;1.37325,3.6,38.176,38.583;1.37436,3,38.8612,37.9408;1.37546,5.4,38.148,38.5165;1.38192,4.7,38.3477,38.14;1.38377,3,38.1455,37.8195;1.38878,4.1,36.3837,35.73;1.39181,3.9,38.1065,36.5068;1.39396,3.5,38.2493,37.9095;1.39454,3.4,37.9027,37.8025;1.39582,3.2,37.8722,36.6988;1.39784,3.4,38.1118,36.5543;1.39895,3.2,38.0175,37.355;1.39939,3.1,37.9438,37.8128;1.40205,4.4,37.8532,36.6253;1.40293,4,37.851,36.7173;1.40351,3.1,37.9287,37.0997;1.40531,4.1,38.0593,37.471;1.41169,3.4,37.9645,37.938;1.41304,3,37.4958,37.1863;1.41358,3.3,38.0873,38.562;1.41697,3.2,38.1353,36.8997;1.41851,3.6,38.936,37.8698;1.42156,3.7,38.1495,37.7473;1.42304,3.9,38.0488,37.7682;1.42683,3.6,38.9178,37.937;1.42866,3,38.0912,37.6877;1.43036,3.1,37.2928,36.8687;1.43148,3.5,37.6367,37.2433;1.43451,3,37.0435,36.6093;1.43755,3.5,38.0783,36.553;1.43911,3.7,37.189,36.9993;1.44291,4,37.9968,37.4845;1.44527,3.3,38.1027,37.8202;1.44571,3.3,38.1187,37.2918;1.44762,3.4,36.178,35.92;1.4492,3.2,37.943,37.5882;1.45104,4.5,38.2648,38.2127;1.45535,3.5,37.62,37.1217;1.45729,3.5,38.0535,37.5092;1.45934,3,38.1158,37.8087;1.46323,3.5,37.1783,36.8615;1.46506,3.6,38.093,36.5532;1.47102,3.4,37.4113,37.135;1.47501,4,38.1457,37.8713;1.47649,3.7,38.2313,37.973;1.47951,3,36.9697,36.5298;1.48309,3.9,38.1017,38.5002;1.48898,3.6,37.883,36.6422;1.4906,3,38.1223,38.1612;1.49394,3.3,38.0672,36.6105;1.50412,3.2,39.0978,38.6018;1.50583,3.5,38.087,36.6067;1.50726,3.4,38.0738,37.9032;1.51155,4.1,38.0903,36.5537;1.51269,3.5,38.0418,36.5692;1.51331,4.5,36.136,35.799;1.51736,3.5,38.2517,38.7013;1.5199,3.2,38.8378,37.8612;1.52673,4,36.3787,36.1337;1.52931,3.3,38.7893,37.4262;1.54565,4.1,37.9817,36.494;1.54665,3.2,38.0863,36.6953;1.54795,3,37.5005,37.203;1.5529,3,37.7465,37.5032;1.55363,3.8,37.8663,36.5133;1.55944,3,36.3675,35.5255;1.56041,3.1,38.0218,38.3147;1.56111,3,37.8727,37.7958;1.57593,3.2,38.0858,37.1107;1.58507,3.4,38.2038,37.9183;1.58771,4,38.5165,40.4197;1.58933,3.2,38.042,37.0513;1.59301,5,37.3573,37.08;1.59738,3.4,37.2512,37.01;1.60509,5,37.992,36.4482;1.60611,3.8,37.9963,36.425;1.6099,3.3,38.002,36.4738;1.61268,3.7,38.0468,37.37;1.61589,3.6,37.9422,37.9428;1.61769,3.7,37.9728,36.5943;1.6181,3.6,38.0002,37.607;1.62098,3.1,37.8865,37.9248;1.62826,3.1,38.1162,37.2208;1.62979,3.3,37.574,37.3632;1.63075,3.3,38.0477,38.4668;1.63412,4,38.2262,37.3442;1.63532,3.2,37.9018,36.5923;1.63619,3.1,37.862,37.8207;1.63834,3.4,37.355,37.0647;1.64298,3,38.0767,38.5117;1.64548,3,38.086,36.6468;1.64699,3.8,38.0685,36.5633;1.64889,3.5,37.8058,36.4;1.64994,3.6,36.0573,35.8648;1.65066,3.7,38.0545,37.2668;1.65474,3.2,36.1808,36.553;1.6565,3.5,38.1183,36.9893;1.6664,3.5,38.0858,38.4687;1.6688,3.2,38.097,38.42;1.67193,3.3,37.708,36.9737;1.6769,3.4,38.1082,36.4902;1.68086,4,38.0265,37.6578;1.68273,3.6,38.3807,39.2103;1.68411,3.6,37.7873,38.6212;1.68708,4,38.1093,36.8757;1.69105,3.6,38.0868,37.2485;1.69186,4.1,38.0313,36.425;1.70087,3.3,38.0193,36.3353;1.70309,5.2,38.102,36.6338;1.70478,3.6,38.1545,37.8542;1.70594,3.6,38.0343,38.3122;1.70877,3.2,37.4837,37.4695;1.71083,3.4,38.1908,37.9153;1.71271,3.1,38.0433,36.5343;1.71369,3,38.2205,37.609;1.72141,3.2,38.1653,36.9502;1.72306,3,38.1698,38.0997;1.72613,3.6,37.407,34.6545;1.73514,3.1,38.2252,38.0355;1.74271,3.4,38.0788,37.3888;1.7474,4.5,38.0778,36.9358;1.75482,3.9,38.1302,37.8082;1.75782,3.1,38.1743,38.7157;1.75883,3.4,38.514,39.6568;1.76127,3.9,38.088,36.4495;1.76396,3.3,38.0275,37.334;1.76588,3,37.4373,37.1147;1.76839,3.1,38.128,37.7582;1.77557,4.7,38.6663,39.9377;1.77755,3.5,38.0593,38.3502;1.78037,3.3,38.0627,36.5373;1.78632,3.6,36.2708,36.2688;1.78917,3.1,38.2325,38.0918;1.79499,3.2,38.081,37.508;1.79655,3.8,38.076,37.243;1.79882,3,37.962,38.0245;1.80064,4.2,38.0572,36.5592;1.80197,3.5,37.8158,36.5937;1.80696,3.5,38.0677,37.0697;1.80764,3.6,37.4723,37.3312;1.80918,3.8,38.0532,36.5642;1.81251,3.2,37.3717,37.1015;1.81351,3,38.103,37.8473;1.8142,3.3,37.8747,36.6718;1.81561,3.4,37.9908,36.6165;1.81637,3.4,38.119,38.2678;1.82157,4,37.8748,36.685;1.82452,3.8,37.5202,37.2037;1.83602,4.9,37.981,37.3963;1.83821,3.7,37.9477,37.6272;1.84601,3.5,38.0538,36.5358;1.84951,3.7,37.3035,37.0275;1.85017,3.6,38.0102,37.671;1.85166,3.3,37.9473,37.4962;1.85547,3,38.1692,36.3662;1.85837,3.7,38.056,36.4722;1.86094,3.1,36.1608,35.8787;1.86206,3.6,37.39,36.9353;1.86831,3.9,38.065,36.5337;1.87007,3.3,38.0597,36.6075;1.87049,3.8,37.4958,37.2068;1.8759,3.8,38.2072,38.1503;1.87623,3.8,38.0817,36.547;1.87672,3.7,38.1052,37.7828;1.87971,3.5,37.871,36.5993;1.88042,3.3,37.849,36.6122;1.88194,3.2,38.057,36.516;1.88416,3.7,38.1165,37.7477;1.8856,4,38.0217,36.487;1.89437,3.9,38.0908,36.5352;1.89572,3,38.2965,37.2688;1.89602,3.7,37.1593,36.6828;1.89839,3.3,37.312,36.8037;1.90056,3.3,38.0427,37.7245;1.90692,3,37.9533,38.6277;1.91006,3.7,38.1037,36.6;1.91354,4.2,36.0775,35.8118;1.91701,3.1,38.0922,38.487;1.91857,3.6,36.4175,36.4907;1.92207,3.7,36.0553,35.9978;1.92432,3.3,38.0313,37.4452;1.92538,3.5,38.2062,37.9863;1.92936,3.2,36.1467,35.695;1.93121,3.9,35.9757,36.0498;1.93227,3.5,38.0393,37.5827;1.94869,3.1,38.02,37.6102;1.95137,3.2,38.046,36.4622;1.95442,3.9,38.0948,37.1443;1.96189,3.8,35.4573,35.3022;1.96508,3,36.3745,36.1375;1.96952,3.4,38.2742,38.247;1.9698,3.1,38.1718,38.7928;1.971,3.4,38.0542,37.669;1.97375,3.3,37.9915,37.6303;1.97424,3.2,38.4193,39.3813;1.97633,3.9,38.5752,39.6802;1.97829,3,38.0713,37.9483;1.98007,3.9,38.123,37.0047;1.982,3.2,38.6868,40.1703;1.99053,3.6,38.4065,39.6705;1.99248,3.4,37.3997,36.9433;2.00161,3.7,36.9003,36.5528;2.00262,4,36.1895,36.0792;2.0039,3.1,37.2925,37.5792;2.00602,3,37.136,36.9842;2.01324,3.7,38.1303,36.3977;2.01707,3.5,37.2127,36.8268;2.02026,3.3,38.0492,36.5238;2.02198,3.4,38.1257,36.862;2.02446,3,38.2155,38.021;2.03318,3,38.0815,37.4288;2.03619,3.2,38.1432,36.6198;2.03657,3.2,37.2585,36.7865;2.04425,3.7,36.0292,36.0887;2.04698,4.4,37.9163,38.0587;2.05022,3.9,38.0063,37.59;2.05194,3.2,38.3602,36.021;2.05561,3,37.3645,36.9228;2.06534,3,38.1853,38.1058;2.06833,3.6,37.177,36.689;2.07186,4.1,37.1442,36.6778;2.07466,3.2,38.1052,36.6535;2.08534,3.8,38.0655,36.5922;2.08722,3.1,37.3572,37.0725;2.08849,3.2,38.1305,36.9758;2.08932,3.1,37.869,36.6772;2.09253,3.4,37.4018,36.9883;2.09873,4.1,37.502,37.1517;2.10105,4.1,37.982,37.6443;2.10399,3.6,38.0017,36.5008;2.1241,3.2,38.0757,36.6193;2.13069,3,35.4227,35.0412;2.14024,3.3,38.1018,38.4073;2.14366,3.1,38.0445,37.5627;2.14852,3.2,38.0242,36.5758;2.15069,3,38.0707,38.5653;2.15318,3.8,38.0212,37.499;2.1727,3.3,37.331,36.8267;2.18287,3.1,39.0878,40.357;2.19101,4.4,38.0647,36.7432;2.19265,3.1,36.9262,36.5765;2.19757,3.4,38.1043,37.8525;2.19959,3.3,37.9772,38.0958;2.20012,3.6,36.1277,35.7207;2.20117,3,37.9942,38.1873;2.20209,4.1,38.048,38.338;2.20237,4.6,36.1473,36.2417;2.2128,3.2,38.0697,36.5593;2.21659,3.2,36.0583,35.7163;2.22424,3,38.0998,38.4005;2.23321,3.1,38.1213,36.3533;2.24444,3.9,38.2315,37.2513;2.24643,3,37.924,37.6728;2.24832,3.7,37.9995,37.5293;2.25108,3.8,37.6058,37.3298;2.25222,3.8,36.8368,36.422;2.25432,3.9,36.3545,36.0953;2.2571,3.1,37.9542,36.4505;2.25756,4,37.9508,37.7797;2.25819,3.3,38.1113,36.6102;2.26123,3.3,38.131,36.991;2.26649,3.6,35.6787,35.4973;2.2701,3.4,36.3202,36.2568;2.271,3.3,37.7158,37.4172;2.2715,5.3,38.0375,36.4715;2.27376,3.4,38.1078,37.1872;2.27836,3,37.4792,37.0183;2.28161,3.7,37.9238,36.5587;2.28412,3,37.5397,37.6325;2.28516,3.4,37.4037,36.8973;2.28931,3.7,38.1392,36.5453;2.28983,3.6,38.118,36.6223;2.29262,3.5,35.9622,35.8948;2.29341,3.3,37.8602,36.6345;2.29544,3.2,37.9443,37.9323;2.30064,3.2,38.0483,36.4965;2.30635,3.3,37.9835,36.409;2.30673,3.3,38.1105,37.8333;2.31112,4.1,38.0977,37.81;2.32579,3.6,37.826,37.7057;2.32738,3,38.1113,36.6627;2.33026,4.2,36.6648,36.4062;2.34517,3.5,37.426,37.2233;2.35014,3.4,38.0723,38.248;2.35738,3.9,38.0515,36.5108;2.35852,3.2,37.8708,36.4307;2.37712,3,38.1292,37.762;2.37992,3.3,38.0698,36.5898;2.38113,4.4,37.0965,37.0088;2.38487,3.5,36.7458,36.3262;2.38644,3.6,38.8345,37.3712;2.39899,3.1,36.3175,36.1358;2.39961,3.1,36.4227,35.8597;2.40251,3.4,38.0817,37.3947;2.40469,4.3,38.151,37.8265;2.40865,3.2,38.0668,36.59;2.41273,5.5,37.995,37.6223;2.41728,3.1,37.749,37.4875;2.41825,3.5,38.0337,37.6122;2.42113,4.8,37.9917,37.629;2.42676,3.2,38.1368,37.7712;2.42801,3.4,37.0982,38.3165;2.4304,3.9,38.095,36.9132;2.43562,3.5,37.6347,37.4937;2.44066,3.5,38.0087,37.9002;2.44433,3.7,38.1182,36.6252;2.44639,3.3,37.6482,37.2242;2.45381,3,38.8213,37.3512;2.45442,3.9,38.8278,37.3862;2.45758,3.2,37.7857,37.925;2.46705,3.4,37.9933,38.173;2.47112,3.1,38.0795,37.7437;2.47255,3.6,38.1075,36.6863;2.47477,3.2,37.5463,37.3052;2.48531,3,38.1128,38.4633;2.48833,3.1,36.145,35.9033;2.4895,3,38.199,38.3513;2.49235,3.3,37.95,37.6285;2.49497,3.1,37.5905,33.019;2.49667,3.4,38.0752,36.614;2.49772,3.5,38.0783,36.5852;2.50083,3.2,38.094,36.5917;2.50362,3.8,37.9915,38.2072;2.50503,3.1,37.8257,39.4208;2.50829,3.8,36.3392,35.9752;2.50968,4.1,38.0642,36.6713;2.51097,3.4,38.1142,37.7535;2.52732,3.5,36.1793,36.2747;2.53221,3.3,37.9685,38.224;2.5329,4,38.1173,38.1453;2.5362,3.7,37.9537,37.5877;2.54367,5,37.996,37.3815;2.55352,3.1,37.3335,37.0622;2.55775,3.3,38.107,37.5133;2.5589,4.3,38.0692,36.6108;2.56639,3.3,37.8667,36.693;2.56826,4.3,38.112,38.5327;2.5726,3.5,37.3435,36.875;2.57441,4.2,38.0448,37.0468;2.57909,3.5,37.9475,36.7377;2.57983,3.9,37.062,36.6073;2.60087,3.2,37.0365,36.6432;2.60335,3.9,37.5083,37.0805;2.60584,4.3,37.8513,36.6278;2.60868,3.6,37.1348,36.7225;2.60904,3.7,37.172,36.6365;2.61064,3.1,37.3392,37.1367;2.61356,3.2,38.1673,38.7548;2.61557,3.4,37.8763,36.6368;2.62017,3.7,38.1053,36.4598;2.63096,3.9,36.2693,36.0627;2.64098,3.2,37.8388,36.5992;2.65147,4.2,38.0982,37.205;2.65403,3.6,37.1022,36.7197;2.65532,3.4,38.0983,37.1967;2.65638,3,37.887,37.7525;2.65909,3.6,38.8105,37.36;2.67096,3.1,35.9918,36.2298;2.69161,3.4,37.9283,38.0657;2.7009,3.9,38.1053,37.8213;2.70505,3.2,38.1507,36.941;2.71435,3.2,37.3105,37.0628;2.72058,4.1,37.4715,37.1947;2.72421,3.8,38.0737,37.2838;2.73168,3.8,38.0793,37.1933;2.73322,3.4,37.9978,38.1255;2.7366,3.3,38.069,36.5685;2.73706,4.1,34.1888,36.2795;2.74149,4,38.0512,36.5313;2.74621,3.1,38.0655,36.5858;2.74712,3.3,37.4767,37.107;2.75204,3.4,37.919,37.8988;2.75402,3.3,38.1348,38.5878;2.76126,3.3,38.1547,37.7133;2.76788,3,37.9077,37.9002;2.77129,4.1,36.3298,36.158;2.78288,3.4,37.5093,37.148;2.78437,3.6,38.7428,35.3365;2.78587,3.3,38.0475,36.5862;2.78787,4,38.26,38.1107;2.79278,3.1,38.0297,36.6452;2.79397,3.4,37.2567,36.7388;2.80748,3.1,37.9258,36.3482;2.81808,3.3,38.0435,37.6258;2.81976,3.6,38.8015,37.3483;2.82145,3,38.3052,37.2733;2.82855,3.3,38.187,37.9423;2.82913,3.3,37.05,36.6273;2.83166,3.4,38.181,37.9202;2.83546,3,39.2363,39.7258;2.84609,3.4,37.5338,37.2335;2.85277,3,37.9633,36.4008;2.86702,3.7,37.241,36.8322;2.86875,3.3,38.0463,36.4743;2.87404,3,38.1908,37.9442;2.87646,3,38.1148,38.0902;2.8812,3,38.0332,36.463;2.88559,3.5,38.1517,38.5542;2.88838,4.1,38.2588,38.1953;2.89618,3.1,38.0352,36.4263;2.90551,3.4,38.1142,36.5762;2.91455,3.6,37.2748,36.8613;2.91536,3.5,38.0122,36.6003;2.91902,3.4,37.982,36.644;2.92201,3.8,37.0605,36.3737;2.92287,3.5,38.0458,36.5187;2.92358,3.5,37.8307,36.0557;2.93226,3.8,38.5403,40.3802;2.93724,3.5,36.8455,36.4585;2.94175,3,38.0725,37.32;2.94523,3.2,37.1608,36.964;2.94672,3.2,37.2293,36.7315;2.94994,3.5,37.0367,36.8387;2.95022,3.1,37.7812,37.3017;2.9523,3.3,36.345,36.1133;2.95346,3,38.1743,39.8063;2.95429,3.4,38.0583,36.5003;2.95868,3.7,36.55,36.2697;2.96211,3.4,37.8567,36.6622;2.96854,4.2,38.4558,39.2127;2.9705,3.3,37.9747,38.1925;2.97153,3.1,36.3792,36.2968;2.98189,3.6,38.1132,37.9457;2.98753,3.4,39.2147,40.2172;2.99249,3,38.2378,38.2038;2.99391,3.3,38.039,36.5437;3.00292,3.6,38.0773,36.5235;3.01082,3.2,37.9677,37.4757;3.01436,4.5,38.5095,40.3777;3.01858,4.5,37.9092,37.7205;3.03102,3.5,38.0008,36.5482;3.03527,3.4,37.9927,36.6085;3.04998,3.4,38.1558,37.7923;3.06179,3,38.0735,37.2197;3.06665,3.1,38.085,37.2268;3.06791,3.9,36.0623,36.3513;3.0741,3.3,38.2712,38.2293;3.08843,3.9,36.6015,36.3673;3.08926,3.9,38.1723,38.7598;3.09069,3.4,38.2015,38.6928;3.09498,3.5,38.2515,38.1148;3.09912,3.3,37.9153,36.6625;3.10317,3.5,38.0913,36.589;3.10746,4.1,38.1217,38.5595;3.11387,3.2,36.3963,36.175;3.11625,3.8,38.9033,39.7507;3.11809,3.3,38.2255,37.9102;3.11925,3.1,38.1253,36.7683;3.12363,3.5,38.2478,38.1353;3.12556,4,37.96,36.3927;3.1353,3.3,37.8405,37.6797;3.13692,4.1,38.1657,38.5282;3.13831,3,37.8543,36.6772;3.146,3.5,36.0687,35.9663;3.14865,3.8,38.052,38.1732;3.15365,3.1,38.0185,36.4257;3.1562,3.8,37.6233,37.3458;3.15651,3.9,38.1062,36.5185;3.16833,3.4,38.9062,37.2977;3.1705,3,38.8045,37.4403;3.17145,4.1,38.0922,36.6292;3.17236,3.1,37.4298,36.9738;3.18057,4.1,38.251,38.2752;3.18113,3.1,37.9992,36.4198;3.18303,3.2,38.1218,37.8168;3.1891,3.2,38.0918,36.6528;3.20513,3.3,38.0508,36.612;3.21197,3.2,37.9805,36.3795;3.21767,3.2,36.8825,38.243;3.2219,3.9,38.1178,37.6608;3.22752,4.3,37.966,37.5958;3.23074,4.1,37.9793,37.6133;3.23993,3.9,38.1147,37.8305;3.24214,3.3,38.074,36.4645;3.24281,4.2,38.1593,38.6115;3.24459,3.5,36.9242,36.5405;3.24769,3.2,38.1523,37.7695;3.24916,3,37.8245,37.766;3.25051,4.8,37.0452,36.6677;3.25798,3.4,38.0853,36.6168;3.26707,4.1,38,36.6913;3.275,3.3,38.0305,37.5915;3.27746,3.9,38.055,36.4868;3.29212,3,36.3467,36.2207;3.29523,3,37.3853,36.9348;3.31034,3.5,38.0752,37.2817;3.31753,3.5,38.9585,39.757;3.3181,3.5,37.8657,36.6222;3.32471,3,36.7923,36.7095;3.3305,3.5,35.9587,35.9317;3.33257,3.4,36.3,35.8993;3.33539,4,38.1452,37.9667;3.33988,3,38.1638,37.8548;3.3423,3.8,36.137,35.674;3.34348,3.2,37.859,36.6748;3.3498,3.6,37.4012,38.936;3.35128,3.3,38.041,36.4587;3.35211,3,38.098,36.5595;3.35371,4.6,38.1085,38.6257;3.36373,3.3,38.6915,39.8955;3.37393,3.7,38.0033,37.4407;3.37608,4.6,39.1323,40.1713;3.38051,3.7,37.794,36.5193;3.38177,3.5,38.0555,36.573;3.38549,3.9,38.0592,38.3792;3.39001,3,38.0738,36.111;3.39226,4.4,37.2693,36.8428;3.40164,3.4,38.01,37.4278;3.40716,3.9,38.0708,37.7228;3.41243,3.4,38.0263,38.0965;3.41307,3.4,37.5912,37.3942;3.41478,3.3,38.0462,37.693;3.42058,3.3,38.0482,36.6;3.43119,3.4,38.2818,39.467;3.43816,4.2,38.0377,37.7098;3.43958,3,38.008,36.4133;3.45211,3.1,38.2893,38.2973;3.46147,3.9,38.1052,37.8252;3.46265,3.8,37.291,36.9878;3.46894,3.6,38.232,38.1598;3.47052,3.7,39.4748,38.3673;3.47071,3.4,37.7032,37.3743;3.47375,3.4,36.9575,36.5537;3.47822,3.2,37.657,38.2203;3.47953,3,37.7598,35.6297;3.48252,3.4,38.0538,36.5018;3.48413,3.1,38.1113,36.8483;3.49601,3.2,36.5278,36.4757;3.50098,3.8,37.9992,36.4877;3.50714,4.2,38.137,37.812;3.50909,3.7,38.2095,38.7095;3.51159,3.4,38.0502,36.6998;3.51617,3,37.1825,36.7035;3.5179,3,38.51,40.402;3.53835,3,38.998,38.716;3.53983,3.1,38.086,36.6243;3.54181,3.9,38.1855,37.8475;3.55559,3.5,37.2523,36.8462;3.58422,3.8,37.3175,37.0318;3.58582,3.3,38.0618,37.7283;3.59716,4,38.5823,39.7753;3.6004,3,37.4215,36.976;3.60421,3.1,37.3133,36.8187;3.60536,3.2,38.0317,36.5963;3.60649,3.2,37.2117,36.7458;3.61319,3.2,36.0707,35.8025;3.61358,3,38.0377,38.3607;3.6339,3.4,37.7982,37.955;3.64501,3.4,38.2477,38.5213;3.64597,3.2,37.902,37.933;3.66863,3.1,37.0075,36.4162;3.68957,3.9,38.1832,38.6452;3.69048,4,38.106,36.5195;3.69848,3.1,38.2693,38.6745;3.72126,3.6,37.3595,37.0827;3.72852,3.2,36.6238,36.4658;3.73061,4.1,36.2195,35.8407;3.73265,3.4,38.1087,37.0328;3.74247,3,37.9213,36.597;3.75091,3.1,38.0827,36.5378;3.75246,3.1,38.0095,36.4492;3.75581,3.3,38.1902,38.0558;3.76222,3.3,38.3055,38.0705;3.76403,3.7,38.0327,36.48;3.77845,3.9,38.2192,38.0925;3.78212,3.9,38.5093,40.3823;3.78948,3.2,38.4823,40.2913;3.80767,3.3,38.1062,37.2607;3.84025,3.1,37.2813,37.0888;3.85345,4.2,37.2458,36.8437;3.85626,3,38.4122,39.636;3.85714,3.4,38.1312,38.5475;3.86307,3.8,38.1687,36.7033;3.86392,3.5,37.7743,36.4838;3.86743,4.2,36.975,36.6858;3.89663,3.7,36.3822,36.2605;3.90012,3.1,38.3067,37.3337;3.90631,3.2,38.075,36.497;3.92291,3.2,38.3653,37.2737;3.92657,3.1,38.7783,40.1487;3.93109,3.9,35.9238,36.326;3.93816,3.8,38.0253,36.5062;3.94338,3.3,36.0597,36.0072;3.94716,4,38.255,38.2303;3.97765,3.2,36.8013,36.4618;3.97892,3,38.0282,37.391;3.98344,3.4,38.0888,37.737;3.98912,3.1,38.0783,36.5522;3.99007,3,37.9897,36.8443;3.99073,3.1,37.9632,37.4033;3.99828,3.3,37.9675,36.5097;3.99964,3.6,38.038,36.605;4.01084,3.3,37.7273,37.1543;4.02323,4.4,37.8842,36.6853;4.03204,4.5,38.1995,38.2138;4.05843,3.4,36.9717,36.6327;4.06806,3.6,39.666,38.0957;4.06996,3.3,36.3105,36.1987;4.07188,3.3,38.0717,36.5618;4.08698,3.7,37.9892,36.3688;4.09882,3.2,38.0705,38.2927;4.10265,3.4,37.9228,36.2325;4.11131,3.3,38.1,38.3938;4.14012,3.2,38.0855,36.5515;4.14059,3.1,37.8192,36.1023;4.14191,3,38.0562,37.7305;4.14595,3.5,36.0105,35.824;4.14781,5,38.229,38.1608;4.15021,4.1,38.088,38.4682;4.15705,3.3,38.0707,37.1777;4.16236,3.1,38.1417,38.5078;4.16741,3,38.1138,38.5242;4.17446,3.8,37.9948,36.6025;4.17535,3.2,38.2528,39.0197;4.21115,3.7,38.0133,36.6085;4.22168,4,37.9407,37.4837;4.23568,3.3,37.4822,37.1482;4.23902,3.2,38.0218,37.5433;4.24108,4.1,37.3523,36.8352;4.24138,3.4,37.2892,36.8817;4.24524,3,37.9997,36.504;4.25831,3.5,38.264,38.1888;4.27743,3.4,38,36.628;4.28088,3.4,37.4205,36.9635;4.28334,3.9,38.283,38.236;4.28629,3.3,38.1218,37.813;4.29162,4.1,35.022,35.1887;4.29504,3.8,38.0915,37.7698;4.3066,3.3,38.5243,40.3807;4.31486,3.2,38.1203,37.8233;4.31564,3.2,38.2303,38.2345;4.32311,4.4,38.0728,38.1002;4.33753,3,38.1492,37.2977;4.33814,3.2,38.1647,38.246;4.36175,3,37.9205,36.6193;4.36376,4.2,38.2273,38.1848;4.38454,3.6,38.5353,40.4323;4.3865,3,37.8235,36.6243;4.42495,3.8,37.5163,37.0837;4.44203,3.3,38.1922,37.9777;4.44299,3.7,37.9407,36.3428;4.44993,3.3,38.0488,36.6947;4.45806,3.2,37.911,36.3338;4.46922,3.6,38.112,36.9102;4.47831,3.8,38.5415,39.6812;4.48271,4,38.2937,38.1118;4.4897,3.5,38.203,38.0633;4.50162,3.1,36.614,36.159;4.50648,3,38.1833,36.5828;4.50812,3.7,38.2233,38.188;4.51593,3.5,37.9992,38.254;4.53579,3.1,37.4268,37.1058;4.53795,3.1,38.0577,37.319;4.53955,3.6,38.0648,38.4083;4.54381,3,37.989,37.2778;4.54769,3.2,38.2447,38.7518;4.57593,3,38.0597,36.5985;4.59153,3.5,37.9757,37.926;4.61207,3.3,38,36.4907;4.61315,3.3,38.2372,38.0968;4.62363,3.1,37.9983,38.2022;4.62469,3,38.0237,36.7573;4.63101,3.8,37.764,36.7308;4.64294,3.8,36.9628,38.2728;4.65506,4.8,37.9277,36.3287;4.67629,4.1,38.174,38.5718;4.67913,3.6,38.0987,36.923;4.68975,3.6,36.1548,36.0878;4.70037,3.1,36.8957,36.6492;4.71443,3.9,38.0933,36.7752;4.75137,3,37.4618,37.1023;4.78397,3.2,36.3785,36.1535;4.78833,4,38.1035,38.5467;4.80294,3.3,37.9365,37.6595;4.80808,3.4,36.138,36.0803;4.8094,3.7,38.1852,38.1132;4.81213,3.3,38.2268,38.0932;4.82362,3,37.644,37.43;4.82951,3.7,38.195,38.1992;4.83547,4,38.5485,39.6743;4.84344,3.3,37.9547,36.3527;4.85224,3,38.0263,37.4143;4.87186,3.6,38.1323,36.9718;4.89087,3.1,37.8812,37.7823;4.89125,3,37.1808,36.9172;4.91667,3.2,37.6237,37.2737;4.91706,3.5,38.1065,37.792;4.92649,3.5,37.83,36.6597;4.94012,3,37.8488,36.5958;4.95042,3.1,38.0942,37.7358;4.95426,3,38.0557,36.432;4.957,3.1,38.0973,36.5647;4.95773,3.2,37.8072,36.5845;4.9604,3.1,38.0638,36.777;4.96331,4.2,36.6357,36.4518;4.96782,3,38.028,36.67;4.98117,3.3,37.8877,36.6125;4.99528,3,36.3128,36.2117;5.00286,3.4,36.7733,36.3703;5.00322,3.9,38.1422,38.545;5.01318,3.6,37.2115,37.0013;5.01635,3.2,38.0167,37.2037;5.01825,3,38.3222,38.3785;5.03135,3.5,38.1245,38.5592;5.03218,3.7,37.9615,36.3347;5.05646,3.3,37.1238,36.6637;5.06542,3.5,38.018,36.4802;5.07604,3.1,37.8712,36.3365;5.07889,4,37.641,37.4035;5.0978,4.2,38.0008,38.4142;5.10314,3.2,38.0712,36.6015;5.12809,3.3,38.1847,38.5618;5.13433,3.4,38.1388,37.7758;5.13806,3.6,38.0263,37.3515;5.13978,3.6,36.4583,36.4427;5.14549,3.9,37.8365,36.541;5.15273,3.1,37.9128,36.3423;5.15821,3.3,38.2943,38.2518;5.16123,3,38.0743,36.4625;5.16641,3.1,37.8812,36.2947;5.17289,3.5,38.115,37.7252;5.19326,3,37.8572,36.6028;5.20057,4,37.9977,38.1832;5.21574,4.2,38.0745,36.6028;5.22269,3.2,37.3315,36.9102;5.24606,3.3,38.3248,37.4533;5.27651,4.5,37.1318,36.9543;5.28727,3.3,38.1308,37.3095;5.28796,3.2,38.276,38.1038;5.29648,3.6,38.0418,37.6627;5.31031,3.2,37.9148,36.8137;5.32062,3.1,38.5767,40.884;5.32363,4.1,38.08,38.1577;5.32996,3.3,36.1505,36.2238;5.33806,3,38.0705,38.1983;5.37506,3.1,37.2048,36.7442;5.38139,3.1,37.1537,36.9603;5.40814,4.5,38.1217,36.6787;5.4262,3.4,38.1363,37.819;5.42771,3.5,38.1557,38.0652;5.42895,3.4,37.4433,36.9362;5.44037,4.1,36.5337,36.2512;5.44376,3.3,37.4085,36.9612;5.44608,3.9,37.8515,36.6973;5.45188,3.2,36.5113,36.25;5.46785,3,38.2027,38.1162;5.47661,3.1,38.3088,38.1705;5.47896,3,38.4957,39.6803;5.48116,3.3,38.1592,37.9078;5.48433,4.3,38.0845,36.6177;5.49473,4.7,38.8502,38.0623;5.50385,3.4,38.0463,36.8463;5.5283,3.4,38.013,36.541;5.53742,4.1,37.9752,36.3522;5.54637,3.1,38.0218,36.4992;5.5545,3.5,38.136,39.5983;5.5559,4.5,38.012,36.4608;5.55774,3.8,38.0212,36.4623;5.56742,3.4,38.0155,36.4702;5.56927,3.4,37.9873,37.4563;5.57501,3,38.0738,38.3472;5.5762,3.3,38.0953,37.3565;5.59801,3.3,38.1083,37.826;5.59895,3,37.3955,36.7352;5.61215,3,37.873,36.6982;5.62469,3,36.8818,36.4463;5.65124,3.2,37.0077,36.369;5.65529,3.3,37.1248,36.6933;5.66273,3.3,38.112,38.2385;5.66491,3.4,38.0698,36.9548;5.66837,4.3,36.2352,36.0937;5.67529,3.2,37.3913,36.6078;5.68938,4.4,38.1657,38.6955;5.69701,3.1,38.1272,37.9122;5.70181,3.1,38.2187,38.7377;5.71434,3,40.4683,36.9303;5.72235,3.2,38.048,36.4838;5.73853,3.4,39.2355,40.1448;5.74881,3.6,37.2333,36.7485;5.74958,3.3,37.9872,36.4345;5.77179,3.8,38.1592,37.939;5.79401,3,37.9915,38.3555;5.79642,3.1,38.2472,38.777;5.79932,3.8,36.1653,36.1313;5.8066,4.3,37.8458,37.88;5.81235,4,36.129,36.382;5.82203,3.4,37.6628,37.5352;5.83571,3.9,37.357,37.1112;5.83638,3.7,38.0402,36.9967;5.84284,3.2,38.2928,38.6557;5.88312,4.4,36.6638,36.4495;5.89449,3.3,38.1177,37.7752;5.9116,3.5,37.273,37.031;5.92099,3.6,37.7125,37.427;5.92185,3.1,37.3458,36.8752;5.9231,3.8,38.0805,37.0453;5.92596,4.2,38.0673,36.5303;5.93611,3.1,38.0257,37.5742;5.93988,3.3,37.847,36.6283;5.95006,3.3,38.1583,37.8007;5.96875,3.3,36.2483,36.1143;5.98183,3.7,38.2045,38.024;5.99714,3.3,38.2442,38.1885;5.99819,3.4,36.7648,36.492;6.0042,3,36.5392,36.3043;6.034,3.8,38.115,38.5795;6.04067,3.2,38.9222,39.7708;6.0484,4,36.2342,35.9713;6.0539,3.2,37.9745,37.468;6.08875,3.1,38.2387,38.1342;6.0916,3.1,38.0765,37.017;6.09431,3.6,37.8657,36.6565;6.1083,4,38.0632,38.4717;6.1156,3,38.0705,37.7247;6.12302,3.2,38.1218,37.821;6.12848,3.9,38.0492,37.6995;6.1331,4.2,37.967,38.239;6.14509,4.3,36.4127,36.3135;6.14958,4.3,38.0022,37.4647;6.17146,3.4,36.8487,36.5812;6.18794,3,38.1532,38.538;6.18897,3,38.0825,37.1718;6.20683,3.8,38.1195,38.5633;6.21312,3.1,37.9858,37.5493;6.21706,3.1,38.0833,36.5033;6.22988,3.6,37.1858,36.6937;6.23887,3.8,37.4603,36.5865;6.24659,3.5,35.6242,35.6103;6.25134,3,38.108,37.2483;6.25987,3.7,38.046,37.2555;6.26368,3,38.0502,36.6043;6.27597,3.5,37.795,37.6955;6.28933,3.7,38.0747,37.2683;6.30286,3.5,36.3608,36.0432;6.30596,3.5,38.1767,38.024;6.3225,3.2,38.1798,38.095;6.32293,3.1,38.1808,37.8243;6.32472,3,37.8813,36.2905;6.33437,3,37.1522,36.7312;6.34367,3.6,36.3105,36.103;6.35906,3.2,38.0497,37.4018;6.36009,3.7,36.6102,36.2238;6.36309,4,38.1878,38.1883;6.37208,3.3,38.1375,37.7957;6.39133,3.5,38.2358,37.4062;6.40325,3.4,36.9488,36.5188;6.43729,3.5,38.028,36.4785;6.45073,3.3,37.9888,36.6182;6.45454,3.8,37.8223,36.5733;6.4638,4.2,36.9222,36.7335;6.46743,4,38.0207,38.1648;6.48105,3.4,37.8905,36.3603;6.48177,3.3,37.9295,36.286;6.4842,3.2,38.0957,36.6767;6.49575,3.1,37.284,36.8237;6.5081,4.6,38.0368,38.2677;6.51257,3.4,38.076,38.3655;6.52388,3.5,38.4893,40.2805;6.5473,3.4,38.016,38.1807;6.55035,4.2,37.8183,36.5503;6.59205,3.5,38.1397,37.8817;6.60345,4.1,38.2038,38.0195;6.62104,3.4,36.8855,36.757;6.62584,3.7,38.5335,40.4268;6.62679,3.3,38.133,37.8185;6.63076,3.2,36.5485,36.216;6.63187,3.4,37.9597,38.0487;6.63352,5.3,38.8445,38.0723;6.63549,3,38.827,38.0827;6.63794,3,38.5263,40.4055;6.66833,3.2,36.3898,35.8868;6.67412,3.8,38.084,36.5938;6.67553,3,37.9827,38.0305;6.69535,3.8,37.285,37.0953;6.70216,3.2,36.951,36.593;6.70411,3.6,37.3687,36.934;6.71125,3,38.0908,36.6203;6.71307,3.2,36.9805,36.5965;6.71922,4.9,37.3627,36.9417;6.72242,3.8,38.0613,38.0788;6.72733,3,38.0803,36.6775;6.73955,4,37.3018,37.0453;6.74819,3.2,37.9772,36.59;6.7716,3.3,38.132,38.5727;6.77189,3.6,37.4782,37.0958;6.78755,3.5,37.9905,38.3888;6.79543,3.4,38.0023,37.4497;6.79811,3.3,38.0308,36.7798;6.82184,3.2,38.1363,37.8247;6.82359,3.4,36.9125,36.535;6.83556,3.1,38.0635,36.6412;6.83618,3.8,36.8292,36.4727;6.84196,3.3,38.0947,36.5663;6.84373,3.4,38.0393,36.4657;6.84669,3.3,38.145,38.1635;6.86213,3.8,38.002,37.3303;6.86427,3.9,35.9687,35.8127;6.86837,3.2,38.1348,37.9268;6.88525,3.1,37.3352,37.1322;6.89961,4.7,38.0442,36.612;6.91603,3,37.6045,37.521;6.93604,3.1,38.0078,37.683;6.9434,3.1,38.1465,37.5303;6.9541,3.2,38.0792,36.5608;6.99667,3.8,37.9422,36.3622;7.00242,3.2,38.2825,38.2788;7.01472,3.3,38.1147,36.565;7.07983,3.6,38.218,38.1752;7.09068,3.2,38.0438,37.6793;7.0955,3.6,37.3325,36.9123;7.1021,3.3,36.2167,36.387;7.11777,3.3,38.1537,38.085;7.12222,3.3,38.1117,37.0678;7.13573,3.4,38.1243,37.8777;7.14711,3,37.612,37.3607;7.14847,3.5,38.1185,37.8128;7.16432,3.1,38.0773,38.3875;7.17019,3.1,36.2343,35.8143;7.20786,3.4,37.996,37.4972;7.2159,3.1,38.1152,37.7168;7.22013,3.2,38.018,37.6213;7.22541,3,37.8188,36.5713;7.23645,3,38.2162,38.6955;7.25094,3.7,37.5103,37.1113;7.27841,3.3,38.0302,36.3242;7.2805,3.1,38.0987,37.4953;7.32858,3.3,37.4363,36.9743;7.33268,3.6,37.4233,36.9435;7.33718,3.9,38.0185,37.4043;7.34757,3,38.0748,37.6982;7.35984,3.9,38.1507,38.5443;7.36258,3.6,38.0577,36.7865;7.39138,3.2,37.459,37.1613;7.39845,3.4,37.9373,37.9415;7.41142,3.6,38.0767,37.7868;7.41861,3.1,38.0588,38.3662;7.44565,4.7,36.9307,36.5358;7.48103,3.3,36.0833,36.0052;7.48596,3.3,38.328,37.7258;7.52861,3.2,38.063,37.4173;7.52965,4,38.0332,37.3112;7.53508,3.8,38.0255,37.3218;7.54911,4.4,38.1143,38.533;7.56125,3.8,37.8183,37.8525;7.56276,3.8,38.1387,38.5207;7.57931,3.2,37.868,36.331;7.58162,4.1,37.8465,36.282;7.58376,3.5,36.8502,36.4973;7.5852,3.1,37.871,36.3475;7.58598,4.1,38.2118,38.6805;7.59256,3.2,37.8717,36.2697;7.59776,3.4,38.1627,37.8582;7.60383,3.3,36.1998,35.8113;7.62786,3.3,37.875,36.3695;7.64183,3.4,37.2443,36.9962;7.66388,3.7,38.0602,36.5752;7.67246,3.2,36.3537,36.2068;7.71605,3.7,37.9775,36.5622;7.7302,3.2,37.8128,36.605;7.74365,3.1,37.8597,36.2947;7.75201,4.9,38.0275,36.4305;7.78468,3,38.0485,36.4297;7.78617,3.1,38.0587,36.6315;7.79456,3,38.0773,36.5732;7.81653,3,38.2442,38.1903;7.84348,3.2,38.0947,37.0222;7.85849,3,38.1223,38.3982;7.90124,3.1,37.6307,35.3612;7.90605,3.3,37.94,34.0447;7.93883,3.6,36.3468,35.9942;7.9389,3.9,38.0173,36.4602;7.95348,3.4,36.6142,36.3613;7.98153,3.9,37.9733,36.6072;7.98433,3.6,38.0835,37.882;7.99252,3.2,38.1765,37.7858;8.02361,3.2,37.5203,37.2487;8.02708,3.6,36.6118,36.428;8.0361,3,38.0568,37.885;8.05973,3,38.2692,38.197;8.06331,3.3,38.1255,38.4892;8.06378,3.5,38.2118,37.9942;8.07479,3.5,38.0653,36.638;8.08338,3.2,38.3077,38.304;8.09343,3.3,38.028,37.4367;8.11236,3,37.8372,37.8737;8.13836,3.7,38.1487,38.5822;8.15359,3.6,38.0747,37.4305;8.22498,3.5,37.9395,36.227;8.2713,3.3,38.0768,37.7268;8.27984,3.3,37.8893,37.8483;8.29126,3,38.2878,38.8207;8.31025,3.3,38.1243,36.8725;8.32858,3.2,37.5375,37.3377;8.40742,3.8,38.0423,36.5567;8.40987,4,37.96,36.4067;8.41034,3.1,38.0595,36.5642;8.41906,3.3,39.1948,40.2267;8.42991,3.5,38.148,36.5943;8.43244,3.1,37.9163,37.8305;8.44213,4.1,36.105,35.9597;8.47617,3.8,38.123,38.231;8.47764,3.1,37.9032,37.6272;8.47854,3,37.5053,37.1543;8.48038,3,38.005,37.4782;8.48093,3.1,37.8438,35.4308;8.4969,3.9,37.9398,37.9405;8.5184,3.5,35.5503,35.4048;8.55284,3.1,38.1112,38.4097;8.57394,3.3,37.0957,37.1252;8.59627,3.1,38.0672,36.6705;8.60464,3.2,37.9637,36.3745;8.6063,4.1,38.071,37.1402;8.64836,3.7,38.3603,37.7692;8.69133,3.5,36.7758,36.2027;8.69491,3.1,38.9748,38.7058;8.74888,3.1,37.1285,36.2538;8.76047,3,37.823,37.7415;8.78507,3.8,37.7802,37.7295;8.81507,3,38.0328,36.4137;8.83888,3.1,38.2338,37.203;8.84247,3.2,38.1845,38.5615;8.84631,3.4,37.824,36.5458;8.84715,3.5,38.6762,37.5213;8.8522,3.1,38.079,36.5225;8.85812,3.9,36.6515,36.3753;8.86937,3.2,38.0603,37.1843;8.87329,3.3,36.4405,36.3803;8.88166,3.1,38.1135,37.7188;8.90554,3,36.6788,36.4287;8.91382,3.2,38.5152,40.5047;8.91423,4.6,38.5632,37.4538;8.92131,3.4,38.0805,38.157;8.94253,3.3,37.3007,37.0712;8.95035,4.4,36.8093,36.4988;8.95375,3.7,37.9392,36.3905;8.961,3.2,36.3967,36.1882;8.97921,3.7,37.9967,37.4697;8.99869,3.2,36.3868,36.1493;9.01794,3.9,38.6867,40.0117;9.07358,3.2,37.4428,36.9818;9.10682,4,35.9315,36.0952;9.11324,3.3,37.0195,36.6498;9.12177,3,37.3728,37.1288;9.14245,3.5,37.4548,37.0513;9.1862,3.5,38.0537,37.6952;9.18792,3.1,38.1555,36.6055;9.19192,3.1,36.0808,36.4677;9.19716,3.4,38.1,36.6412;9.20806,3.1,37.8937,36.5965;9.21385,4.4,38.0898,36.6373;9.25775,3.1,38.6178,39.6833;9.26315,4.7,38.0278,36.4377;9.26628,3.5,38.0833,36.532;9.27706,3.4,38.0927,38.6032;9.29339,3.4,37.3655,37.1202;9.30401,3.4,38.0835,36.5707;9.31539,3.4,38.092,37.4752;9.36413,3.8,37.1032,36.7302;9.37278,3.9,38.0455,36.4473;9.37896,3.7,38.3875,37.9167;9.40455,3,38.0373,36.3927;9.45043,3.1,37.9118,36.6072;9.46201,4,38.2183,38.0993;9.5122,3.1,37.8177,37.8845;9.52028,3.8,38.122,36.7618;9.5353,3.7,37.4258,37.0367;9.54976,3,38.1063,36.5473;9.56155,3.4,35.8773,35.9837;9.56389,3.2,37.92,37.935;9.57081,3.2,38.0122,37.6698;9.58586,3.7,38.1028,36.5497;9.59543,3.5,37.6153,37.1483;9.61181,3.8,36.2118,36.0847;9.6516,3.4,36.1802,36.0382;9.65189,3.7,37.9297,36.6367;9.6599,3.1,37.7848,38.227;9.67634,3,38.1297,36.6683;9.67674,3.4,37.8333,36.5402;9.68113,3.2,37.843,36.5712;9.68228,3.4,37.8173,36.573;9.69947,3,37.8773,36.62;9.72039,4,38.2168,38.644;9.72127,3.1,38.2137,38.6797;9.73022,3.9,37.7903,37.8785;9.75746,3.2,38.02,38.1742;9.76622,3.3,37.2292,36.7368;9.77204,3.4,36.2888,36.102;9.787,3.3,37.8035,36.5488;9.81596,3.2,38.1978,37.7587;9.82441,3.4,38.5962,37.5158;9.84176,3.4,37.2248,36.8915;9.87508,3.1,37.4412,37.1685;9.88083,4.5,38.0625,36.64;9.88627,3.8,38.0738,36.5863;9.89263,3.2,37.8212,36.5505;9.92609,3.2,36.9767,36.5513;9.93479,3.8,37.4027,36.9012;9.93957,3.1,38.3128,37.7748;9.94722,3.2,37.4955,37.2443;9.95688,3.8,38.0715,36.5693;9.96176,3.4,37.999,37.4785;9.97012,3.9,38.1413,38.5392;9.97826,3.3,37.0418,36.7003;9.99303,3,37.3728,36.8892;10.0266,3.5,38.059,38.5163;10.055,3.4,36.8193,36.4883;10.0725,3.3,37.904,36.6132;10.1477,3.3,38.1933,38.6455;10.1491,3,36.3487,36.1103;10.1534,3.2,37.1137,36.9993;10.1661,3.1,37.803,36.5808;10.1676,4.4,38.1395,38.558;10.1794,3.1,38.1765,38.5258;10.1938,3.7,37.314,36.8602;10.2452,3.2,38.054,38.1362;10.2643,3.4,38.0995,36.6213;10.2725,3.3,37.7982,37.7048;10.289,3.2,38.0923,37.1587;10.2947,3.8,37.8515,36.4468;10.3545,3.4,38.1605,37.8132;10.3854,3,36.0838,35.613;10.4159,4.8,35.962,35.8687;10.4213,3.3,36.3377,36.166;10.438,3,35.9257,35.8435;10.452,3.5,38.0763,36.5172;10.4633,3.1,37.9625,36.6433;10.4801,3.1,37.8063,36.4277;10.5228,3.2,38.0788,38.2248;10.5612,4.9,38.1868,37.8783;10.5664,3.9,38.12,38.6888;10.572,3,38.3822,37.7028;10.5793,3.7,38.8267,37.3985;10.5852,3.7,38.1817,37.8462;10.6396,4.1,37.9777,37.5338;10.6487,3.9,38.0225,36.6392;10.6662,3.2,37.9892,37.4753;10.6695,3.3,37.9595,37.4627;10.6966,3.2,38.105,37.8765;10.7145,3.2,38.2573,37.197;10.7666,3,38.0885,37.7905;10.771,5,36.1652,35.7968;10.7871,3,36.1558,35.7877;10.8253,3.4,38.226,38.759;10.8461,3.3,36.659,36.4207;10.8674,3.2,37.8635,36.0475;10.8731,3.7,38.2552,38.2373;10.877,3.2,38.085,37.4448;10.8999,3.3,38.0083,36.5625;10.9174,3.1,38.1072,36.5483;10.9209,3.3,37.493,37.2377;10.9335,3,37.8802,36.346;10.9416,4,37.9368,37.9445;10.9542,4,38.8873,38.0813;10.9711,5,39.1853,40.233;10.9804,4,37.506,37.2103;11.0069,3.1,37.8912,36.3625;11.0172,3.2,38.0683,36.4578;11.0478,3.2,37.1348,33.9712;11.0528,3.2,37.9427,36.33;11.0625,3.4,38.148,37.3597;11.1377,3.1,37.3758,37.0148;11.1468,3.4,37.7527,37.495;11.1863,3,36.0567,36.334;11.1894,3.8,36.1953,36.1625;11.2004,4.1,38.2258,38.1437;11.217,3.2,37.355,36.882;11.2963,3,38.059,36.5433;11.3802,3.1,38.1217,36.5205;11.3962,3.4,37.8763,36.306;11.4024,3.4,37.882,36.29;11.4534,3.5,38.1137,38.6783;11.5286,3.2,37.2805,37.0478;11.5404,3.1,38.0667,37.1202;11.5423,3.1,37.866,36.7232;11.5704,4.4,37.934,36.3155;11.5722,3.3,37.7795,37.6753;11.5944,3.6,35.2117,35.0205;11.5952,4.6,38.6412,39.6752;11.6061,3.4,38.1642,38.6545;11.6163,3.3,38.6322,39.6698;11.6272,3.4,37.9428,36.3572;11.6298,3,37.3385,36.8758;11.6364,4,37.861,36.3675;11.6395,3.3,37.9427,36.6428;11.7159,3.8,37.6167,37.2653;11.7452,4.1,38.2375,38.2152;11.7597,3.4,37.931,36.5697;11.7671,3.1,38.0142,36.7005;11.7681,3.1,38.073,36.5485;11.811,3.3,37.8857,36.3248;11.821,3.3,38.0642,36.6902;11.8576,3.5,38.0495,36.742;11.8703,3.3,37.874,36.7288;11.8828,3.1,37.9012,36.477;11.9285,3.2,38.1222,37.8532;12.0135,3.5,37.9525,36.6713;12.041,3.2,37.9458,36.3373;12.0433,3.2,38.0938,37.0062;12.0826,3.2,37.9997,36.5903;12.0831,3.2,38.3183,38.2088;12.09,3.1,38.0757,37.2172;12.1059,3.6,37.8522,36.4225;12.1304,3,37.363,36.8265;12.1378,3.2,36.7485,36.5133;12.1726,4.1,38.0843,37.1717;12.1827,3.4,38.1637,37.8648;12.2169,4,38.0652,36.5767;12.2516,3,36.5582,36.3433;12.2528,3.8,38.0145,37.4215;12.2552,3.4,37.9778,36.5412;12.3009,3.1,38.0213,36.4408;12.322,3,38.1032,38.2308;12.3443,3,38.2542,36.3392;12.3686,3,37.863,36.641;12.3778,3.3,38.0117,36.5912;12.3915,3.4,38.1208,38.4957;12.4384,3.2,38.0197,37.4462;12.4746,3.4,38.1762,39.1485;12.5378,3.2,36.8155,36.3697;12.6176,3.8,37.8727,36.2897;12.623,4.3,38.0277,38.1537;12.6298,3,38.0368,37.6898;12.6384,3.7,35.9952,36.0702;12.65,3.4,37.1668,37.0302;12.6529,3.7,37.9948,37.3597;12.6785,3,37.8665,37.732;12.6854,3.9,39.1692,40.2022;12.6964,3.3,38.1338,38.4857;12.7067,3.7,38.0925,37.7715;12.7211,3.2,38.1363,38.5292;12.7272,3.6,38.2112,38.632;12.7363,3.2,38.1273,37.5453;12.745,3,37.195,36.7638;12.7597,5.3,38.0803,36.6068;12.7638,3.3,38.0763,38.4988;12.7706,3.7,38.0663,36.5993;12.7798,3.3,36.1527,35.898;12.8049,3.2,36.1605,35.8693;12.8155,3.6,37.8632,36.3203;12.8184,4.1,36.8498,36.5493;12.8573,3.2,38.026,36.5002;12.8579,3.3,37.2113,37.0708;12.9833,3.4,38.0857,36.5877;12.9852,4.6,38.088,36.2443;12.994,3.4,38.1467,38.4945;13.0131,3.2,38.0892,36.6302;13.067,3.3,38.099,36.8625;13.0689,3.3,38.1843,37.8637;13.1123,4.3,37.2573,36.831;13.1154,3.3,37.2688,36.8513;13.1172,3.8,37.2882,36.8498;13.1181,4.6,37.2505,36.8535;13.1247,3.5,37.2497,36.8228;13.1868,4,37.4913,37.2172;13.193,3.1,38.0413,37.6292;13.2348,4,37.5228,37.1482;13.2493,3,36.8823,36.4073;13.2782,3.1,38.0572,36.5657;13.2855,3.9,38.0255,37.4528;13.3095,3.3,37.6775,37.4318;13.313,3.5,37.8722,36.2388;13.3184,3,37.8708,36.726;13.3207,3,37.8412,36.6735;13.3453,3.4,38.0132,36.6462;13.3989,3,38.3725,37.835;13.4143,3.4,38.459,39.6797;13.4424,3.5,37.1887,36.7365;13.4449,3.6,39.2298,40.1982;13.4478,3.6,37.8062,36.4442;13.4493,4.8,38.2593,38.199;13.5143,3.4,38.1272,38.472;13.5169,3.1,38.4863,36.8563;13.5286,3.2,38.0132,37.5327;13.5328,3.1,36.1737,36.0177;13.5425,3.9,37.8542,37.3758;13.5941,3.2,38.0772,37.889;13.6006,3.1,38.3115,38.1897;13.6484,3,38.1035,36.8895;13.6624,3.1,37.8447,36.6192;13.6905,3.8,38.0487,37.7338;13.6959,3.9,38.0463,36.728;13.7071,3.6,38.1247,37.801;13.7499,3.1,36.739,36.1683;13.7523,3.3,37.8518,36.6343;13.8423,4.1,37.3672,36.848;13.8438,3.3,37.3747,36.876;13.8968,3.4,38.5328,40.389;13.9169,3.1,38.0842,36.656;13.9339,3.1,37.132,36.7325;13.9441,3.4,38.2613,37.2857;13.9444,4.5,38.2627,38.769;13.9722,4.9,38.6477,39.9862;13.9733,4.5,38.6468,39.9768;13.9795,3.7,38.2243,38.182;13.987,3.6,38.6603,40.0263;13.9931,4.6,38.6788,39.997;14.0218,4.7,38.0987,36.8188;14.05,4.5,38.6712,40.0143;14.0885,3.2,38.0242,37.6912;14.1028,4.5,38.6747,40.0173;14.105,3.2,38.6932,40.0162;14.1449,3.2,37.502,37.2835;14.3163,3.5,38.0103,37.6317;14.4138,3.2,36.1075,36.3293;14.4212,3.6,37.8417,37.7652;14.4276,3,38.4873,40.4387;14.4605,3,37.2105,36.8187;14.6481,3.7,38.1345,36.9183;14.6576,6.4,36.0487,36.1132;14.6597,4.6,36.177,36.0277;14.6616,3,35.889,36.1455;14.6637,4,36.2318,35.9117;14.6644,3.1,38.6572,36.5172;14.668,3.4,36.0785,36.002;14.6713,4,36.1988,36.0495;14.6729,3.8,36.0463,36.0152;14.6745,3.5,36.1995,35.9885;14.6781,3.7,36.0003,35.9527;14.6795,3.4,37.3248,37.1463;14.6814,4.3,36.1163,35.8977;14.6833,3.5,36.2663,36.0665;14.6843,3.6,36.1355,35.8693;14.6876,3.2,36.1823,35.8867;14.6994,3.3,36.1668,35.898;14.7006,4,36.1592,35.9255;14.7071,3.2,38.2173,38.1052;14.7144,3.4,36.1322,35.9262;14.7176,4,36.2542,36.004;14.7215,3.9,36.1625,35.9783;14.7248,3.6,36.2277,36.0165;14.7288,3.5,36.2933,36.091;14.738,4.4,36.1015,36.1195;14.7443,4.2,36.2547,35.9927;14.7524,3.2,36.2302,35.9843;14.7656,3.6,36.2533,36.0807;14.7792,3,36.2478,36.102;14.8046,3.1,36.1017,36.1873;14.809,3,37.8568,36.6202;14.8327,3.3,36.0532,35.841;14.8453,3.9,38.0863,36.6732;14.8491,3.2,37.7982,36.608;14.8566,3.3,36.0798,36.286;14.8599,3.2,36.2528,35.9193;14.8752,3.2,38.0945,37.6892;14.9023,3.9,36.0398,35.8017;14.9132,3.6,36.2288,35.9897;14.9192,4.4,38.0287,37.4348;14.9216,3,36.1952,35.8892;14.9335,3.4,36.1368,35.8688;14.9469,3.8,38.0852,37.4373;14.9475,3.2,36.191,35.9008;14.9655,3.1,39.0025,40.7013;15.0251,3.3,36.2312,36.1093;15.0487,3.5,38.1042,37.1475;15.057,3.1,36.2718,35.9992;15.0801,4.1,38.1003,38.6863;15.1145,3.2,38.0377,37.7128;15.1226,3.2,38.1872,38.0933;15.1231,3.2,36.5345,36.3958;15.1303,3.1,36.2877,36.0705;15.1811,3.6,38.086,36.5362;15.1864,3.2,37.4118,36.954;15.1877,3.3,38.5512,37.504;15.2124,3.1,37.8335,37.5167;15.2148,3,38.0743,36.5803;15.2162,3.6,36.1127,35.9408;15.2246,3.2,36.2232,35.9825;15.2492,3,36.2578,36.1202;15.2616,3.7,36.2148,36.0028;15.27,3.9,38.0692,37.6578;15.2877,3.4,36.1532,35.8932;15.296,3.8,35.4815,35.5753;15.3257,3.3,37.1315,35.8925;15.3606,4.3,38.2217,38.6467;15.3695,3.8,37.5455,37.2038;15.3862,3.3,35.9912,36.0627;15.4045,3.5,36.0712,36.352;15.4169,3.3,38.2068,39.3783;15.4433,3.9,38.0698,37.4603;15.4756,3.7,38.2233,38.7942;15.4826,3.2,37.517,37.2403;15.4882,3,36.255,36.0085;15.5123,3.7,38.0603,36.561;15.5344,3.5,37.2995,37.0095;15.5664,3.2,38.1177,38.4435;15.5941,3.3,37.9023,36.647;15.6175,4.1,36.0775,36.0763;15.654,3.2,38.7095,40.0453;15.6725,3.8,38.1433,37.8377;15.688,3,37.1042,36.7048;15.7184,3.3,36.197,36.0125;15.7436,3.1,37.1717,36.7205;15.747,3.4,35.2533,35.575;15.804,3.3,37.967,36.322;15.8897,3.1,38.5625,40.8553;15.9042,3.3,38.2758,38.1973;15.9055,3.1,37.8852,36.6342;15.9428,3,37.4693,36.9658;15.9586,3,37.5438,37.2345;15.9791,3.5,38.2243,38.6452;15.9848,3,37.9413,36.3612;16.0063,3.4,36.2327,35.939;16.0258,3.4,36.036,36.0583;16.0558,3.7,38.6633,39.9868;16.0744,4,38.4255,40.147;16.1193,3.1,38.0812,37.525;16.1406,4,38.0575,36.589;16.189,3.2,37.8072,37.6668;16.1898,4.1,38.2412,37.2807;16.1942,3.2,37.8562,36.5605;16.2026,3.1,38.7128,40.084;16.2446,4.6,38.4738,40.3068;16.2459,3.1,37.8963,36.2355;16.2545,3.4,38.4947,40.3148;16.2618,3,37.8737,36.3383;16.2738,3.4,37.9585,36.606;16.2773,4.4,38.1173,37.8682;16.2784,3.5,38.1462,37.9028;16.2807,3.1,36.2978,36.3295;16.3239,3.6,38.6758,39.9687;16.3856,3.3,35.1542,33.8923;16.3873,3.2,37.9858,37.6365;16.4472,3.1,38.0715,37.1355;16.4847,3.2,37.9698,36.3455;16.4891,3.3,37.8508,36.254;16.5043,3.4,38.2058,38.706;16.5061,3.2,38.1457,36.6582;16.5195,3.4,38.1267,38.5818;16.5599,3.5,38.1097,37.7872;16.5738,3.2,38.1965,38.1083;16.6521,3.1,38.0765,36.4728;16.6941,3.2,37.4443,37.1677;16.7106,3,37.8463,36.2912;16.7458,3.1,37.2477,36.9777;16.7965,3.3,38.0608,37.5125;16.8046,4.1,38.0842,38.4292;16.8906,3.4,36.303,36.0848;16.8932,3.7,37.455,36.9957;16.8999,3.2,37.9563,36.354;16.9004,3.3,38.703,35.3358;16.9139,3.3,36.9657,36.7617;16.9317,3.2,37.1147,36.2212;16.9731,3.1,37.9288,36.2733;17.0176,4.2,36.1008,36.2632;17.0236,3.2,38.091,37.7353;17.0563,3.1,37.8265,36.3133;17.0607,3.9,38.7223,35.2838;17.073,3,37.306,35.5077;17.0776,3.1,36.224,35.9983;17.0822,3,37.3007,37.1065;17.0872,4.1,37.2942,37.1567;17.155,3.5,38.0263,36.6638;17.2412,3,38.186,37.9182;17.2451,3.6,36.0515,35.8848;17.2457,3.2,38.0723,37.3902;17.4034,3.9,38.3882,37.4758;17.415,3.1,36.9612,36.7607;17.4334,4.5,38.064,37.726;17.4469,3.6,38.0745,37.7783;17.4786,3.8,36.0618,35.9882;17.4853,3.2,37.8032,36.3802;17.5426,3.2,38.4287,37.5458;17.5432,3.5,38.194,37.2162;17.5529,3.7,38.0488,36.8973;17.5672,3.3,36.1175,36.0535;17.6085,5,36.1142,36.0933;17.6185,3,38.2862,38.2247;17.658,3,36.8355,36.3017;17.6616,3.4,38.3988,37.4572;17.665,3.2,38.0747,38.306;17.6804,3.7,38.035,36.2347;17.6854,3,37.8215,36.316;17.691,4.1,38.0917,36.5163;17.7187,3,38.3872,37.4902;17.7336,3.6,37.4683,37.184;17.7908,3.2,38.1165,37.7922;17.7977,3.7,38.3817,37.469;17.8508,3.4,38.554,39.6432;17.8685,3.8,38.5732,39.6458;17.8795,3.1,38.1607,36.6953;17.9053,3.9,37.935,36.268;17.9448,3.1,37.8883,36.3273;17.967,3.4,38.1722,38.1672;17.9923,3,36.7317,34.485;18.1866,4,36.3338,35.9458;18.2051,3.4,36.0423,35.9253;18.2058,3.4,38.0552,36.4675;18.2116,3.1,38.393,37.5163;18.246,3,37.8393,35.2637;18.2484,3,38.1978,38.5912;18.2918,3.6,38.0095,36.535;18.3077,3.4,36.273,40.4667;18.3091,3.1,38.244,38.1717;18.328,3.4,38.1788,38.6698;18.3436,3,37.4378,37.1123;18.3539,3.2,38.2285,38.7177;18.3665,3.7,37.2958,36.6993;18.4858,3.3,38.068,36.7728;18.5271,3.7,38.2615,38.1632;18.5309,4.5,37.9682,34.0028;18.6149,3.9,36.1407,36.0938;18.6495,3.3,39.1298,40.1222;18.6684,4.7,38.8165,37.3843;18.6721,3,37.2995,37.0978;18.6844,3,38.0222,37.5775;18.7021,3,38.2155,38.0902;18.706,3.1,38.8183,37.3943;18.7224,3.5,38.8088,37.3992;18.732,3.2,38.0622,37.5642;18.7505,3.1,36.241,35.965;18.7747,3.1,36.2738,36.0757;18.7869,4.1,35.3868,35.1938;18.7972,4.8,38.1522,38.6985;18.8052,4,38.0587,37.1522;18.8089,3.4,38.1785,38.6867;18.8613,3.4,38.0642,37.4283;18.8845,3.4,37.9827,37.4837;18.9436,3,36.7498,36.0727;18.9812,3.1,37.9593,36.531;18.9814,3.6,38.2247,38.7245;18.9964,4,36.0173,35.8915;18.9996,3,36.0805,35.8888;19.0011,3.2,38.8232,37.4353;19.098,3.4,37.2823,36.774;19.1487,3.3,38.2038,38.6463;19.1988,3.2,38.1565,37.8948;19.2122,3.1,38.1392,36.8507;19.2541,3.3,37.977,36.3025;19.2575,3.4,38.0163,37.617;19.2819,3.1,38.1385,37.8035;19.2974,3.4,37.9907,36.5907;19.3202,4.2,38.389,37.4805;19.3817,5.3,37.9895,34.0188;19.3964,3.5,38.2058,38.6615;19.4451,3.2,37.7573,36.5033;19.4748,4.6,38.0673,37.0657;19.554,3.9,38.1605,38.6763;19.5655,3.6,36.719,36.403;19.5923,4,38.1623,36.723;19.6043,3,38.5038,39.5963;19.6244,3.4,36.2142,35.9538;19.8336,3.3,37.9822,36.5182;19.8366,3.2,38.1115,36.5507;19.9035,3.3,38.0848,36.6357;19.937,3.4,38.2568,37.3502;19.9995,3.2,37.3233,37.0332;20.0479,4.3,36.0303,35.9407;20.0898,3.2,38.0678,36.5795;20.112,3.3,36.2475,36.0455;20.139,3.9,38.0575,37.1133;20.1494,3.3,38.0138,37.5237;20.1697,3.9,36.7915,36.5572;20.1845,3,38.1832,37.9025;20.1981,3.1,38.2093,38.6762;20.2495,3.6,38.195,37.8365;20.2703,3.4,38.126,38.5393;20.3732,3,37.9655,36.3097;20.4684,3.5,36.1573,35.9837;20.5409,3.1,38.045,36.556;20.6722,3.4,37.3428,36.9315;20.7887,3.5,38.191,38.7363;20.8026,3.9,38.0583,37.1583;20.838,3,36.3787,36.2675;20.901,3.3,38.2615,37.181;20.9359,3.3,36.1117,35.8238;20.9625,3.2,37.8645,36.6265;21.017,3.3,38.4853,40.3192;21.0651,5.1,37.8938,37.6095;21.0681,3.2,38.2533,36.3517;21.146,3.6,38.0615,37.2288;21.2099,4.4,38.011,37.059;21.2161,3.3,38.2623,38.643;21.2162,3.2,37.863,37.4455;21.2163,3.8,36.7207,35.8205;21.2906,3,37.827,37.6805;21.3245,5.5,38.2492,38.2912;21.3517,3.6,38.0502,37.2828;21.4714,3.1,38.1738,38.6163;21.5134,3.3,38.305,37.3863;21.5242,3.9,37.9393,37.6052;21.5757,3.2,38.0072,38.171;21.5937,3.8,38.754,40.0552;21.6244,4.1,37.9463,37.5543;21.6788,3.2,38.2002,38.0737;21.7462,3.9,37.8432,36.6718;21.768,3.4,38.0967,36.9168;21.929,3.3,38.2815,38.2805;21.9584,3.2,39.1047,40.393;21.9779,3.4,38.1725,38.0655;22.0426,4.1,38.2687,38.2688;22.0704,3,37.404,36.7127;22.0738,3.1,37.9695,34.0378;22.1331,3.7,37.9937,36.4388;22.2148,3.4,38.1178,37.4818;22.2227,3.9,38.0907,37.7953;22.2361,3.3,38.0967,37.5103;22.2922,3.4,38.1338,38.5045;22.345,3.4,37.2968,37.0815;22.3792,3.6,37.2912,37.077;22.4755,4.1,37.3835,36.2883;22.4983,3.1,38.1812,38.715;22.5238,3.2,38.279,38.3602;22.5572,4.6,37.8332,36.5797;22.5637,4,37.8488,36.6198;22.5827,4.5,38.7025,35.3258;22.6074,3.8,38.0358,37.7648;22.6539,4,38.7323,35.3018;22.6586,3.3,36.2607,36.0528;22.6662,3.1,36.8558,36.5248;22.7111,3.1,37.7038,36.5343;22.7321,3.8,37.3223,37.044;22.8255,3.1,38.2207,37.1937;22.8335,3.6,38.0485,36.4457;22.9268,3.9,37.3055,37.02;22.9661,3.1,38.229,38.3045;22.98,3.3,38.0632,37.8208;23.0187,3.3,37.8923,36.353;23.0457,4.2,37.984,37.046;23.0969,3.1,38.2762,36.4805;23.1236,4.2,37.8192,37.85;23.2413,3.2,36.7907,36.2872;23.252,4.6,36.312,36.0592;23.302,3.4,38.2678,38.268;23.3183,3.4,38.7193,35.2745;23.4093,3.6,38.0278,37.6195;23.4759,3.4,37.9747,37.6565;23.4816,3.2,37.9872,36.4312;23.6392,4.2,37.2882,37.0352;23.6665,3.4,38.7003,35.2853;23.6991,3.5,37.4002,36.884;23.7411,3.2,34.8783,37.9032;23.885,3.1,37.3458,36.9057;23.8991,3.5,37.9883,36.412;23.9574,3.8,40.0492,38.6138;23.9837,3.2,38.1698,37.0143;24.0009,3.8,38.0637,37.0408;24.1944,3.4,36.3928,36.2237;24.2002,3.1,38.0893,37.1748;24.2169,3.3,38.1387,38.5087;24.4739,3.4,37.8007,36.081;24.5127,3.8,38.2403,38.1742;24.5875,3.3,37.9992,36.4447;24.6202,3.3,36.1077,36.1115;24.7911,3.8,38.0668,36.6112;24.9536,3.2,38.0893,38.4733;25.0271,3.1,38.2265,38.034;25.0652,3.3,38.102,37.2148;25.0668,5.1,37.8562,36.6385;25.0712,3.2,37.8443,36.625;25.0746,3.5,37.8518,36.6322;25.1404,4,37.8377,36.6277;25.1537,3.3,37.837,36.606;25.1543,3.2,38.0903,34.5728;25.1826,3,36.9655,35.7908;25.2269,3.9,38.1637,38.6977;25.2469,3,38.146,37.8357;25.2662,3.2,38.329,38.7778;25.2671,3.1,37.3047,36.8563;25.2825,3.9,37.96,36.288;25.3442,3.3,37.9153,36.426;25.3554,3.1,37.4743,37.042;25.45,3.3,36.1385,35.9652;25.5425,3.6,37.4,36.8462;25.5818,3.1,38.265,38.217;25.6599,4,34.1722,38.0757;25.7619,3.4,36.205,35.9135;25.855,3.2,38.0332,36.5615;25.9007,3.1,36.8802,36.5855;25.9258,3.5,37.9725,36.5497;25.9601,4.1,38.1178,36.2043;26.0737,4,36.243,36.168;26.1727,3.4,38.9008,38.1103;26.1736,4.4,38.0632,38.2787;26.2072,3.1,38.0973,37.848;26.2466,3,38.6,39.6457;26.2904,3.2,36.3097,36.3518;26.3246,3.3,37.8188,36.5667;26.351,3.4,37.592,37.3107;26.38,3,35.2338,35.532;26.3812,3.9,37.4622,37.0035;26.4301,3,38.0888,37.624;26.4391,3.1,38.297,38.321;26.4416,3.6,38.0882,36.7493;26.455,3.2,38.2935,38.6508;26.5513,3.1,37.2757,36.9815;26.5522,3.1,37.9525,36.427;26.6248,3.2,38.179,38.0637;26.6666,3.2,37.3558,36.9025;26.6923,3.5,38.0348,37.2725;26.7488,3.2,38.4913,40.2712;26.8168,3.3,38.5035,40.349;26.8209,4,38.5202,40.356;26.9412,3,37.1368,36.9547;26.9957,3.9,37.861,36.6638;27.0088,3.2,36.8885,36.563;27.1454,3.2,38.4462,39.6425;27.1569,3.1,37.1815,36.9707;27.214,4.2,34.8575,37.963;27.2676,3.3,39.1858,40.3893;27.3028,3,37.9978,37.6555;27.3103,3.2,38.1792,38.0522;27.4518,3.8,38.1167,36.8398;27.4596,3.6,37.8863,36.6325;27.6054,3.2,38.3063,37.8353;27.6151,3.4,38.5692,40.8452;27.6508,3.2,38.6943,35.2995;27.7428,3.6,38.0733,36.5595;27.7541,3.1,38.1428,37.8478;27.814,4.8,36.7472,36.1313;27.847,3.3,37.9387,36.2573;27.856,3.8,38.006,36.7138;27.8673,3.2,38.122,37.5103;27.8803,3.2,38.6807,35.2903;27.9159,3.1,36.4612,34.604;27.9212,3.5,37.9415,36.2338;27.9593,3.4,37.9413,36.245;27.9896,3,38.6922,35.2555;28.0406,3.6,36.2295,35.9655;28.0454,3.3,36.2308,35.9077;28.0799,3.1,38.0777,37.7235;28.1225,3.5,37.6367,36.1862;28.19,4,37.9147,37.9187;28.205,3.2,37.9023,36.388;28.2152,3.7,38.0587,36.6543;28.225,3,37.8877,36.3935;28.2894,3.5,36.1277,36.0365;28.4065,4.2,36.3178,35.9185;28.4337,4,37.9957,36.3647;28.4902,4.2,38.2787,37.2712;28.5112,3.2,37.5178,37.1583;28.516,3.2,38.8937,37.725;28.5309,3.3,37.9083,36.346;28.8038,3.1,37.8918,36.4307;28.8162,3.5,36.1323,36.1147;28.8732,4,36.1363,36.1193;28.9605,3.3,38.0343,37.3983;29.1809,3.4,37.1245,36.6453;29.193,3.3,38.1542,37.7898;29.2272,3.2,38.2552,39.012;29.2656,3.8,38.2105,38.6963;29.3028,3.2,38.075,37.8348;29.3491,4.5,37.7247,36.5705;29.3683,3.2,38.0537,37.3727;29.4141,3.8,38.0553,36.5637;29.4259,3.8,38.0048,37.5252;29.4374,4.9,38.711,35.2668;29.4417,4.2,38.7485,35.2857;29.4441,3,38.6762,35.2755;29.4572,3.8,38.6883,35.2568;29.4893,3,37.104,36.6268;29.5422,4.5,38.8083,37.4022;29.5627,3.3,38.7088,35.2748;29.577,3.1,38.1972,38.7042;29.658,3.3,38.3373,37.3362;29.6931,3.9,37.8775,36.3455;29.774,3,38.6827,35.2945;29.7808,3.3,37.8952,36.3508;29.7922,3.5,38.1718,38.1133;29.8007,3.3,38.079,38.3205;29.8789,3.4,38.1095,38.6557;30.0617,3.3,35.2647,35.4662;30.0739,3.3,35.3815,35.3137;30.0875,3.2,38.105,37.2363;30.1327,3.3,36.1973,35.9327;30.2329,3.3,38.0698,36.5187;30.3086,3.1,36.2177,36.0333;30.3228,3.2,38.1783,38.5442;30.3395,3.7,37.884,36.6548;30.3422,3.6,37.899,36.33;30.5205,3.3,36.1408,36.1352;30.5612,3.2,36.0208,36.0412;30.5656,3.8,37.8698,36.6352;30.8517,3.8,37.3157,37.0963;31.0018,3.1,38.5702,40.4075;31.018,3.1,38.2162,38.55;31.0391,3.2,38.5425,39.4923;31.1117,3.5,38.1382,37.0612;31.2178,3.3,38.0412,36.5282;31.2341,3,38.151,37.866;31.2709,3.1,38.1107,37.4683;31.273,3.1,37.9335,38.2312;31.2916,3,38.0752,37.863;31.3417,3.3,38.1793,38.6718;31.4232,3.5,38.7198,35.321;31.4567,3.1,38.0552,36.591;31.5844,3,37.8092,36.3105;31.6099,3.2,37.3295,36.8873;31.6194,3.5,38.5502,38.0717;31.6406,3.5,38.0783,38.4805;31.6617,3,38.2718,37.3667;31.6943,3.3,38.2042,38.0445;31.7347,4.6,38.068,38.4365;31.8273,4,37.1178,36.929;31.8687,3.5,35.1797,35.5655;31.8859,3.1,37.9745,36.1507;31.9283,4.1,38.0933,38.4788;32.0491,4.9,38.7008,35.2843;32.0947,3.3,35.399,35.7412;32.2785,4,38.0035,37.4892;32.3747,3,38.2795,38.135;32.4869,3,38.1002,36.6535;32.5588,3.3,37.4875,37.2383;32.6537,3.3,39.177,40.4065;32.7,3.5,38.2275,37.2905;32.7027,3.2,37.0393,36.6183;32.7633,3.2,38.1838,37.8205;32.8523,3.3,38.1577,38.6872;32.8916,3.1,38.0448,37.4303;32.9735,3.7,37.785,36.4217;33.1818,3.2,38.0718,37.2305;33.2224,3.1,37.1502,36.1265;33.4268,3.8,38.136,38.577;33.7378,3.2,38.53,39.4565;33.7623,4.2,36.9162,35.763;33.8613,3.3,37.9968,37.499;34.0162,3.7,37.8727,35.3158;34.049,3.2,38.1315,37.8077;34.2121,3.3,37.9142,36.2442;34.3315,3.8,37.2378,36.3273;34.3497,3,38.682,35.2533;34.3824,3.1,38.1685,37.8342;34.3876,3.2,38.1413,37.5233;34.4554,3.1,38.2743,37.1795;34.4679,4.3,37.943,36.2685;34.4888,3.7,38.0437,36.5022;34.5134,3.5,35.5793,35.2895;34.5256,3.7,36.3657,41.1728;34.5921,3.1,37.493,37.0435;34.6369,3.2,38.0858,36.9603;34.6394,3,37.4115,37.0445;34.6493,3.4,38.1787,37.111;34.6956,3,38.1,36.6197;34.7668,3.2,36.8645,36.5578;34.7895,3.3,38.1232,38.4592;34.7941,3.3,37.5005,37.1585;34.8178,3.5,38.2868,38.1255;34.8693,3.1,38.1828,37.8567;34.8916,3.7,38.025,36.6272;34.9203,3,37.8683,36.6525;35.0118,4.8,38.1388,38.7018;35.0391,4.5,38.1468,38.6833;35.0456,4.4,36.8018,36.5215;35.0484,3.3,38.2113,38.672;35.0883,3.1,38.8003,38.114;35.121,3.3,37.8818,36.2925;35.1573,3.5,40.5003,36.8162;35.1641,3.1,40.5073,36.8187;35.2045,3.3,37.3932,37.263;35.2085,3.8,38.1913,38.6848;35.2276,3.4,37.8888,36.3712;35.3746,3.4,37.8707,36.4805;35.4616,3.2,36.893,36.5183;35.5404,3.1,38.4118,37.512;35.5756,3.9,36.3905,36.261;35.6107,3.6,38.165,38.6538;35.6805,3.4,37.8098,37.707;35.7392,3.4,37.8515,36.2553;36.0488,4.2,38.1348,38.5307;36.1191,3.1,37.1707,36.9458;36.124,3,38.2245,38.6698;36.145,3.2,37.744,36.4862;36.1663,3.6,36.8007,36.49;36.2292,4.7,38.0722,37.0223;36.2912,3.3,38.191,38.6682;36.4277,3.4,38.0578,36.6125;36.4447,3.8,37.826,36.251;36.5641,4.9,37.8418,37.3907;36.5764,3.3,38.0065,36.6325;36.6549,3.2,38.4875,39.4297;36.7193,3,37.8717,36.636;36.7345,4,38.119,38.5022;36.7448,3.3,38.4385,37.5205;36.8008,3,38.0823,36.9818;36.809,3.5,36.632,36.3707;36.9067,3.2,38.1355,38.4475;37.0919,4,37.1545,36.2902;37.1322,3,37.3835,36.7755;37.1438,3.1,38.072,36.5175;37.1889,4,37.9912,37.5147;37.2738,3.2,38.0297,36.619;37.5284,3.1,37.8743,36.6637;37.8409,3.7,37.9172,36.2852;37.9186,3.3,38.142,38.579;37.9545,3.3,36.8845,35.8353;38.0726,3.5,38.2158,38.6972;38.099,3.3,38.6453,39.8987;38.2588,3,36.88,36.5258;38.3086,3.1,38.1273,36.612;38.4482,3.3,36.3902,36.2405;38.4549,3.5,37.2672,36.859;38.4708,3.4,38.5823,40.4733;38.497,3.9,37.9783,36.3202;38.5519,3,38.0802,36.5762;38.6611,3.2,37.6588,36.0492;38.7258,3,37.6707,36.0315;38.7646,3.5,37.8652,36.6468;38.7789,4.5,36.3978,34.3465;38.8056,3,37.9527,38.038;38.8667,3.4,38.246,34.8535;38.8727,3.2,37.8503,36.6633;38.8798,3.5,38.0503,37.1863;38.9268,3.2,38.007,36.5517;38.9855,3.1,38.0365,38.3727;39.0048,3.1,36.7693,36.4182;39.0164,4.1,37.9797,36.5428;39.5046,3.8,38.1222,36.694;39.6123,3,37.315,35.4285;39.7105,3.9,37.7932,36.5763;40.0156,4.1,37.8663,36.6243;40.0236,3.1,37.8657,36.6157;40.0307,3.5,39.96,39.4905;40.1645,4.6,38.0082,36.4525;40.1668,3.4,38.0202,36.453;40.2643,3.5,37.9258,36.401;40.2765,3.9,38.2623,38.2615;40.3389,4.2,37.8028,36.4233;40.3427,3.7,37.1377,36.2653;40.3863,3.1,38.0667,38.3143;40.4765,4.1,35.2548,35.9198;40.4897,3.1,37.427,37.0613;40.4933,3.3,38.1313,37.0327;40.5243,3,37.9023,36.657;40.9146,3.8,38.0472,37.3915;40.9195,3.2,37.0255,36.401;40.9629,3.2,37.8538,36.3575;40.9643,3,38.065,37.2478;41.0014,3.4,38.0307,37.3387;41.0932,3.7,37.9828,37.4925;41.1228,3.2,38.018,36.4798;41.2555,3.8,38.2068,37.9243;41.2649,3.3,37.9975,38.1285;41.3102,4.2,34.8642,35.2775;41.4839,4.5,38.0165,36.4857;41.4856,4.3,38.0333,36.4612;41.4964,3.5,38.0303,36.4778;41.5057,3.2,38.047,36.439;41.5133,3.5,38.0133,36.4598;41.5423,3.3,37.9278,36.3987;41.5475,3.7,36.2962,36.0705;41.6918,3.6,38.0377,36.4937;41.7288,3.1,37.4893,37.065;41.7294,3.6,38.0217,36.4805;41.7354,3.1,37.3193,37.0257;41.7622,3.6,38.0202,36.5162;41.7839,3.8,37.8253,35.367;41.9999,3.1,37.9847,38.1427;42.0048,3.4,38.0845,36.7387;42.0791,3,36.7837,36.4502;42.2774,3.4,38.1247,38.6012;42.3359,3.3,37.2842,36.6823;42.3608,4.3,38.081,37.1888;42.501,3.2,38.2068,34.3022;42.5993,4.1,37.2653,36.678;42.6185,3.4,38.3078,37.5718;42.6874,3.9,38.0737,38.461;42.7077,3.2,38.1013,38.513;42.7633,3.2,38.026,37.466;42.8091,4,38.0933,37.7157;42.9277,3.5,38.1032,38.4602;43.0534,3.1,38.298,37.7772;43.1027,3.3,38.2992,37.3583;43.1529,3.2,36.2072,36.1342;43.2034,3.1,37.5953,37.2972;43.2628,3.7,38.0568,36.4382;43.2691,3.2,37.8383,36.2867;43.2989,3.9,37.8312,36.2835;43.3078,3.9,38.023,36.3728;43.3085,3.2,38.0252,36.3213;43.3747,3,37.3517,36.9017;43.425,3.3,38.1303,38.5188;43.5319,3.2,35.9597,36.0707;43.5447,3.4,38.0323,37.2593;43.6891,3.6,38.0248,37.5187;43.7853,3.3,38.1835,37.3185;43.7919,3.2,38.5635,40.1808;43.8175,3.1,37.885,36.2923;43.9514,3.3,38.579,37.4353;43.9839,3,38.1235,36.1902;44.112,3.2,36.7587,36.0952;44.2986,3.5,38.0752,37.6248;44.5642,3,37.2327,36.9127;44.768,4.5,38.1842,38.0548;45.077,3,37.4135,36.9882;45.1692,3.9,38.5013,39.9362;45.186,4.4,37.8955,36.6182;45.1897,3,37.4565,37.001;45.1983,3.4,36.289,36.2;45.2683,3.7,38.114,37.4128;45.335,5.3,38.0317,36.4765;45.3377,3.8,38.0277,36.484;45.3662,4.2,38.0102,36.5247;45.5046,3.2,38.3152,38.1407;45.5814,3.8,38.0227,36.4543;45.7227,3,37.8662,36.6847;45.7716,3.6,38.0153,36.465;45.7761,3.4,38.194,38.5562;45.833,3.5,38.101,36.6355;45.9738,4.8,38.0173,36.3985;46.2436,3.1,38.0402,36.5068;46.2666,3.3,38.2667,38.2963;46.2808,3.5,38.0288,36.4075;46.4213,3.4,37.9088,36.5353;46.4952,4.3,38.011,37.5388;46.52,3.4,36.6085,36.5023;46.5235,4.1,37.9502,36.2852;46.5755,3.9,38.1393,38.4153;46.6496,3.3,38.0137,36.4903;46.7648,3,38.0433,36.4657;46.7844,3,37.8458,36.5723;46.8362,3.3,38.2642,38.2633;46.8498,3.2,38.017,36.4853;46.9867,3,37.9153,36.2655;47.1403,4.5,38.0702,37.0163;47.1994,3.5,37.9438,36.4537;47.2195,4.1,37.9158,36.2867;47.2383,3.4,38.3677,37.3247;47.3591,3.2,37.9782,36.427;47.4844,3.2,36.6085,36.5228;47.5828,3.2,38.0677,37.3202;47.6292,3,36.318,35.9127;47.8189,3.1,38.1517,36.2695;47.8499,3.4,37.9865,36.4532;47.9937,3.1,38.768,38.7643;48.2569,3.4,35.5333,35.3603;48.4657,3.9,38.2432,39.0012;48.5699,3.4,37.8597,36.2572;48.9437,3.4,36.1063,35.8715;49.0185,3.3,35.9878,36.0872;49.1957,3.2,36.3218,36.2145;49.2544,3.4,37.9383,36.296;49.3919,3.1,37.8225,36.2887;49.4117,3,38.033,36.3825;49.4812,3.4,37.8065,36.3303;49.554,4.7,38.0668,36.5298;49.6696,3.3,37.8528,36.5755;49.7294,3.2,38.1225,37.3323;49.8734,3.1,37.6062,37.2948;49.927,3.4,38.2277,38.29;50.2143,3.8,38.0568,37.6422;50.2569,3.1,37.2888,36.8653;50.2846,3.2,38.0857,37.2467;50.3682,3,38.0723,36.933;50.4012,4,37.7002,36.4407;50.4326,3.2,37.4713,37.1072;50.4878,3.7,38.0685,37.066;50.9673,3,37.9815,36.2842;51.0645,3.4,38.1727,38.5333;51.09,3.8,38.1805,37.8705;51.1419,3,38.2003,38.5405;51.318,3.4,37.8533,37.7925;51.398,3.2,37.9318,36.3122;51.4627,3.1,37.8782,36.2382;51.5286,4.1,38.2007,38.088;51.5477,3.3,37.9355,36.632;51.6384,3.8,37.9432,36.322;51.6455,4.6,37.9328,36.2887;51.6487,3.2,38.133,36.2513;51.6586,4.1,37.9425,36.257;51.6977,3,39.1403,40.2402;51.7855,3.9,37.3543,36.9115;51.8519,4.2,37.8598,36.6187;51.8659,3.2,37.8585,36.614;51.8746,3.2,37.8127,36.5565;52.0027,3.5,35.99,36.2063;52.2059,3.6,38.3415,38.2125;52.2237,3.1,37.9263,36.2553;52.2291,3.4,38.3152,38.1937;52.2615,3.4,37.6885,36.1377;52.3103,3.2,38.1013,37.2143;52.4792,3.2,37.8628,36.6402;52.765,3,38.2575,37.6573;52.7849,3.3,37.3147,37.058;52.8724,3.1,38.1235,36.985;52.9234,3.6,38.1638,37.9107;53.011,3.1,38.0395,37.3953;53.1211,3,36.0632,35.9618;53.4024,4.6,36.9917,36.5947;54.0139,3.9,37.8945,36.3442;54.0552,3,37.775,36.3783;54.1901,3.2,38.6207,39.8147;54.2344,3.5,37.9177,36.285;54.238,3.1,37.9105,36.3043;54.2545,3.4,38.2858,38.1212;54.2683,3.5,37.1638,36.9542;54.41,3.2,38.469,37.9598;54.4541,3.1,36.2548,35.8173;54.4648,3.1,38.3118,38.1945;54.4702,4,36.0307,35.8205;54.4745,4.1,36.1438,35.8342;54.5563,3.1,38.0978,37.3585;54.7223,3.3,38.4298,37.5692;54.7231,3,37.9288,36.2808;54.727,3.2,38.0677,38.4097;54.8108,3.1,38.48,38.0037;54.8829,3.3,38.191,38.1563;54.8835,3.2,37.9237,36.3048;55.0136,3.4,38.4665,37.9842;55.2889,3,36.8805,36.4598;55.455,4,38.4827,37.9515;55.4727,3,35.6123,35.3238;55.5939,3.8,37.9265,36.236;55.6259,4,36.7512,41.413;55.6329,3.3,37.8168,36.568;55.6792,3.4,37.8608,36.6305;55.6863,3.2,37.9482,37.6447;55.7411,4,38.2152,38.6577;55.8075,3.2,37.904,36.2927;55.9665,3.2,37.9318,36.6658;56.103,4.2,37.9188,36.2898;56.3736,3.2,37.887,36.292;56.3995,4.3,38.061,37.8083;56.4769,4.1,38.0767,37.6942;56.5826,3,38.2388,38.1907;56.624,3.8,37.893,36.297;56.9686,3.2,37.9452,36.28;57.019,3,38.0887,36.5822;57.0848,3.8,37.9957,36.3893;57.1131,3.2,38.4837,38.0377;57.3241,3.1,37.0323,36.6583;57.5612,3.4,38.217,38.1637;57.8545,3,38.2078,39.1948;57.8548,3.1,36.5243,36.4067;58.0183,3.1,38.0448,37.5565;58.0553,3.2,37.8935,36.316;58.0797,3.4,37.8955,36.3902;58.9862,3.8,37.6942,35.3845;59.104,3.3,38.0543,37.7193;59.3006,3.3,38.0963,37.9368;59.3398,3.1,37.886,36.272;59.3427,3.1,37.897,36.3005;59.5146,3.4,37.5243,37.1855;59.6381,3.3,38.101,37.2543;59.8293,3.3,37.9783,36.5245;59.8852,3.8,35.5583,35.3277;60.0269,3.9,38.124,38.6778;60.2146,3,38.2642,37.3185;60.3,4.5,39.0392,40.4357;60.327,3,37.886,36.2912;60.3281,3.3,39.0542,40.4543;60.6105,3.3,38.0845,37.1993;60.6277,3.3,36.124,40.2593;60.6558,3.7,38.801,40.7722;60.6879,3.1,37.8763,37.7618;60.9647,4.2,38.1355,36.9247;61.0875,3.1,37.9032,36.6397;61.1132,3.5,35.913,36.128;61.2182,3.1,38.138,37.7082;61.2812,3.6,37.8723,36.3503;61.2896,3.4,37.9112,36.3667;61.3617,3.2,37.6453,35.3923;61.4815,3.1,38.7043,35.3293;61.6714,3.1,37.5773,36.7385;61.7622,3.6,37.9758,36.3863;61.8074,3.4,37.8965,36.2768;61.829,3,37.326,36.8458;62.0021,3.6,38.0818,36.691;62.0722,3.7,37.9227,36.2535;62.5617,3.4,38.1337,38.5275;62.9838,3,37.8783,36.657;63.3403,3.1,36.1283,35.9023;63.6184,3.1,37.9363,36.2782;63.7219,3,37.9088,36.2678;63.7228,3.8,37.905,36.3035;63.7235,3,37.9258,36.343;63.8432,3.3,38.105,38.4113;63.8942,3.9,37.4902,37.1647;63.9054,3.3,37.6522,37.3533;64.0527,3,38.1767,38.5478;64.0611,3,37.9085,36.247;64.1714,3.6,37.5423,37.1605;64.2918,3.9,37.8858,36.4705;64.3083,3.8,38.8247,37.8512;64.3252,3.6,37.8788,36.4708;64.3736,3,38.189,37.9122;64.5453,3.4,38.726,39.703;64.7059,3.4,38.493,38.0137;64.7482,3.3,36.3268,36.079;64.852,3.5,38.4872,38.0027;65.1308,3,38.1598,38.5048;65.3311,3.2,35.136,36.659;65.3661,3.2,38.1615,38.5543;65.4252,3.4,37.8183,36.5387;66.0962,3.2,37.1585,36.9385;66.5065,4.3,38.0748,38.5457;66.5206,3.7,38.2017,38.6163;66.5658,3,38.0095,37.379;66.5742,3.2,36.2577,35.939;66.7588,3.6,38.2732,37.4097;66.8701,3.1,37.9887,36.5475;67.3332,3.3,38.2285,38.8035;67.4352,3.5,37.9168,36.2658;67.5801,3,38.2868,38.8233;67.6596,3.1,36.6987,36.1183;67.9056,4.2,37.9687,36.3267;68.3362,3.4,38.1042,38.2085;68.3471,4.2,37.9303,36.2428;68.4225,4.2,33.76,35.4127;68.5552,3.7,37.5208,37.1665;68.6448,3.2,38.174,37.5227;68.8566,4,37.6227,37.1962;68.8978,3.4,38.2157,38.7283;69.6051,3.2,37.91,36.2643;69.6862,3,37.636,35.5118;69.7507,3.5,37.102,36.6838;69.9017,4.1,38.0267,36.7783;70.2159,3.9,38.4638,38.0328;70.2233,3.4,38.2085,38.7207;70.609,3.2,36.443,36.5807;70.8608,3.2,38.1865,38.6008;71.1148,3.1,38.3283,37.8268;71.4324,3.8,38.832,37.4275;71.8959,3.7,38.0503,36.4608;71.9624,3.1,36.1925,35.93;72.0986,3.2,37.857,36.6465;72.1529,3.7,38.073,37.86;72.1728,3.3,37.0342,36.0697;72.5777,3.4,37.2212,36.6782;72.6422,3.4,37.8488,36.2675;72.709,3.8,37.8605,36.2893;72.787,3,37.978,37.479;72.8935,4.5,38.4555,39.2145;73.0255,3.5,37.9988,37.5987;73.2054,3.4,37.862,36.3463;73.2059,3.1,37.8613,36.2503;73.2426,3.5,38.3102,38.2345;73.4699,3,38.4547,39.1583;73.5265,3,38.48,39.6008;73.6086,3.1,37.9305,36.2825;74.3421,3.3,37.9015,36.2802;74.4186,3.2,36.9712,35.8093;74.4282,3.4,38.1405,38.1092;74.5718,3,34.877,36.1547;75.4151,3.4,38.551,39.745;76.5625,3.4,38.352,37.331;76.7263,3.8,38.333,37.5145;77.0676,3.4,38.0908,38.4248;77.2464,3.3,38.0638,36.6045;77.3984,4,38.2143,38.6838;77.4006,3.5,38.2328,38.702;77.5251,3,37.9805,36.4575;78.1144,3.4,38.0893,37.7962;78.3937,3.2,38.303,38.2807;78.507,3.4,38.1705,37.8907;78.5316,3.6,36.2025,36.0307;78.7296,4,38.2262,38.6085;78.7731,3.3,38.2623,38.7742;78.7996,3.1,36.2063,36.0258;78.8726,4,38.0435,37.3297;79.0272,3,37.7922,37.7312;79.0743,3.2,38.0585,37.2925;79.1465,4.1,37.8813,36.2673;79.2892,3.1,38.2133,38.4583;79.4196,3.2,38.1195,38.1702;79.48,3,35.1493,36.4855;79.5927,4.5,37.967,36.416;79.6773,3.9,38.252,38.2695;79.8083,3.3,38.0863,38.4637;80.1657,3.1,38.2992,36.363;80.2181,3.4,37.8373,36.5763;80.2868,3.2,37.9672,33.9718;80.3583,3.3,38.3025,38.369;80.5946,4.2,38.8185,37.2358;80.6921,3.1,38.0445,38.466;80.7323,3.1,36.7742,36.1792;80.8653,3,37.3842,37.0885;81.1038,3.6,37.9555,36.384;81.1654,4.3,36.0708,36.1268;81.1881,3.3,35.1332,36.6327;81.2363,3.3,38.1023,37.8378;81.3141,3.3,34.8388,36.3715;81.3247,3.3,37.9445,36.347;81.4077,3,37.8677,36.3895;81.4654,3.2,37.9087,36.2375;81.547,3.7,37.9125,36.2917;81.5732,3.1,37.891,36.2235;81.7101,3.6,37.9025,36.6715;81.9472,3.1,37.8843,36.25;82.0266,4.9,38.0253,36.452;82.0412,3.1,37.5287,37.2652;82.2451,3.5,37.2628,36.962;82.3328,3.1,38.3402,37.4765;82.3712,3.3,37.9763,36.3892;82.6384,3.8,38.0192,36.4747;82.6704,3.2,38.1257,37.6442;82.6947,3.7,37.9377,36.3072;82.6951,3.7,38.0267,36.4438;82.7715,3.9,37.8607,36.2185;82.823,3,36.807,38.8853;83.0652,3.5,35.6422,34.0252;83.4888,4.3,38.3392,37.7633;83.556,3,34.8902,33.532;83.7126,3.3,38.1585,38.3667;83.8882,3.1,36.7938,36.4933;83.9805,3.2,38.082,36.596;84.2714,3.2,38.2492,38.0477;84.5509,3.7,37.996,36.4437;84.6334,3.3,38.1283,36.3957;84.8461,4.3,38.1285,38.5707;85.0047,3.2,37.876,36.5888;85.1531,3,38.7935,37.4773;85.3981,3.2,38.0583,36.9387;85.4657,3.4,37.9545,36.366;85.7042,3.1,38.0658,36.6197;85.7994,3,38.0713,37.7823;86.2106,4.3,37.6233,35.5738;86.2731,3.2,37.6245,35.5478;86.5593,3,38.4628,39.3032;86.666,5.1,38.084,36.5752;86.6699,4.1,38.0847,36.5788;86.7125,3.1,37.899,36.2633;86.7656,3.1,38.0865,36.5777;87.1738,3.3,37.9157,36.3315;87.2144,3.4,38.0722,36.6048;87.4516,3.1,37.1325,39.3477;87.5338,3.1,38.2483,36.3667;87.5357,3.3,37.8442,36.2653;87.5634,3.3,37.903,36.2443;87.859,3,39.1703,40.2133;88.2417,3.1,37.8958,36.2693;88.2862,3.7,37.9105,36.2755;88.4092,3,37.1892,39.3678;88.4448,3.5,38.1272,38.4035;88.5191,3.7,36.1905,35.9368;88.5577,3.2,37.985,36.3495;88.5659,4.7,37.973,36.3063;88.6465,3.3,37.9822,36.325;88.7686,3.3,37.8673,36.5542;88.8872,3,37.7163,36.1252;88.9072,3,38.2963,38.9138;89.0117,3,37.8178,36.2833;89.4666,4,37.8565,36.5693;89.9978,3.1,38.0202,38.1203;90.0477,3.7,34.7198,37.9153;90.3046,4.9,36.4223,36.298;90.4075,3,36.4247,36.3007;90.5333,3.3,38.1085,37.7963;90.5446,3.5,38.2177,37.283;90.7476,3,37.8605,36.36;90.9163,3.7,38.158,38.384;91.0909,3.2,36.188,36.0292;91.3385,4.5,35.012,37.6605;91.3426,3.6,34.9108,37.6652;91.4893,3.3,37.4023,37.0627;91.7938,4.7,38.1172,38.3602;91.8792,3,37.8563,36.442;92.0791,3.8,37.2878,36.7763;92.1074,4.6,35.0097,37.674;92.2125,3,37.177,36.9493;92.7757,3.2,38.3125,38.7615;92.9586,3.3,38.0502,37.2275;92.994,3.4,37.0137,36.4202;93.0883,3.3,37.0387,36.6212;93.1039,3.8,38.0177,37.4122;93.1158,3,36.1267,36.0048;93.5137,3.2,38.3222,37.7942;93.7236,3.5,38.106,36.6267;94.025,3.2,37.9733,36.3052;94.3684,3.2,38.2902,38.2832;94.5691,4,38.0688,36.576;94.9837,3.4,37.9248,36.269;95.1917,3,37.7642,36.551;95.2039,3.1,37.8815,36.2198;95.3026,4.6,37.8722,36.273;95.3048,3.8,37.825,36.2265;95.3957,3,37.957,36.3432;95.4295,3,37.874,36.2293;95.6297,3.2,37.8793,36.2397;95.8511,3.2,37.9312,37.6532;95.8615,3.6,37.2563,36.784;95.8717,3.7,37.6492,35.3963;96.0173,3.3,37.9015,36.283;96.1347,3,37.9267,36.2332;96.1933,3.2,38.3717,37.3858;96.2158,3.3,37.8958,36.275;96.2815,3,38.0095,36.3363;96.5248,3.7,38.0513,36.5653;96.6982,3.8,37.9118,36.3563;96.7053,3,37.8692,36.2765;96.7758,4,38.113,38.5653;96.8948,3.1,38.0437,36.7713;97.3956,3.2,38.0568,37.2192;97.4504,4.3,37.8792,36.2885;97.622,3.1,38.0902,38.403;97.634,3.4,38.033,37.6363;97.9792,3.2,37.8735,36.5655;98.2622,3.1,37.9647,36.2745;98.4032,3.5,38.0095,37.6292;98.5438,3.2,38.1743,37.3478;98.6109,3.2,36.699,36.1872;98.6965,3,38.4637,37.6995;98.7404,3.1,38.0348,37.6018;98.8256,3,38.4715,37.7193;98.8903,3.2,38.1583,36.5562;99.1333,3.2,38.1323,36.9045;99.2072,3.2,38.0543,36.5785;99.3365,3.4,37.0253,36.4532;99.365,3.2,37.8427,36.6508;99.4792,3,37.8965,36.2042;100.482,3.1,37.9957,36.2975;100.852,3.3,37.8452,35.3333;100.895,3.2,37.994,38.132;101.629,3.2,38.1828,37.81;101.668,3.1,38.0405,37.6802;102.081,3.6,38.055,37.6393;102.131,3.4,37.9833,38.1762;102.212,3.1,38.2,38.5865;102.296,4,38.3543,37.7352;102.341,3.4,38.1912,37.817;102.883,3.2,38.1115,36.4322;102.985,3.9,38.1605,38.1097;103.074,4,36.1765,36.0375;103.2,3.1,38.2185,38.2698;103.332,3.4,38.1803,38.5848;103.61,3.1,38.2232,38.5675;103.707,3.1,38.2258,38.591;103.787,3.2,36.9917,36.0115;104.016,3.4,37.8972,36.2485;104.048,3.2,38.229,38.6663;104.279,3.1,36.1227,36.0613;104.478,4.8,37.9117,36.2582;104.485,3,37.8915,36.2745;104.501,3.3,37.939,36.2773;104.517,3.7,37.9458,36.2745;104.591,3.1,37.9473,36.3035;104.607,3.7,37.2357,39.3218;104.653,3.8,37.9025,36.2165;104.735,3.9,37.7577,36.3913;104.791,4,37.9147,36.2853;105.09,3.1,36.2845,36.0587;105.247,3.6,37.5175,37.1057;105.323,3.3,37.7993,36.4042;105.389,3,38.3337,37.3793;105.47,3.4,38.078,37.61;105.511,3.4,39.1772,40.3902;105.591,3.3,37.8597,36.285;105.618,4.6,37.9415,36.2732;105.643,4.3,37.8977,36.2443;105.844,3.2,38.2718,38.0737;105.854,3.3,37.9305,36.28;105.945,3.4,38.1555,37.0407;105.997,4.1,37.909,36.3013;106.067,3.1,37.905,36.2457;106.166,3.1,37.8882,36.2775;106.277,3,37.9318,36.3223;106.581,3.4,35.9565,35.8152;106.759,3.3,37.195,36.8918;106.849,3.1,37.8568,36.6362;106.905,3.2,37.8472,36.6127;107.669,3.4,37.7967,36.52;107.676,3,37.9258,36.2607;107.799,3,37.9963,36.3933;107.829,3.4,38.2657,37.7633;108.253,3.7,35.7963,35.5343;108.395,3.4,35.7517,35.5182;108.573,4,38.0463,38.5912;108.779,3.9,37.9205,36.3017;108.791,3.4,37.932,36.3033;108.929,3.7,35.7575,35.5315;108.936,3.1,38.1337,36.608;109.057,3,37.9818,36.362;109.135,3.1,38.5215,40.3385;109.469,3.8,37.9345,36.3365;109.665,3,37.608,37.3612;109.681,3.4,37.9823,36.3138;109.741,3.7,38.3418,37.3942;109.761,3,37.8645,37.891;109.885,3.3,38.0002,37.3985;109.972,3,37.2105,35.9765;110.051,3.2,37.8433,36.5645;110.103,3.7,37.9568,37.7368;110.261,3.1,38.0868,36.803;110.846,3.9,37.909,36.3055;110.919,3,37.9067,36.2977;110.976,3,38.0472,37.5738;111.131,3,38.2998,38.7818;111.19,3.5,37.3812,36.9083;111.867,3,38.1293,36.6553;112.066,3.7,38.2945,37.2128;112.229,3.4,36.12,35.8432;112.654,3.2,36.1117,36.3692;112.69,3.1,37.5253,37.2247;112.815,3.1,37.8885,36.2822;113.067,3.8,38.4743,40.2748;113.325,3.7,37.6822,35.3765;113.419,4,38.4568,37.5612;113.449,3.3,38.4678,37.617;113.45,3.6,37.9098,36.3163;113.646,3.3,38.1548,37.8968;113.786,3.7,38.2432,38.1457;114.471,3.1,38.0835,36.1838;114.77,3.3,38.2657,38.7122;115.064,3,37.9527,36.3232;115.094,3.1,36.1508,39.6047;115.184,3.6,37.469,38.7213;115.242,3.3,36.5038,36.3173;115.439,3.2,36.829,40.768;115.642,3,39.65,38.2228;115.785,3.8,35.334,35.5333;115.963,3.1,38.1228,36.9223;116.199,3.1,38.4722,37.498;116.262,3.4,38.4577,37.5565;116.5,3.3,38.4667,37.5388;116.722,3.1,38.4708,37.5663;116.878,3.1,38.2338,38.2958;116.91,3.3,37.1632,36.9117;116.949,3,37.1357,36.7073;117.277,3.3,38.4617,37.5268;117.387,3.6,37.6232,35.3602;117.576,4.3,39.4283,37.2335;117.608,3,38.0172,37.561;117.88,4.1,38.2587,39.4097;118.01,3.3,38.1717,38.5717;118.731,3.1,38.082,38.3447;119.402,3,38.3342,37.7942;119.473,3.4,38.3017,37.653;119.641,4.6,38.0025,36.5735;120.093,3.6,37.5177,37.1713;120.154,3.4,36.2893,39.8032;120.363,3.2,38.19,37.3348;121.159,3.6,36.9327,36.5485;121.22,3.2,38.478,37.5045;121.384,3.3,37.8913,36.2817;121.609,3,38.4565,37.56;121.712,3.9,38.2153,39.3985;121.943,3.2,38.0947,36.9262;122.098,4.2,37.8225,36.3102;122.524,3.1,35.9162,35.9843;122.857,3.3,38.1252,38.5207;123.087,3.5,38.1413,36.889;123.255,3.3,37.6497,34.7113;123.271,3.1,38.0717,37.7493;123.273,3,37.6172,35.4248;123.573,3.2,38.142,38.5595;123.589,3.2,35.38,35.7868;123.808,3.2,38.2572,38.57;123.847,3,38.4483,37.4968;124.12,3.4,37.9487,36.6422;124.36,3,38.0835,38.3232;124.548,3.1,38.0978,36.6257;124.604,3,37.0067,36.4322;124.909,3.2,37.372,39.2255;125.028,3.1,39.1317,40.2443;125.146,4,37.8962,36.2605;125.301,3.2,38.08,37.4867;125.35,3.4,38.4562,37.5618;125.569,4.1,37.9172,36.2507;125.972,3,37.903,36.2368;126.006,3.4,37.9147,36.303;126.405,3.4,37.8782,36.2845;127.189,3.4,38.3393,37.2005;127.864,3.9,37.8658,36.655;127.884,3.2,37.872,36.6823;128.072,3.4,38.1123,38.5358;128.112,3.3,38.133,38.5208;128.262,3.1,37.8495,36.6992;128.433,3,38.1212,38.4075;128.458,3.1,38.3008,38.205;129.139,3.5,37.5567,36.1445;129.164,3.9,37.6475,34.7147;129.176,3,37.6352,34.7265;129.188,3.3,36.854,36.2818;129.269,3.4,38.1738,38.5942;129.432,4,37.9827,36.4233;129.612,3.5,38.071,38.4437;129.717,3.1,37.4977,37.6258;129.738,3.5,37.945,37.6412;130.693,3.2,38.0145,37.5762;130.925,3.7,37.8633,36.4213;130.926,3,37.8577,36.4743;131.402,3.3,37.7392,37.3838;131.865,4.1,37.6912,37.3625;131.87,3.2,38.1615,38.4272;132.152,3.5,38.0458,36.601;132.211,3.5,38.3308,37.8238;132.221,3,35.1862,36.5633;132.285,3.2,38.0817,37.4325;132.596,4.5,38.2618,38.5953;132.821,4,37.8638,36.2483;132.967,4.5,38.177,38.0318;133.003,4,37.9583,36.3152;133.04,3.2,37.9545,36.2813;133.469,3.1,35.9302,36.1878;133.487,3.7,34.9728,34.7397;133.718,4.7,37.9637,36.5538;133.737,3,37.9948,36.5437;133.956,3.6,38.0072,36.5495;134.71,3.3,36.0442,36.082;134.712,3.3,37.9618,36.3245;134.748,3.4,37.9712,36.4953;134.842,3.1,37.9542,36.6522;135.2,3.1,36.0267,36.099;135.338,3.1,37.17,37.0115;135.683,3,36.315,36.1923;135.996,3.7,38.2223,38.6242;136.034,3.1,37.3122,37.05;136.105,3.2,38.0232,36.5247;136.118,3.1,38.1402,37.1743;136.169,4.2,38.1298,38.4147;136.549,3.3,37.6132,37.3272;136.708,3.2,39.0685,40.1087;136.878,3.3,35.1855,36.5742;136.905,3.1,36.2357,36.4445;137.658,3.5,38.077,37.6512;137.665,3.7,38.0683,37.6423;138.418,3.7,37.9077,36.2698;138.424,3.3,38.2758,37.7373;138.576,3.5,37.1352,36.6378;138.615,3.4,37.8977,36.2653;139.715,3.4,37.244,37.0347;140.736,3,36.4478,35.7857;141.036,3.4,37.9118,36.2557;141.474,4,38.4833,39.2767;141.577,3.3,38.4535,39.245;141.716,3,36.1532,35.9188;141.719,3.3,36.8627,35.3108;141.739,3.3,38.3857,37.5688;142.54,3.7,37.2855,37.0652;142.949,3.3,39.0032,40.545;143.174,4.2,38.0132,36.416;143.379,3.1,37.795,36.565;143.384,3.1,38.1428,37.8003;143.512,4,38.0185,37.3337;143.896,3.1,37.5477,37.2217;143.988,3.7,39.0785,40.3097;144.122,3.7,38.2993,36.3793;144.124,3,37.1963,36.9838;144.608,3.5,34.8493,34.8987;144.988,4,37.998,36.5822;145.449,3.3,38.0045,37.2975;145.673,3.2,37.4713,36.6513;146.098,3.3,37.8955,36.3987;146.28,3,38.129,37.7405;146.374,3.4,36.2317,36.1478;146.529,3.1,37.835,36.6093;147.218,3.4,36.0793,35.8008;147.404,3.3,38.0407,37.2283;149.193,3.4,38.0628,36.6152;149.217,3.2,38.0952,36.6925;149.538,3.1,38.4967,39.1487;149.681,3.4,38.4847,39.138;150.888,3.1,37.7185,36.2385;150.889,3.3,39.0735,40.3355;151.708,3,38.5492,39.5522;151.723,3.4,38.015,37.4102;152.344,3.3,34.1472,34.701;152.781,3.8,36.1617,36.0073;153.049,3.8,37.9707,36.3632;153.935,3.3,35.4375,35.3403;156.812,3.1,38.2923,37.7578;156.976,3.2,37.2203,36.7778;157.128,3.1,36.7523,34.157;157.469,3.9,38.3232,37.1888;158.164,3,37.3573,37.0483;158.912,3.1,36.1848,36.0543;159.095,3.2,38.3138,36.3957;159.677,3.8,38.0123,37.4075;160.041,3,38.4935,39.2778;160.279,3.2,38.092,37.7905;160.33,3.1,37.8397,36.6712;161.057,3.4,38.1735,37.341;161.155,3.2,38.1342,36.6557;161.341,3.2,37.1773,36.7678;161.87,3.2,38.3068,37.2117;162.676,3,38.8523,37.4163;162.96,3.2,36.3243,36.1277;163.075,3.3,38.1858,38.135;163.147,3,38.1957,37.9953;163.531,3.4,38.1492,36.8932;164.724,3.2,38.1692,38.0818;165.421,3.9,38.2048,37.2033;165.456,3.1,37.1885,36.029;165.77,3.2,35.0895,36.5707;165.907,3.9,38.2,38.5822;166.06,3.6,38.304,38.1525;166.389,4,37.8753,36.269;166.559,4.1,38.0587,37.5387;166.877,3.3,37.5437,35.4482;167.397,3.9,38.2217,37.1792;167.683,3.1,37.9733,36.3043;167.837,3.5,38.325,37.3542;168.03,3,37.9018,36.2957;168.604,3,37.965,36.2882;168.89,3.8,38.0665,37.6547;169.186,5.6,37.5915,35.8967;169.19,3,37.6285,35.8215;169.198,3.3,37.5785,35.8843;169.213,3,37.6125,35.8028;169.246,3.3,37.124,36.5893;169.261,3.4,37.5823,35.8868;169.272,3.8,37.6552,35.8738;169.278,4.5,37.6007,35.9215;169.37,3.3,37.6445,35.8497;169.409,3.1,37.6485,35.8617;169.438,3.3,37.5875,35.8908;169.557,3.1,37.5793,35.8702;169.674,3.1,37.664,35.8525;169.728,3.1,37.6395,35.8815;169.736,3,37.6805,35.8623;169.766,3,37.6387,35.8342;169.995,3.7,38.0327,38.5623;170.018,3.1,38.0183,38.0165;170.073,3.2,38.0078,37.969;170.401,4,37.5178,35.927;170.518,3.2,38.3282,37.2058;170.63,3.6,38.0843,36.9128;171.181,4,36.0473,36.0593;171.216,3.5,37.6703,35.8533;172.682,3.9,38.4963,40.269;172.862,3.3,38.054,37.1362;173.198,3,38.2585,37.3083;173.377,3,38.5012,40.2537;173.733,3,37.6042,35.909;173.836,3.1,37.967,36.2612;174.58,3.7,36.2702,35.8723;174.622,3,38.1197,38.1953;175.587,3.5,38.1413,38.434;175.858,3.5,37.4153,37.1703;176.313,3.6,39.1948,40.4463;176.543,3,37.3132,37.0645;176.836,3.3,38.0573,37.6547;177.328,3.1,38.0587,36.9822;177.919,3,37.8392,37.5915;178.124,3.8,36.0462,35.8377;178.152,4.3,38.1623,38.6448;178.39,3.1,36.0535,35.856;178.947,3.2,37.2203,36.066;179.596,3.8,37.4842,37.032;179.994,3.3,35.9115,35.859";
+
+function referenceEvents() {
+  return REFERENCE_CSV.split(";").map(function (row) {
+    var p = row.split(",");
+    return { dt: parseFloat(p[0]), mw: parseFloat(p[1]),
+             lat: parseFloat(p[2]), lon: parseFloat(p[3]), dist: NaN };
+  });
+}
+
+function computeSelfTest() {
+  var checks = [];
+  function check(what, got, want, tol, fmt) {
+    var ok = Math.abs(got - want) <= tol;
+    checks.push({ ok: ok, what: what, got: fmt ? fmt(got) : String(got), want: fmt ? fmt(want) : String(want) });
+  }
+
+  // Analytic checks: exact arithmetic on a published relation.
+  check("radiated energy exponent at Mw 7.8", Math.log(ENERGY_J(7.8)) / Math.LN10, 16.5, 1e-6, f3);
+  check("B\u00E5th ratio at a one-magnitude anomaly", Math.log(BATH_RATIO(7.55, 7.7, 1.15)) / Math.LN10, 1.5, 1e-6, f3);
+  check("Scordilis Ms 6.0 to Mw", MW_FROM_MS(6.0), 6.09, 1e-9, f3);
+  check("Scordilis mb 5.0 to Mw", MW_FROM_MB(5.0), 5.28, 1e-9, f3);
+  check("one degree of latitude in km", HAVERSINE_KM(0, 0, 1, 0), 111.19, 0.5, f2);
+
+  // Recovery of known decay parameters from an inverse-CDF sample.
+  var p0 = 1.2, c0 = 0.05, T = 100, N = 4000, t = [];
+  for (var i = 0; i < N; i++) {
+    var u = (i + 0.5) / N;
+    var A = Math.pow(c0, 1 - p0), B = Math.pow(T + c0, 1 - p0);
+    t.push(Math.pow(A + u * (B - A), 1 / (1 - p0)) - c0);
+  }
+  var rec = fitOmori(t, T);
+  check("recovers a known decay exponent p", rec.p, p0, 0.05, f3);
+  check("recovers a known offset c", rec.c, c0, 0.03, f3);
+
+  // The eight locked reference values, on the bundled catalogue.
+  var ev = referenceEvents();
+  var post = ev.filter(function (e) { return e.dt > 0 && e.dt <= 180; });
+  var mags = post.map(function (e) { return e.mw; });
+  var mc = mcMaxCurvature(mags, 0.1, 0.2);
+  var above = post.filter(function (e) { return e.mw >= 3.5 - 0.05; });
+  var bv = bValueAki(above.map(function (e) { return e.mw; }), 3.5, 0.1);
+  var om = fitOmori(above.map(function (e) { return e.dt; }));
+
+  check("reference catalogue: events in window", post.length, 3469, 0, f0);
+  check("reference catalogue: Mc", mc, 3.4, 1e-9, f1);
+  check("reference catalogue: b-value", bv.b, 0.844, 0.0005, f3);
+  check("reference catalogue: b-value sigma", bv.sigma, 0.019, 0.0005, f3);
+  check("reference catalogue: events above M 3.5", bv.n, 1529, 0, f0);
+  check("reference catalogue: Omori p", om.p, 1.161, 0.001, f3);
+  check("reference catalogue: Omori c", om.c, 0.497, 0.001, f3);
+  check("reference catalogue: Omori k", om.k, 359, 1, f1);
+
+  return checks;
+}
+
+function f0(x) { return String(Math.round(x)); }
+function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+function f2(x) { return x.toFixed(2); }
+function f3(x) { return x.toFixed(3); }
+
+function renderSelfTest(checks) {
+  var passed = checks.filter(function (c) { return c.ok; }).length;
+  var all = passed === checks.length;
+  document.getElementById("verifyCard").hidden = false;
+  document.getElementById("verifySummary").textContent =
+    all ? "All " + checks.length + " checks reproduce their known values."
+        : (checks.length - passed) + " of " + checks.length + " checks did not reproduce their known value.";
+  document.getElementById("checklist").innerHTML = checks.map(function (c) {
+    return '<div class="check ' + (c.ok ? "pass" : "fail") + '">' +
+      '<span class="mark">' + (c.ok ? "\u2713" : "\u2717") + "</span>" +
+      '<span class="what">' + c.what + "</span>" +
+      '<span class="got">' + c.got + "</span>" +
+      '<span class="want">want ' + c.want + "</span></div>";
+  }).join("");
+
+  var chip = document.getElementById("verifyChip");
+  chip.className = "chip " + (all ? "is-good" : "is-bad");
+  document.getElementById("verifyChipText").textContent =
+    all ? "Self-test passed \u00B7 " + checks.length + "/" + checks.length : "Self-test failed \u00B7 " + passed + "/" + checks.length;
+}
+
+/* ==========================================================================
+   8. WIRING
+   ========================================================================== */
+
+var STATE = { header: [], rows: [], cols: {}, name: "", preWindowed: false };
+
+function $(id) { return document.getElementById(id); }
+
+function readSettings() {
+  var thrRaw = $("threshold").value.trim();
+  return {
+    windowDays: numOr($("windowDays").value, 180),
+    threshold: thrRaw === "" ? null : parseFloat(thrRaw),
+    dm: numOr($("dm").value, 0.1),
+    mcCorr: numOr($("mcCorr").value, 0.2),
+    deltaMb: numOr($("deltaMb").value, 1.15),
+    nBoot: Math.max(0, Math.min(1000, Math.round(numOr($("nBoot").value, 100)))),
+    seed: Math.round(numOr($("seed").value, 0)),
+    mainshockMw: numOr($("msMw").value, 7.8)
+  };
+}
+function numOr(v, d) { var x = parseFloat(v); return isFinite(x) ? x : d; }
+
+function showError(msg) {
+  var b = $("loadError");
+  b.hidden = !msg;
+  b.textContent = msg || "";
+}
+
+function buildMappingUi() {
+  var grid = $("mappingGrid");
+  var roles = [
+    ["dtDays", "elapsed days"],
+    ["date", "date"],
+    ["time", "clock time"],
+    ["datetime", "date and time"],
+    ["mag", "magnitude"],
+    ["magType", "magnitude scale"],
+    ["lat", "latitude"],
+    ["lon", "longitude"]
+  ];
+  grid.innerHTML = roles.map(function (r) {
+    var opts = ['<option value="">not used</option>'].concat(STATE.header.map(function (h) {
+      return '<option value="' + escapeAttr(h) + '"' + (STATE.cols[r[0]] === h ? " selected" : "") + ">" + escapeHtml(h) + "</option>";
+    })).join("");
+    return '<div class="field"><label for="col-' + r[0] + '">' + r[1] + '</label>' +
+           '<select id="col-' + r[0] + '" data-role="' + r[0] + '">' + opts + "</select></div>";
+  }).join("");
+  grid.querySelectorAll("select").forEach(function (sel) {
+    sel.addEventListener("change", function () {
+      STATE.cols[sel.dataset.role] = sel.value;
+      STATE.preWindowed = !!STATE.cols.dtDays;
+      $("mainshockFields").hidden = false;
+      recompute();
+    });
+  });
+  $("mappingFields").hidden = false;
+  $("mainshockFields").hidden = false;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+function loadText(text, name) {
+  showError("");
+  try {
+    var parsed = parseCsv(text);
+    STATE.header = parsed.header;
+    STATE.rows = parsed.rows;
+    STATE.cols = detectColumns(parsed.header, parsed.rows);
+    STATE.preWindowed = !!STATE.cols.dtDays;
+    STATE.name = name;
+    if (!STATE.cols.mag) throw new Error("No magnitude column was recognised. Choose one below.");
+    buildMappingUi();
+    $("loadedChip").textContent = name + " \u00B7 " + parsed.rows.length.toLocaleString() + " rows";
+    recompute();
+  } catch (err) {
+    showError(err.message);
+    if (STATE.header.length) buildMappingUi();
+  }
+}
+
+var bootToken = 0;
+
+function recompute() {
+  if (!STATE.rows.length) return;
+  showError("");
+  var s = readSettings();
+  var mainshock = {
+    timeText: $("msTime").value,
+    lat: numOr($("msLat").value, NaN),
+    lon: numOr($("msLon").value, NaN),
+    mw: s.mainshockMw
+  };
+  var built;
+  try {
+    built = buildEvents(STATE.rows, STATE.cols, mainshock, $("dayFirst").checked);
+  } catch (err) {
+    showError(err.message);
+    return;
+  }
+  if (built.skipped) {
+    showError(built.skipped.toLocaleString() + " of " + STATE.rows.length.toLocaleString() +
+              " rows could not be read and were left out. Check the column choices.");
+  }
+
+  var result = analyse(built.events, s);
+  result.boot = null;
+  renderResults(result, s);
+
+  // Bootstrap in slices so the page stays responsive; a later run cancels this one.
+  var token = ++bootToken;
+  var bar = $("bootProgress");
+  if (result.omori && s.nBoot >= 2) {
+    bar.hidden = false;
+    bar.firstElementChild.style.width = "0%";
+    bootstrapOmoriChunk(result.times, s.nBoot, maxOf(result.times), s.seed,
+      function (frac) {
+        if (token !== bootToken) return;
+        bar.firstElementChild.style.width = (frac * 100).toFixed(0) + "%";
+      },
+      function (boot) {
+        if (token !== bootToken) return;
+        bar.hidden = true;
+        result.boot = boot;
+        renderResults(result, s);
+      });
+  } else {
+    bar.hidden = true;
+  }
+}
+
+/* ------------------------------------------------------------------ events */
+document.addEventListener("DOMContentLoaded", function () {
+  var fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = ".csv,.txt,text/csv,text/plain";
+  fileInput.style.display = "none";
+  document.body.appendChild(fileInput);
+
+  var dz = $("dropzone");
+  dz.addEventListener("click", function () { fileInput.click(); });
+  dz.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
+  });
+  fileInput.addEventListener("change", function () {
+    var f = fileInput.files && fileInput.files[0];
+    if (f) f.text().then(function (t) { loadText(t, f.name); });
+  });
+  ["dragenter", "dragover"].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("is-over"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove("is-over"); });
+  });
+  dz.addEventListener("drop", function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) f.text().then(function (t) { loadText(t, f.name); });
+  });
+
+  $("loadExample").addEventListener("click", function () {
+    var csv = "dt_days,mw,lat,lon\n" + REFERENCE_CSV.replace(/;/g, "\n");
+    $("msTime").value = "2023-02-06 01:17:32";
+    $("msLat").value = "37.1578";
+    $("msLon").value = "36.8092";
+    $("msMw").value = "7.8";
+    $("windowDays").value = "180";
+    $("threshold").value = "3.5";
+    loadText(csv, "Kahramanmara\u015F 2023, 180 days");
+  });
+
+  $("runSelfTest").addEventListener("click", function () {
+    var btn = $("runSelfTest");
+    btn.disabled = true;
+    var chip = $("verifyChip");
+    chip.className = "chip is-running";
+    $("verifyChipText").textContent = "Running the self-test\u2026";
+    // Yield once so the chip paints before the optimiser blocks the thread.
+    setTimeout(function () {
+      renderSelfTest(computeSelfTest());
+      btn.disabled = false;
+      $("verifyCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 30);
+  });
+
+  ["windowDays", "threshold", "dm", "mcCorr", "deltaMb", "nBoot", "seed",
+   "msTime", "msLat", "msLon", "msMw", "dayFirst"].forEach(function (id) {
+    var node = $(id);
+    node.addEventListener("change", recompute);
+  });
+
+  document.querySelectorAll("[data-table]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var t = $(btn.dataset.table);
+      var on = t.classList.toggle("on");
+      btn.textContent = on ? "Hide the data behind this chart" : "Show the data behind this chart";
+    });
+  });
+
+  $("copyResults").addEventListener("click", function () {
+    if (!LAST.result) return;
+    var text = resultsAsText(LAST.result, LAST.settings);
+    var btn = $("copyResults");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy these results"; }, 1600); },
+        function () { btn.textContent = "Could not copy \u2014 select the table instead"; }
+      );
+    } else {
+      btn.textContent = "Copying is blocked here \u2014 select the table instead";
+    }
+  });
+
+});
+
+</script>
