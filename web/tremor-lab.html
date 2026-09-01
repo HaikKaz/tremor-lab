@@ -342,6 +342,7 @@ legend {
   letter-spacing: -.02em;
 }
 .tile .u { font-size: var(--step--1); color: var(--ink-2); font-family: var(--mono); }
+.tile .d { font-size: var(--step--1); color: var(--ink-muted); margin-top: .3rem; text-wrap: pretty; }
 
 table.readout { width: 100%; border-collapse: collapse; font-size: var(--step-0); }
 table.readout th, table.readout td { text-align: left; padding: .32rem .5rem .32rem 0; border-bottom: 1px solid var(--rule); }
@@ -449,6 +450,13 @@ footer.colophon {
 }
 footer.colophon strong { color: var(--ink-2); font-weight: 600; }
 
+/* On a narrow screen the drop target would push the one-press example below the
+   fold; the example is the better first thing to meet. */
+@media (max-width: 640px) {
+  .source-row { flex-direction: column; }
+  .source-aside { order: -1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
@@ -491,8 +499,8 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
           <span class="sub">3,469 events &middot; the catalogue behind the reference values</span>
         </button>
         <button class="action" id="runSelfTest" type="button">
-          Run the self-test
-          <span class="sub">Checks 13 known values, including all eight reference numbers</span>
+          Run the self-test again
+          <span class="sub" id="selfTestSub">Checks every known value, including all eight reference numbers</span>
         </button>
       </div>
     </div>
@@ -510,12 +518,24 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
       <div class="fieldgrid">
         <div class="field">
           <label for="msTime">origin time</label>
-          <input id="msTime" type="text" value="2023-02-06 01:17:32" spellcheck="false">
-          <span class="hint">same clock as the catalogue</span>
+          <input id="msTime" type="text" placeholder="2023-02-06 01:17:32" spellcheck="false">
+          <span class="hint" id="msTimeEcho">same clock as the catalogue, with the time of day</span>
         </div>
-        <div class="field"><label for="msLat">latitude</label><input id="msLat" type="number" step="any" value="37.1578"></div>
-        <div class="field"><label for="msLon">longitude</label><input id="msLon" type="number" step="any" value="36.8092"></div>
-        <div class="field"><label for="msMw">Mw</label><input id="msMw" type="number" step="any" value="7.8"></div>
+        <div class="field">
+          <label for="msLat">latitude</label>
+          <input id="msLat" type="number" step="any" placeholder="37.1578">
+          <span class="hint">epicentre, decimal degrees</span>
+        </div>
+        <div class="field">
+          <label for="msLon">longitude</label>
+          <input id="msLon" type="number" step="any" placeholder="36.8092">
+          <span class="hint">used for distances only</span>
+        </div>
+        <div class="field">
+          <label for="msMw">Mw</label>
+          <input id="msMw" type="number" step="any" placeholder="7.8">
+          <span class="hint">sets the energy and the B&aring;th expectation</span>
+        </div>
       </div>
     </fieldset>
   </section>
@@ -573,6 +593,7 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
     <div class="banner" id="resultNote" hidden></div>
     <div class="tiles" id="tiles"></div>
     <div class="scroller"><table class="readout" id="readout"></table></div>
+    <p class="note tight" id="provenance"></p>
   </section>
 
   <!-- ============================================================ charts -->
@@ -664,8 +685,28 @@ var CONST = {
   DM: 0.1,          // magnitude bin width
   MC_CORR: 0.2,     // maximum-curvature Mc correction
   MIN_FOR_MC: 50,   // minimum events to attempt Mc
-  MIN_FOR_B: 100    // minimum events above threshold to attempt b and Omori
+  MIN_FOR_B: 100,   // minimum events above threshold to attempt b and Omori
+  // Used only to judge whether a fitted decay is worth believing; they never
+  // constrain the fit. Below the floor, c has collapsed onto the boundary of the
+  // model, where the likelihood has no interior maximum and c is not identified.
+  OMORI_C_FLOOR: 1e-3,
+  OMORI_P_MIN: 0.5,
+  OMORI_P_MAX: 2.0
 };
+
+/* Say when a converged fit should not be believed. Never suppresses the number. */
+function omoriCaution(fit) {
+  var out = [];
+  if (fit.c < CONST.OMORI_C_FLOOR) {
+    out.push("c has collapsed to " + fit.c.toExponential(1) + ", at the boundary of " +
+             "the model, so this catalogue does not identify it");
+  }
+  if (fit.p < CONST.OMORI_P_MIN || fit.p > CONST.OMORI_P_MAX) {
+    out.push("p = " + fit.p.toFixed(3) + " lies outside " + CONST.OMORI_P_MIN + " to " +
+             CONST.OMORI_P_MAX + ", the range reported for real sequences");
+  }
+  return out.length ? out.join("; ") : null;
+}
 
 function ENERGY_J(mw, a, b) {
   a = a == null ? CONST.E_A : a;
@@ -1049,7 +1090,15 @@ function buildEvents(rows, cols, mainshock, dayFirst) {
       ? HAVERSINE_KM(mainshock.lat, mainshock.lon, lat, lon) : NaN;
     events.push({ dt: dt, mw: mag, lat: lat, lon: lon, dist: dist });
   }
-  if (!events.length) throw new Error("No rows could be read. Check the column choices above.");
+  if (!events.length) {
+    throw new Error(
+      (cols.dtDays || cols.datetime || cols.date)
+        ? "None of the " + rows.length.toLocaleString() + " rows produced both a " +
+          "usable time and a usable magnitude. Check the column choices above."
+        : "No column was recognised as a date, a clock time, or elapsed days, so " +
+          "no event time could be worked out. Choose one above."
+    );
+  }
   return { events: events, skipped: skipped };
 }
 
@@ -1060,10 +1109,16 @@ function buildEvents(rows, cols, mainshock, dayFirst) {
 function analyse(events, s) {
   var post = events.filter(function (e) { return e.dt > 0 && e.dt <= s.windowDays; });
   var mags = post.map(function (e) { return e.mw; });
+  var haveMw = isFinite(s.mainshockMw);
   var out = {
     nEvents: post.length, post: post, mc: null, threshold: null, nAbove: null,
-    b: null, omori: null, boot: null, fmd: null, note: null,
-    energy: ENERGY_J(s.mainshockMw), bathMag: BATH_MAG(s.mainshockMw, s.deltaMb)
+    b: null, omori: null, boot: null, fmd: null, note: null, caution: null,
+    // The window worth quoting is where the data actually end, which is often
+    // earlier than the one requested.
+    spanDays: post.length ? maxOf(post.map(function (e) { return e.dt; })) : 0,
+    largestMw: post.length ? maxOf(mags) : null,
+    energy: haveMw ? ENERGY_J(s.mainshockMw) : null,
+    bathMag: haveMw ? BATH_MAG(s.mainshockMw, s.deltaMb) : null
   };
   if (!post.length) { out.note = "No events fall inside the window."; return out; }
 
@@ -1090,6 +1145,7 @@ function analyse(events, s) {
   out.b = bValueAki(above.map(function (e) { return e.mw; }), out.threshold, s.dm);
   out.times = above.map(function (e) { return e.dt; });
   out.omori = fitOmori(out.times);
+  out.caution = omoriCaution(out.omori);
   return out;
 }
 
@@ -1472,7 +1528,7 @@ function drawFmd(result, s) {
 
   legend(document.getElementById("fmdLegend"), [
     { label: "events at or above each magnitude", color: "var(--series-1)", shape: "dot" },
-    { label: "events in each 0.1 bin", color: "var(--series-3)", shape: "square" },
+    { label: "events in each " + s.dm + " bin", color: "var(--series-3)", shape: "square" },
     { label: "Gutenberg-Richter fit", color: "var(--series-2)", shape: "line" }
   ]);
 
@@ -1576,21 +1632,55 @@ function renderResults(result, s) {
   LAST.settings = s;
   document.getElementById("resultsCard").hidden = false;
 
+  var messages = [];
+  if (result.note) messages.push(result.note);
+  if (result.caution) {
+    messages.push("Treat this decay fit with caution: " + result.caution + ".");
+  }
+  if (s.fellBack && s.fellBack.length) {
+    messages.push("Some settings were blank or unreadable, so these values were used: " +
+                  s.fellBack.join("; ") + ".");
+  }
   var note = document.getElementById("resultNote");
-  note.hidden = !result.note;
-  if (result.note) note.textContent = result.note;
+  note.hidden = !messages.length;
+  note.textContent = messages.join("  ");
 
+  var bp = result.boot;
   var tiles = [
-    { k: "completeness Mc", v: result.mc == null ? "\u2014" : result.mc.toFixed(1), u: "magnitude" },
-    { k: "b-value", v: result.b ? result.b.b.toFixed(3) : "\u2014",
-      u: result.b ? "\u00B1 " + result.b.sigma.toFixed(3) + " on " + result.b.n + " events" : "not estimated" },
-    { k: "Omori p", v: result.omori ? result.omori.p.toFixed(3) : "\u2014",
-      u: result.omori ? "decay exponent" : "not estimated" },
-    { k: "events in window", v: result.nEvents.toLocaleString(), u: s.windowDays + " days" }
+    { k: "completeness Mc",
+      v: result.mc == null ? "\u2014" : result.mc.toFixed(1),
+      u: "magnitude",
+      d: "the magnitude above which the catalogue is believed complete; smaller " +
+         "events below it are missing from the record, not absent from the ground" },
+    { k: "b-value",
+      v: result.b ? result.b.b.toFixed(3) : "\u2014",
+      u: result.b
+        ? "\u00B1 " + result.b.sigma.toFixed(3) + " &middot; at M &ge; " +
+          result.threshold.toFixed(2) + " &middot; " + result.b.n.toLocaleString() + " events"
+        : "not estimated",
+      d: "how sharply event numbers fall as magnitude rises; near 1 means about " +
+         "ten times fewer events for each unit of magnitude" },
+    { k: "Omori p",
+      v: result.omori ? result.omori.p.toFixed(3) : "\u2014",
+      u: result.omori
+        ? (bp && isFinite(bp.pStd)
+            ? "\u00B1 " + bp.pStd.toFixed(3) + " &middot; " + bp.nBoot + " resamples"
+            : (s.nBoot >= 2 ? "estimating the uncertainty&hellip;"
+                            : "no uncertainty estimated (bootstrap runs = 0)"))
+        : "not estimated",
+      d: "how quickly the aftershock rate decays; the rate falls as one over " +
+         "elapsed time raised to this power" },
+    { k: "events in window",
+      v: result.nEvents.toLocaleString(),
+      u: result.spanDays && result.spanDays < s.windowDays * 0.995
+        ? "data end at " + result.spanDays.toFixed(1) + " of " + s.windowDays + " days"
+        : s.windowDays + " days",
+      d: "every event after the mainshock and inside the window, before any " +
+         "magnitude threshold is applied" }
   ];
   document.getElementById("tiles").innerHTML = tiles.map(function (t) {
     return '<div class="tile"><span class="k">' + t.k + '</span><span class="v">' + t.v +
-           '</span><span class="u">' + t.u + "</span></div>";
+           '</span><span class="u">' + t.u + '</span><span class="d">' + t.d + "</span></div>";
   }).join("");
 
   var rows = [];
@@ -1601,15 +1691,21 @@ function renderResults(result, s) {
   if (result.b) {
     rows.push(["b-value", result.b.b.toFixed(3) + "  \u00B1 " + result.b.sigma.toFixed(3)]);
   }
+  if (result.largestMw != null) {
+    rows.push(["largest event in window", "M " + result.largestMw.toFixed(1)]);
+  }
   if (result.omori) {
-    var bp = result.boot;
     rows.push(["Omori p", result.omori.p.toFixed(3) + (bp && isFinite(bp.pStd) ? "  \u00B1 " + bp.pStd.toFixed(3) : "")]);
     rows.push(["Omori c", result.omori.c.toFixed(3) + (bp && isFinite(bp.cStd) ? "  \u00B1 " + bp.cStd.toFixed(3) : "")]);
     rows.push(["Omori k", result.omori.k.toFixed(1)]);
     rows.push(["observation interval", maxOf(result.times).toFixed(3) + " days"]);
   }
-  rows.push(["mainshock energy", result.energy.toExponential(3) + " J"]);
-  rows.push(["B\u00E5th expectation", "M " + result.bathMag.toFixed(2)]);
+  rows.push(["mainshock energy",
+             result.energy == null ? "no mainshock Mw given"
+                                   : result.energy.toExponential(3) + " J"]);
+  rows.push(["B\u00E5th expectation",
+             result.bathMag == null ? "no mainshock Mw given"
+                                    : "M " + result.bathMag.toFixed(2)]);
 
   document.getElementById("readout").innerHTML = rows.map(function (r) {
     return "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>";
@@ -1622,16 +1718,47 @@ function renderResults(result, s) {
   document.getElementById("fmdCard").hidden = !result.fmd;
   document.getElementById("omoriCard").hidden = !result.omori;
 
+  document.getElementById("provenance").textContent = provenanceLine(s);
+
   if (hasEvents) drawSequence(result, s);
   if (result.fmd) drawFmd(result, s);
   if (result.omori) drawOmori(result, s);
 }
 
+/* One line stating what was read and what was done to it, so a number never
+   travels without the choices that produced it. */
+function provenanceLine(s, withFile) {
+  var c = STATE.cols;
+  var bits = withFile === false ? [] : [(STATE.name || "catalogue") + ", " +
+              STATE.rows.length.toLocaleString() + " rows"];
+  bits.push("magnitude from " + (c.mag ? "\'" + c.mag + "\'" : "no column"));
+  bits.push(c.magType
+    ? "scale column \'" + c.magType + "\', Ms and mb converted to Mw by the " +
+      "Scordilis relations"
+    : "no scale column, magnitudes used as published");
+  bits.push(c.dtDays
+    ? "elapsed days taken from the file"
+    : "times from " + (c.datetime ? "\'" + c.datetime + "\'"
+        : "\'" + c.date + "\'" + (c.time ? " and \'" + c.time + "\'" : "")) +
+      ($("dayFirst").checked ? ", read day-first" : ""));
+  bits.push("bin " + s.dm + ", Mc correction " + s.mcCorr + ", Bath dM " + s.deltaMb);
+  return bits.join(" \u00B7 ");
+}
+
 function resultsAsText(result, s) {
   var lines = ["Tremor Lab 1.0.0"];
+  // Everything needed to run this again, so the numbers never travel alone.
+  lines.push("catalogue               " + (STATE.name || "?") + ", " +
+             STATE.rows.length.toLocaleString() + " rows");
+  lines.push("mainshock               " + ($("msTime").value.trim() || "not given") +
+             "  lat " + ($("msLat").value.trim() || "-") +
+             "  lon " + ($("msLon").value.trim() || "-") +
+             "  Mw " + ($("msMw").value.trim() || "-"));
+  lines.push("columns                 " + provenanceLine(s, false));
   lines.push("window " + s.windowDays + " days, threshold " +
-             (result.threshold == null ? "none" : "M " + result.threshold) +
-             ", bin " + s.dm + ", Mc correction " + s.mcCorr);
+             (result.threshold == null ? "the estimated Mc" : "M " + result.threshold) +
+             ", bin " + s.dm + ", Mc correction " + s.mcCorr +
+             ", bootstrap " + s.nBoot + " runs, seed " + s.seed);
   lines.push("events in window        " + result.nEvents);
   lines.push("completeness Mc         " + (result.mc == null ? "not estimated" : result.mc));
   if (result.b) lines.push("b-value                 " + result.b.b.toFixed(3) + " +/- " +
@@ -1641,8 +1768,17 @@ function resultsAsText(result, s) {
     lines.push("Omori c                 " + result.omori.c + (result.boot && isFinite(result.boot.cStd) ? " +/- " + result.boot.cStd : ""));
     lines.push("Omori k                 " + result.omori.k);
   }
-  lines.push("mainshock energy        " + result.energy.toExponential(3) + " J");
-  lines.push("Bath expectation        M " + result.bathMag.toFixed(2));
+  lines.push("mainshock energy        " +
+             (result.energy == null ? "no mainshock Mw given"
+                                    : result.energy.toExponential(3) + " J"));
+  lines.push("Bath expectation        " +
+             (result.bathMag == null ? "no mainshock Mw given" : "M " + result.bathMag.toFixed(2)));
+  if (result.spanDays && result.spanDays < s.windowDays * 0.995) {
+    lines.push("note                    the catalogue ends " + result.spanDays.toFixed(2) +
+               " days after the mainshock, so the effective window is shorter than the " +
+               s.windowDays + " requested");
+  }
+  if (result.caution) lines.push("CAUTION                 " + result.caution);
   return lines.join("\n");
 }
 
@@ -1741,19 +1877,61 @@ var STATE = { header: [], rows: [], cols: {}, name: "", preWindowed: false };
 function $(id) { return document.getElementById(id); }
 
 function readSettings() {
-  var thrRaw = $("threshold").value.trim();
+  var fellBack = [];
+  function field(id, fallback, label) {
+    var raw = String($(id).value).trim().replace(",", ".");
+    var x = raw === "" ? NaN : parseFloat(raw);
+    if (!isFinite(x)) { fellBack.push(label + " " + fallback); return fallback; }
+    return x;
+  }
+  var thrRaw = $("threshold").value.trim().replace(",", ".");
+  var threshold = thrRaw === "" ? null : parseFloat(thrRaw);
+  if (thrRaw !== "" && !isFinite(threshold)) {
+    threshold = null;
+    fellBack.push("threshold: the estimated Mc");
+  }
+  // The mainshock magnitude has no default on purpose: inheriting the previous
+  // example value would put a plausible energy under the wrong earthquake.
+  var mwRaw = String($("msMw").value).trim().replace(",", ".");
   return {
-    windowDays: numOr($("windowDays").value, 180),
-    threshold: thrRaw === "" ? null : parseFloat(thrRaw),
-    dm: Math.max(0.001, numOr($("dm").value, 0.1)),
-    mcCorr: numOr($("mcCorr").value, 0.2),
-    deltaMb: numOr($("deltaMb").value, 1.15),
-    nBoot: Math.max(0, Math.min(1000, Math.round(numOr($("nBoot").value, 100)))),
-    seed: Math.round(numOr($("seed").value, 0)),
-    mainshockMw: numOr($("msMw").value, 7.8)
+    windowDays: field("windowDays", 180, "window"),
+    threshold: threshold,
+    dm: Math.max(0.001, field("dm", 0.1, "bin width")),
+    mcCorr: field("mcCorr", 0.2, "Mc correction"),
+    deltaMb: field("deltaMb", 1.15, "Bath dM"),
+    nBoot: Math.max(0, Math.min(1000, Math.round(field("nBoot", 100, "bootstrap runs")))),
+    seed: Math.round(field("seed", 0, "seed")),
+    mainshockMw: mwRaw === "" ? NaN : parseFloat(mwRaw),
+    fellBack: fellBack
   };
 }
-function numOr(v, d) { var x = parseFloat(v); return isFinite(x) ? x : d; }
+function numOr(v, d) { var x = parseFloat(String(v).replace(",", ".")); return isFinite(x) ? x : d; }
+
+/* Show the instant the typed origin time was actually read as. A date with no
+   clock is accepted and silently becomes midnight, which moves the whole
+   sequence; saying so is cheaper than a rule that rejects it. */
+function updateTimeEcho() {
+  var echo = $("msTimeEcho");
+  var raw = $("msTime").value.trim();
+  if (!raw) {
+    echo.textContent = "same clock as the catalogue, with the time of day";
+    echo.style.color = "";
+    return;
+  }
+  var ms = parseStamp(raw, "", $("dayFirst").checked);
+  if (!isFinite(ms)) {
+    echo.textContent = "could not be read; try 2023-02-06 01:17:32";
+    echo.style.color = "var(--critical)";
+    return;
+  }
+  var stamp = new Date(ms).toISOString().replace("T", " ").replace(/\.\d+Z$/, "");
+  var hasClock = /\d{1,2}:\d{2}/.test(raw);
+  echo.textContent = hasClock
+    ? "read as " + stamp
+    : "read as " + stamp + "; no time of day given, so midnight is assumed and " +
+      "the decay is measured from there";
+  echo.style.color = hasClock ? "" : "var(--warning)";
+}
 
 function showError(msg, isWarning) {
   var b = $("loadError");
@@ -1916,9 +2094,16 @@ document.addEventListener("DOMContentLoaded", function () {
   dz.addEventListener("keydown", function (e) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
   });
+  // A file chosen by the user describes a different earthquake, so the mainshock
+  // box is emptied; only the example button fills it.
+  function clearMainshock() {
+    ["msTime", "msLat", "msLon", "msMw"].forEach(function (id) { $(id).value = ""; });
+    updateTimeEcho();
+  }
+
   fileInput.addEventListener("change", function () {
     var f = fileInput.files && fileInput.files[0];
-    if (f) f.text().then(function (t) { loadText(t, f.name); });
+    if (f) f.text().then(function (t) { clearMainshock(); loadText(t, f.name); });
   });
   ["dragenter", "dragover"].forEach(function (ev) {
     dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("is-over"); });
@@ -1928,7 +2113,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   dz.addEventListener("drop", function (e) {
     var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) f.text().then(function (t) { loadText(t, f.name); });
+    if (f) f.text().then(function (t) { clearMainshock(); loadText(t, f.name); });
   });
 
   $("loadExample").addEventListener("click", function () {
@@ -1939,6 +2124,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $("msMw").value = "7.8";
     $("windowDays").value = "180";
     $("threshold").value = "3.5";
+    updateTimeEcho();
     loadText(csv, "Kahramanmara\u015F 2023, 180 days");
   });
 
@@ -1958,9 +2144,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   ["windowDays", "threshold", "dm", "mcCorr", "deltaMb", "nBoot", "seed",
    "msTime", "msLat", "msLon", "msMw", "dayFirst"].forEach(function (id) {
-    var node = $(id);
-    node.addEventListener("change", recompute);
+    $(id).addEventListener("change", recompute);
   });
+  ["msTime", "dayFirst"].forEach(function (id) {
+    $(id).addEventListener("input", updateTimeEcho);
+    $(id).addEventListener("change", updateTimeEcho);
+  });
+
+  // A reviewer with two minutes should not have to find a button to see the
+  // evidence, so the checks run themselves once the page is up.
+  setTimeout(function () {
+    var checks = computeSelfTest();
+    $("selfTestSub").textContent =
+      "Re-runs all " + checks.length + " checks, including the eight reference numbers";
+    renderSelfTest(checks);
+  }, 60);
 
   document.querySelectorAll("[data-table]").forEach(function (btn) {
     btn.addEventListener("click", function () {

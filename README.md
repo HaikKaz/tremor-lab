@@ -121,6 +121,24 @@ timestamps, use `dt_days = "dt_days"` and `mag = "mw"`.
 Add `--fmd-out table.csv` to write the frequency-magnitude table for a Gutenberg-Richter
 plot.
 
+## Use from a browser
+
+`web/tremor-lab.html` is the whole tool in one file. Open it by double-clicking:
+it runs offline, with nothing installed and no server. Drop a catalogue in, or press
+the button to load the bundled 2023 Kahramanmaras sequence.
+
+It reports the same quantities as the package, draws the sequence, the
+frequency-magnitude distribution and the decay curve, and shows the data behind each
+chart. Every published constant is editable, and the page states which columns it read,
+how magnitudes were treated, and what it assumed, so a number never travels without the
+choices that produced it.
+
+A self-test runs on load and reproduces the eight reference values below in the browser.
+
+The page runs the JavaScript implementation transplanted from `SeismoSheet.gs`. This
+package remains the authority for published values; the two agree on the reference
+catalogue and on the real KOERI and USGS exports they have been checked against.
+
 ## What it computes
 
 **Magnitude of completeness**, maximum-curvature method: the mode of the incremental

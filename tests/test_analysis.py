@@ -145,7 +145,9 @@ def test_a_fit_whose_offset_collapses_is_flagged(monkeypatch, kahramanmaras):
     assert "collapsed" in result["omori_warning"]
 
 
-def test_a_decay_exponent_outside_the_reported_range_is_flagged(monkeypatch, kahramanmaras):
+def test_a_decay_exponent_outside_the_reported_range_is_flagged(
+    monkeypatch, kahramanmaras
+):
     monkeypatch.setattr(constants, "OMORI_P_MIN", 1.5)
     result = analyze_case(kahramanmaras, MAINSHOCK, mc_threshold=3.5, n_boot=0)
     assert "outside 1.5" in result["omori_warning"]
