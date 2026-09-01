@@ -38,6 +38,9 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 88
 src = ["src", "tests"]
+# ruff formats Python inside Markdown fences too; the README aligns its example
+# comments for readability, so prose is left alone.
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "NPY", "RUF"]

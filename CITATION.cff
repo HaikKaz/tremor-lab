@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: "Tremor Lab: aftershock-sequence statistics in Python"
+abstract: >-
+  Estimators for aftershock sequences: the magnitude of completeness by maximum
+  curvature, the Gutenberg-Richter b-value by the Aki maximum-likelihood estimator with
+  the Shi and Bolt standard error, the modified Omori-Utsu decay by maximum likelihood
+  with a bootstrap uncertainty, radiated energy and the Bath energy screen, and
+  magnitude homogenisation to Mw by the Scordilis relations.
+type: software
+version: 1.0.0
+license: MIT
+authors:
+  - given-names: Haik
+    family-names: Kazarian
+    # Fill these in before archiving:
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+    # affiliation: ""
+keywords:
+  - seismology
+  - aftershocks
+  - Gutenberg-Richter
+  - b-value
+  - Omori-Utsu
+# Add once the release is archived for a DOI:
+# doi: 10.5281/zenodo.0000000
+# repository-code: "https://github.com/<user>/tremor-lab"
