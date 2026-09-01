@@ -7,6 +7,7 @@ fail only if a coefficient has been mistyped.
 import numpy as np
 import pytest
 
+from tremor_lab import constants
 from tremor_lab.magnitude import (
     bath_mag,
     bath_ratio,
@@ -74,3 +75,22 @@ def test_to_mw_vectorises_over_a_mixed_scale_catalogue():
     mag = [6.0, 5.0, 6.5, 4.2]
     mtype = [" Ms ", "mb", "Mw", "ml"]
     assert to_mw(mag, mtype) == pytest.approx([6.09, 5.28, 6.5, 4.2])
+
+
+def test_a_coefficient_can_be_overridden_for_one_call():
+    assert bath_mag(7.8, delta_mb=1.2) == pytest.approx(6.6)
+    assert np.log10(energy_joules(7.8, a=1.5, b=4.9)) == pytest.approx(16.6)
+    assert ms_to_mw(6.0, low_slope=1.0, low_intercept=0.0) == pytest.approx(6.0)
+
+
+def test_a_coefficient_can_be_overridden_for_a_whole_session(monkeypatch):
+    monkeypatch.setattr(constants, "DELTA_MB", 1.2)
+    assert bath_mag(7.8) == pytest.approx(6.6)
+    assert np.log10(bath_ratio(7.6, 7.8)) == pytest.approx(1.5)
+
+
+def test_a_session_override_reaches_functions_that_call_others(monkeypatch):
+    # to_mw delegates to mb_to_mw, which resolves its coefficients at call time.
+    monkeypatch.setattr(constants, "MB_MW_SLOPE", 1.0)
+    monkeypatch.setattr(constants, "MB_MW_INTERCEPT", 0.0)
+    assert to_mw(5.0, "mb") == pytest.approx(5.0)
