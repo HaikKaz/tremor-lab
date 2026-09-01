@@ -1,0 +1,35 @@
+# Reproduces the reference values reported for the 2023 Kahramanmaras sequence.
+#   tremor-lab run examples/kahramanmaras.toml
+# Expected: Mc 3.4, b 0.844 +/- 0.019 on 1529 events, Omori p 1.161, c 0.497, k 359.
+
+[catalog]
+# On Windows, write the path with forward slashes (C:/data/catalog.csv) or in
+# single quotes ('C:\data\catalog.csv'). A backslash inside a double-quoted TOML
+# string is an escape character and will be rejected as invalid.
+# This file is already windowed: it carries elapsed days rather than timestamps, so
+# the columns below name that form. A raw export is configured differently; see the
+# README for the KOERI and USGS shapes.
+path = "../tests/data/kahramanmaras_180d.csv"
+
+[catalog.columns]
+dt_days = "dt_days"
+mag = "mw"
+
+[mainshock]
+t = "2023-02-06 01:17:32"
+lat = 37.1578
+lon = 36.8092
+mw = 7.8
+
+[analysis]
+window_days = 180
+threshold = 3.5
+n_boot = 200
+seed = 0
+
+# Any name from tremor_lab.constants may be set here. These are the defaults, shown so
+# that the values behind the numbers are visible in the record of the run.
+[constants]
+DM = 0.1
+MC_CORRECTION = 0.2
+DELTA_MB = 1.15
