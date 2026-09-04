@@ -1,9 +1,8 @@
 """Published constants used by the estimators, all of them overridable.
 
-Every value here is a default, not a fixed law of the package. There are two ways to
-change one.
+Every value here is a default, not a fixed law of the package.
 
-Change it for a single call, by passing the matching keyword argument::
+Most can be changed for a single call, by passing the matching keyword argument::
 
     energy_joules(7.8, a=1.44, b=5.24)
     mc_maxcurvature(mags, dm=0.05, correction=0.0)
@@ -17,6 +16,10 @@ call time, so the new value applies to every later call, including calls made in
 
 The command-line tool exposes the same names in the ``[constants]`` section of its
 settings file, so they can be changed without writing Python.
+
+The three fit-quality bounds, ``OMORI_C_FLOOR``, ``OMORI_P_MIN`` and ``OMORI_P_MAX``,
+are the exception: they have no keyword argument, because they judge a fit rather than
+enter it. They are changed by reassignment here or from the settings file.
 """
 
 # Radiated energy: log10(E) = ENERGY_A * M + ENERGY_B, with E in joules.

@@ -178,8 +178,8 @@ are taken as reported, since no global relation is published for them.
 
 ## Changing the constants
 
-Every published constant is a default, not a fixed law of the package. All of them live
-in `tremor_lab.constants`, and there are three ways to change one.
+Every published constant is a default, not a fixed law of the package. All 23 live in
+`tremor_lab.constants`.
 
 For a single call, pass the keyword argument:
 
@@ -197,6 +197,11 @@ constants.DELTA_MB = 1.2
 ```
 
 Without writing Python, set it in the `[constants]` section of a settings file.
+
+Three of the 23 are the exception to the keyword route: `OMORI_C_FLOOR`, `OMORI_P_MIN`
+and `OMORI_P_MAX` judge whether a fitted decay is worth believing rather than entering
+the fit, so they have no keyword argument and are changed by reassignment or from a
+settings file.
 
 ## Validation
 
