@@ -1,0 +1,19 @@
+{
+  "upload_type": "software",
+  "title": "Tremor Lab: aftershock-sequence statistics in Python",
+  "description": "<p>Estimators for aftershock sequences: the magnitude of completeness by maximum curvature (Wiemer and Wyss 2000), the Gutenberg-Richter b-value by the Aki (1965) maximum-likelihood estimator with the Shi and Bolt (1982) standard error, the modified Omori-Utsu decay by maximum likelihood (Ogata 1983; Utsu, Ogata and Matsu'ura 1995) with a seeded bootstrap uncertainty, radiated energy and the Bath energy screen, and magnitude homogenisation to Mw by the Scordilis (2006) relations.</p><p>Ships as an installable Python package, a command-line tool, and a single self-contained HTML page that runs the same estimators in a browser with nothing installed. Reproduces a locked set of reference values for the 2023 Kahramanmaras sequence with one command.</p>",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    { "name": "Kazarian, Haik" }
+  ],
+  "keywords": [
+    "seismology",
+    "aftershocks",
+    "Gutenberg-Richter",
+    "b-value",
+    "Omori-Utsu",
+    "magnitude of completeness",
+    "reproducible research"
+  ]
+}
