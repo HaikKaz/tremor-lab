@@ -659,10 +659,15 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
       all eight of those values live.
     </p>
     <p class="note">
-      <strong>Two deliberate differences from the spreadsheet version.</strong> The bootstrap is
-      seeded, so the same seed gives the same error bars instead of a new answer each run. Times
-      are handled in UTC, so elapsed days do not depend on the viewer&rsquo;s time zone or on
-      daylight saving.
+      <strong>Five deliberate differences from the spreadsheet version.</strong> The bootstrap
+      is seeded, so the same seed gives the same error bars instead of a new answer each run.
+      Times are handled in UTC, so elapsed days do not depend on the viewer&rsquo;s time zone or
+      on daylight saving. The decay search restarts from several starting points, because one
+      start can settle short of the best fit. A converged decay fit is marked when c collapses
+      onto the boundary of the model or p falls outside the range reported for real sequences.
+      And the minimum event counts follow the Python package &mdash; more than 50 events for a
+      completeness magnitude, more than 100 above the threshold for a b&#8209;value or a decay
+      fit &mdash; rather than the spreadsheet&rsquo;s lower ones.
     </p>
     <p class="note tight">MIT licence &middot; H. Kazarian &middot; Tremor Lab 1.0.0</p>
   </footer>
