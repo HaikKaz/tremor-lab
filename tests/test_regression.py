@@ -10,6 +10,10 @@ If a change to this package makes this file fail, the change is wrong, not the n
 Locked: 3469 events in a 180-day window; Mc 3.4; b 0.844 +/- 0.019 on 1529 events at or
 above M 3.5; Omori p 1.161, c 0.497, k 359. At full precision the fit gives
 p 1.160897, c 0.496822, k 358.868.
+
+Produced with Python 3.13.7, NumPy 2.5.2, SciPy 1.18.1, pandas 2.3.3 on
+Windows 11, 5 September 2026. When this file goes red, check the dependency
+versions before assuming a regression in this package.
 """
 
 from pathlib import Path

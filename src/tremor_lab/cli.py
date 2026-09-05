@@ -11,6 +11,7 @@ remember.
 import argparse
 import sys
 import tomllib
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -109,15 +110,32 @@ def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
         **analysis,
     )
     result.update({k: v for k, v in catalog.attrs.items() if k.startswith("rows_")})
-    scale_col = columns.get("mag_type")
-    result["magnitude_note"] = (
-        f"column {columns.get('mag')!r}, scale column {scale_col!r}, converted to "
-        f"Mw by the Scordilis relations where the scale is Ms or mb"
-        if scale_col
-        else f"column {columns.get('mag')!r}, used as published; no scale column "
-        f"given, so no homogenisation was applied"
+    result["magnitude_note"] = _magnitude_note(
+        columns, catalog.attrs.get("scale_counts")
     )
     return result, path
+
+
+def _magnitude_note(columns: Mapping[str, str], scales) -> str:
+    """State what happened to the magnitudes, from counts rather than intent."""
+    source = f"column {columns.get('mag')!r}"
+    scale_col = columns.get("mag_type")
+    if not scale_col:
+        return f"{source}, used as published; no scale column given"
+    if not scales:
+        return f"{source}, scale column {scale_col!r}"
+    converted = scales.get("ms", 0) + scales.get("mb", 0)
+    if not converted:
+        return (
+            f"{source}, scale column {scale_col!r} held no Ms or mb labels, so "
+            f"nothing was converted and every magnitude was used as published"
+        )
+    return (
+        f"{source}, scale column {scale_col!r}: {scales.get('ms', 0)} Ms and "
+        f"{scales.get('mb', 0)} mb converted to Mw by the Scordilis relations, "
+        f"{scales.get('mw', 0)} already Mw, "
+        f"{scales.get('unconverted', 0)} used as published"
+    )
 
 
 def _report(result: dict[str, Any], source: Path) -> str:

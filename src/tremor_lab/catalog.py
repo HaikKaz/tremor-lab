@@ -139,19 +139,43 @@ def read_catalog(
         }
     )
     mag = pd.to_numeric(frame[columns["mag"]], errors="coerce")
-    parsed["mw"] = (
-        to_mw(mag.to_numpy(), frame[mag_type_col].to_numpy(dtype=str))
-        if mag_type_col
-        else mag
-    )
+    scales: dict[str, int] = {}
+    if mag_type_col:
+        labels = frame[mag_type_col].to_numpy(dtype=str)
+        parsed["mw"] = to_mw(mag.to_numpy(), labels)
+        scales = _scale_counts(labels)
+    else:
+        parsed["mw"] = mag
 
     out = window(parsed, mainshock, window_days)
     out.attrs = {
         "rows_read": len(frame),
         "rows_parsed": int(parsed.notna().all(axis=1).sum()),
         "events_in_window": len(out),
+        "scale_counts": scales,
     }
     return out
+
+
+def _scale_counts(labels) -> dict[str, int]:
+    """How many magnitudes each conversion branch of `to_mw` actually took.
+
+    A scale column is not always a scale column: KOERI's "Type" holds
+    "Earthquake". Counting the branches lets a caller report what happened
+    instead of asserting that a conversion occurred.
+    """
+    counts = {"ms": 0, "mb": 0, "mw": 0, "unconverted": 0}
+    for raw in labels:
+        label = str(raw).strip().lower()
+        if label.startswith("mw"):
+            counts["mw"] += 1
+        elif label == "ms":
+            counts["ms"] += 1
+        elif label == "mb":
+            counts["mb"] += 1
+        else:
+            counts["unconverted"] += 1
+    return counts
 
 
 def _parse_times(

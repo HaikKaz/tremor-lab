@@ -106,7 +106,9 @@ def test_magnitudes_are_taken_as_reported_without_a_type_column():
 
 def test_unparseable_rows_are_dropped_and_counted():
     cat = read_koeri(mag_type_col="Tip")
-    assert cat.attrs == {"rows_read": 10, "rows_parsed": 7, "events_in_window": 4}
+    assert cat.attrs["rows_read"] == 10
+    assert cat.attrs["rows_parsed"] == 7
+    assert cat.attrs["events_in_window"] == 4
 
 
 def test_the_two_export_formats_give_the_same_window():
@@ -146,3 +148,29 @@ def test_window_can_be_called_directly_on_a_parsed_frame():
     )
     out = window(frame, MAINSHOCK, window_days=180)
     assert out["dt_days"].to_list() == pytest.approx([0.5, 1.0])
+
+
+def test_conversions_are_counted_so_a_report_can_state_what_happened():
+    cat = read_koeri(mag_type_col="Tip")
+    # the fixture's four in-window events are ML, Ms, mb and Mw
+    assert cat.attrs["scale_counts"]["ms"] == 1
+    assert cat.attrs["scale_counts"]["mb"] == 1
+    assert cat.attrs["scale_counts"]["mw"] == 1
+
+
+def test_a_column_holding_no_scale_labels_converts_nothing():
+    # KOERI's "Type" column holds "Earthquake"; naming it as the scale column
+    # must not produce a report claiming a conversion took place.
+    path = DATA / "raw_catalog_koeri.csv"
+    frame = pd.read_csv(path)
+    frame["Kind"] = "Earthquake"
+    scratch = DATA.parent / "_kind.csv"
+    frame.to_csv(scratch, index=False)
+    try:
+        cat = read_catalog(scratch, KOERI_COLUMNS, MAINSHOCK, mag_type_col="Kind")
+        counts = cat.attrs["scale_counts"]
+        assert counts["ms"] == 0 and counts["mb"] == 0
+        assert counts["unconverted"] == len(frame)
+        assert cat["mw"].to_list() == pytest.approx([4.5, 4.2, 5.5, 3.9])
+    finally:
+        scratch.unlink()

@@ -230,6 +230,8 @@ bundled catalogue.
 | b-value (Aki) | 0.844 +/- 0.019 on 1529 events |
 | Omori | p = 1.161, c = 0.497, k = 359 |
 
+Produced with Python 3.13.7, NumPy 2.5.2, SciPy 1.18.1, pandas 2.3.3 on Windows 11, 5 September 2026.
+
 These were produced by the validated Python/SciPy reference implementation and
 reproduced independently by the spreadsheet implementation, whose optimiser is a
 hand-written Nelder-Mead simplex rather than SciPy's. Two independent optimisers
