@@ -5,6 +5,7 @@ from typing import NamedTuple
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.optimize import minimize
+from scipy.stats import kstest
 
 from tremor_lab import constants
 
@@ -66,6 +67,7 @@ def fit_omori(
     t_end: float | None = None,
     c0: float | None = None,
     p0: float | None = None,
+    t_start: float = 0.0,
 ) -> Omori:
     """
     Maximum-likelihood fit of n(t) = k / (c + t)^p to unbinned post-mainshock times.
@@ -105,9 +107,11 @@ def fit_omori(
     Ogata, Y. (1983). Utsu, T., Ogata, Y. and Matsu'ura, R. S. (1995).
     """
     t = np.sort(np.asarray(times_days, float))
-    t = t[t > 0]
+    t = t[t > t_start]
     if t.size < 2:
-        raise ValueError(f"Omori fit needs at least two positive times; got {t.size}")
+        raise ValueError(
+            f"Omori fit needs at least two times after {t_start}; got {t.size}"
+        )
     if t_end is None:
         t_end = float(t[-1])
     c0 = constants.OMORI_C0 if c0 is None else c0
@@ -116,21 +120,25 @@ def fit_omori(
     search = minimize(
         _profiled_nll,
         (c0, p0),
-        args=(t, t_end),
+        args=(t, t_end, t_start),
         method="Nelder-Mead",
         # fatol is absolute, so it must scale with the likelihood, which grows
         # with n; a fixed 1e-10 is unreachable on a large catalogue and the fit
         # is then rejected as unconverged despite sitting on the optimum.
         options={
             "xatol": 1e-8,
-            "fatol": max(1e-10, 1e-10 * abs(_profiled_nll((c0, p0), t, t_end))),
+            "fatol": max(
+                1e-10, 1e-10 * abs(_profiled_nll((c0, p0), t, t_end, t_start))
+            ),
             "maxiter": 5000,
         },
     )
     if not search.success:
         raise ValueError(f"Omori fit did not converge: {search.message}")
     c, p = search.x
-    return Omori(float(p), float(c), t.size / _integrated_rate(c, p, t_end), t.size)
+    return Omori(
+        float(p), float(c), t.size / _integrated_rate(c, p, t_end, t_start), t.size
+    )
 
 
 def bootstrap_omori(
@@ -185,20 +193,88 @@ def bootstrap_omori(
     )
 
 
-def _integrated_rate(c: float, p: float, t_end: float) -> float:
-    """Integral of (c + t)^-p over (0, t_end], the expected count per unit k."""
+def _integrated_rate(c: float, p: float, t_end: float, t_start: float = 0.0) -> float:
+    """Integral of (c + t)^-p over (t_start, t_end], the expected count per unit k."""
     if abs(p - 1.0) < 1e-12:
-        return float(np.log((t_end + c) / c))
-    return float(((t_end + c) ** (1.0 - p) - c ** (1.0 - p)) / (1.0 - p))
+        return float(np.log((t_end + c) / (t_start + c)))
+    return float(((t_end + c) ** (1.0 - p) - (t_start + c) ** (1.0 - p)) / (1.0 - p))
 
 
-def _profiled_nll(cp: tuple[float, float], t: np.ndarray, t_end: float) -> float:
+def _profiled_nll(
+    cp: tuple[float, float], t: np.ndarray, t_end: float, t_start: float = 0.0
+) -> float:
     """Negative log-likelihood with k replaced by its maximising value n / integral."""
     c, p = cp
     if c <= 0 or p <= 0:
         return np.inf
-    integral = _integrated_rate(c, p, t_end)
+    integral = _integrated_rate(c, p, t_end, t_start)
     if integral <= 0:
         return np.inf
     n = t.size
     return float(p * np.sum(np.log(t + c)) - n * np.log(n / integral) + n)
+
+
+class FitTest(NamedTuple):
+    """Kolmogorov-Smirnov test of a fitted decay against the times it was fitted to."""
+
+    statistic: float
+    p_value: float
+    n: int
+
+
+def omori_fit_test(
+    times_days: ArrayLike,
+    fit: Omori,
+    t_end: float | None = None,
+    t_start: float = 0.0,
+) -> FitTest:
+    """
+    Test whether the fitted decay actually describes the occurrence times.
+
+    Under the modified Omori-Utsu model the transformed times, each event's
+    expected count since the start of the interval, are the arrival times of a
+    Poisson process of unit rate. Rescaled by the total expected count they are
+    therefore uniform on (0, 1), and a Kolmogorov-Smirnov test against that
+    uniform is the standard residual analysis for a point process. A small
+    p-value means the sequence is not a single Omori decay, most often because a
+    large aftershock has started a sequence of its own inside the window.
+
+    The test is on times, which are continuous, so no discreteness correction is
+    needed; the same test on binned magnitudes would reject on the binning alone.
+
+    Parameters
+    ----------
+    times_days : array_like
+        The elapsed times the fit was made on.
+    fit : Omori
+        The fitted parameters.
+    t_end : float, optional
+        End of the observation interval. Defaults to the largest time supplied.
+    t_start : float, optional
+        Start of the observation interval, 0 by default.
+
+    Returns
+    -------
+    FitTest
+        The KS statistic, its p-value, and the number of times tested. A p-value
+        below 0.05 is the conventional signal that the model is inadequate.
+
+    References
+    ----------
+    Ogata, Y. (1988).
+    """
+    t = np.sort(np.asarray(times_days, float))
+    t = t[t > t_start]
+    if t_end is None:
+        t_end = float(t[-1])
+    total = _integrated_rate(fit.c, fit.p, t_end, t_start)
+    if not np.isfinite(total) or total <= 0:
+        return FitTest(float("nan"), float("nan"), int(t.size))
+    if abs(fit.p - 1.0) < 1e-12:
+        transformed = np.log((t + fit.c) / (t_start + fit.c))
+    else:
+        transformed = (
+            (t + fit.c) ** (1.0 - fit.p) - (t_start + fit.c) ** (1.0 - fit.p)
+        ) / (1.0 - fit.p)
+    result = kstest(np.clip(transformed / total, 0.0, 1.0), "uniform")
+    return FitTest(float(result.statistic), float(result.pvalue), int(t.size))

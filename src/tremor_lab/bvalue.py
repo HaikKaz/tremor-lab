@@ -3,7 +3,7 @@
 from typing import NamedTuple
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from tremor_lab import constants
 
@@ -77,3 +77,117 @@ def b_value_aki(
     b = 1.0 / (np.log(10) * (mean_m - threshold))
     sigma = shi_bolt_k * b**2 * np.sqrt(((m - mean_m) ** 2).sum() / (n * (n - 1)))
     return BValue(float(b), float(sigma), n)
+
+
+class BStability(NamedTuple):
+    """b and its standard error as a function of the threshold applied."""
+
+    thresholds: NDArray[np.float64]
+    b: NDArray[np.float64]
+    sigma: NDArray[np.float64]
+    n: NDArray[np.int64]
+
+
+def b_stability(
+    mags: ArrayLike,
+    thresholds: ArrayLike | None = None,
+    dm: float | None = None,
+    min_events: int = 50,
+) -> BStability:
+    """
+    b against the threshold it was estimated at.
+
+    Above a correctly estimated completeness magnitude the b-value should not
+    depend on where the threshold is put; a curve that keeps climbing is the
+    standard sign that completeness has been placed too low, or that the sample
+    is not a single Gutenberg-Richter population. The Shi and Bolt error is the
+    scatter at one threshold and says nothing about this, so the curve carries
+    information the headline figure cannot.
+
+    Parameters
+    ----------
+    mags : array_like
+        Event magnitudes.
+    thresholds : array_like, optional
+        Thresholds to evaluate. Defaults to the bin grid from the smallest
+        magnitude to two units above it.
+    dm : float, optional
+        Magnitude bin width. Defaults to `constants.DM`.
+    min_events : int, optional
+        Thresholds retaining fewer events than this are dropped, since b is not
+        meaningful there. 50 by default.
+
+    Returns
+    -------
+    BStability
+        Arrays of threshold, b, sigma and n, one entry per usable threshold.
+
+    References
+    ----------
+    Cao, A. and Gao, S. S. (2002). Woessner, J. and Wiemer, S. (2005).
+    """
+    dm = constants.DM if dm is None else dm
+    m = np.asarray(mags, float)
+    if thresholds is None:
+        lo = np.round(np.floor(m.min() / dm) * dm, 10)
+        thresholds = np.round(lo + dm * np.arange(round(2.0 / dm) + 1), 10)
+    thresholds = np.atleast_1d(np.asarray(thresholds, float))
+
+    kept, bs, sigmas, ns = [], [], [], []
+    for threshold in thresholds:
+        if int((m >= threshold - dm / 2).sum()) < min_events:
+            continue
+        estimate = b_value_aki(m, threshold, dm=dm)
+        kept.append(threshold)
+        bs.append(estimate.b)
+        sigmas.append(estimate.sigma)
+        ns.append(estimate.n)
+    return BStability(
+        np.array(kept), np.array(bs), np.array(sigmas), np.array(ns, dtype=np.int64)
+    )
+
+
+def mc_b_stability(
+    mags: ArrayLike,
+    dm: float | None = None,
+    span: float = 0.5,
+    min_events: int = 50,
+) -> float | None:
+    """
+    Completeness magnitude by the b-value stability method.
+
+    The lowest threshold at which b has stopped changing: b there differs from
+    the mean of b over the next `span` magnitude units by no more than its own
+    standard error. Where maximum curvature answers "where is the peak of the
+    incremental distribution", this answers "from where onward does the slope
+    stop moving", and the two disagreeing is itself worth reporting.
+
+    Parameters
+    ----------
+    mags : array_like
+        Event magnitudes.
+    dm : float, optional
+        Magnitude bin width. Defaults to `constants.DM`.
+    span : float, optional
+        Width of the averaging window above each candidate, 0.5 by default.
+    min_events : int, optional
+        Minimum events above a threshold for it to be a candidate.
+
+    Returns
+    -------
+    float or None
+        The completeness magnitude, or None if b never stabilises over the
+        range available.
+
+    References
+    ----------
+    Cao, A. and Gao, S. S. (2002). Woessner, J. and Wiemer, S. (2005).
+    """
+    dm = constants.DM if dm is None else dm
+    curve = b_stability(mags, dm=dm, min_events=min_events)
+    steps = round(span / dm)
+    for i in range(len(curve.thresholds) - steps):
+        window = curve.b[i : i + steps + 1]
+        if abs(window.mean() - curve.b[i]) <= curve.sigma[i]:
+            return float(curve.thresholds[i])
+    return None

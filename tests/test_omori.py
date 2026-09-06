@@ -5,7 +5,12 @@ import pytest
 from scipy.optimize import minimize
 
 from tremor_lab import constants
-from tremor_lab.omori import bootstrap_omori, fit_omori, omori_nll
+from tremor_lab.omori import (
+    bootstrap_omori,
+    fit_omori,
+    omori_fit_test,
+    omori_nll,
+)
 
 
 def omori_sample(n, p, c, t_end, seed):
@@ -115,7 +120,7 @@ def test_non_positive_times_are_discarded():
 
 
 def test_too_few_times_is_an_error():
-    with pytest.raises(ValueError, match="at least two positive times"):
+    with pytest.raises(ValueError, match="at least two times after"):
         fit_omori([1.0])
 
 
@@ -154,3 +159,44 @@ def test_a_negative_bootstrap_count_is_refused():
     t = omori_sample(500, 1.15, 0.5, t_end=180.0, seed=0)
     with pytest.raises(ValueError, match="cannot be negative"):
         bootstrap_omori(t, n_boot=-5)
+
+
+def test_a_fit_can_start_after_the_origin():
+    # The early hours of a real sequence are the least complete; being able to
+    # exclude them is how c is diagnosed rather than merely reported.
+    t = omori_sample(4000, 1.15, 0.5, t_end=180.0, seed=0)
+    late = fit_omori(t, t_end=180.0, t_start=1.0)
+    assert late.n == int((t > 1.0).sum())
+    assert late.p == pytest.approx(1.15, abs=0.08)
+
+
+def test_starting_at_zero_is_unchanged():
+    t = omori_sample(2000, 1.15, 0.5, t_end=180.0, seed=1)
+    assert fit_omori(t, t_end=180.0) == fit_omori(t, t_end=180.0, t_start=0.0)
+
+
+def test_times_from_the_fitted_model_pass_the_fit_test():
+    t = omori_sample(3000, 1.15, 0.5, t_end=180.0, seed=0)
+    fit = fit_omori(t, t_end=180.0)
+    assert omori_fit_test(t, fit, t_end=180.0).p_value > 0.05
+
+
+def test_times_that_are_not_an_omori_decay_are_rejected():
+    # The negative control: without it a test that never fails is evidence of
+    # nothing. A uniform sequence will not do, because the model covers it at
+    # p = 0, where the rate is constant. A rate that *rises* with time cannot be
+    # k / (c + t)^p for any positive p, so it must be rejected.
+    rng = np.random.default_rng(0)
+    t = np.sort(180.0 * rng.random(3000) ** (1 / 3))
+    fit = fit_omori(t, t_end=180.0)
+    assert omori_fit_test(t, fit, t_end=180.0).p_value < 0.01
+
+
+def test_a_second_sequence_inside_the_window_is_detected():
+    # One Omori decay plus a burst starting on day 30, which is what a large
+    # aftershock does to a catalogue. The model should be rejected.
+    main = omori_sample(2500, 1.15, 0.5, t_end=180.0, seed=0)
+    burst = 30.0 + omori_sample(1200, 1.2, 0.3, t_end=150.0, seed=1)
+    t = np.sort(np.concatenate([main, burst]))
+    fit = fit_omori(t, t_end=180.0)
+    assert omori_fit_test(t, fit, t_end=180.0).p_value < 0.01

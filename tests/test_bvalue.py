@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from tremor_lab import constants
-from tremor_lab.bvalue import b_value_aki
+from tremor_lab.bvalue import b_stability, b_value_aki, mc_b_stability
 
 LN10 = np.log(10)
 
@@ -77,3 +77,31 @@ def test_a_known_b_is_recovered_from_unbinned_magnitudes(seed):
 def test_the_true_b_lies_within_a_few_standard_errors():
     result = b_value_aki(gutenberg_richter_sample(0.85, 3.0, 20000, 3), mc=3.0)
     assert abs(result.b - 0.85) < 3 * result.sigma
+
+
+def test_the_stability_curve_is_flat_for_a_single_gutenberg_richter_population():
+    # Drawn from one law, so b must not drift with the threshold; this is the
+    # control that gives the curve its meaning on real data.
+    mags = gutenberg_richter_sample(b=1.0, mc=3.0, n=200000, seed=0)
+    curve = b_stability(mags, dm=0.1, min_events=500)
+    assert curve.b.size > 10
+    assert curve.b.max() - curve.b.min() < 0.08
+    assert curve.b.mean() == pytest.approx(1.0, abs=0.02)
+
+
+def test_the_stability_curve_reports_one_entry_per_usable_threshold():
+    mags = gutenberg_richter_sample(b=1.0, mc=3.0, n=5000, seed=1)
+    curve = b_stability(mags, thresholds=[3.0, 3.5, 4.0], dm=0.1, min_events=1)
+    assert curve.thresholds.tolist() == [3.0, 3.5, 4.0]
+    assert (np.diff(curve.n) < 0).all()
+
+
+def test_b_stability_finds_completeness_for_a_catalogue_missing_small_events():
+    # Complete from 3.0, then everything below 3.5 thinned away: the slope only
+    # settles above the true completeness.
+    rng = np.random.default_rng(3)
+    mags = gutenberg_richter_sample(b=1.0, mc=3.0, n=200000, seed=2)
+    keep = (mags >= 3.5) | (rng.random(mags.size) < 0.25)
+    mc = mc_b_stability(mags[keep], dm=0.1, min_events=200)
+    assert mc is not None
+    assert 3.3 <= mc <= 3.8

@@ -7,10 +7,10 @@ from typing import Any
 import pandas as pd
 
 from tremor_lab import constants
-from tremor_lab.bvalue import b_value_aki
-from tremor_lab.completeness import fmd, mc_maxcurvature
+from tremor_lab.bvalue import b_stability, b_value_aki, mc_b_stability
+from tremor_lab.completeness import fmd, mc_goodness_of_fit, mc_maxcurvature
 from tremor_lab.magnitude import bath_mag, energy_joules
-from tremor_lab.omori import bootstrap_omori, fit_omori
+from tremor_lab.omori import bootstrap_omori, fit_omori, omori_fit_test
 
 REQUIRED_COLUMNS = ("dt_days", "mw")
 
@@ -90,11 +90,21 @@ def analyze_case(
     post = usable[(usable["dt_days"] > 0) & (usable["dt_days"] <= window_days)]
     mags = post["mw"].to_numpy()
 
+    dense_enough = len(post) > min_events_for_mc
     mc = (
-        mc_maxcurvature(mags, dm=dm, correction=mc_correction)
-        if len(post) > min_events_for_mc
-        else None
+        mc_maxcurvature(mags, dm=dm, correction=mc_correction) if dense_enough else None
     )
+    # Maximum curvature answers only "where does the incremental distribution
+    # peak". Two further methods ask whether the data above a threshold actually
+    # look like a Gutenberg-Richter law, and where the slope stops moving. Where
+    # the three disagree, the spread is the honest uncertainty in completeness,
+    # and it is usually far larger than the b-value's own standard error.
+    mc_methods = {"maximum_curvature": mc}
+    stability = None
+    if dense_enough:
+        mc_methods["goodness_of_fit"] = mc_goodness_of_fit(mags, dm=dm).mc
+        mc_methods["b_stability"] = mc_b_stability(mags, dm=dm)
+        stability = b_stability(mags, dm=dm)
     threshold = mc if mc_threshold is None else mc_threshold
     above = post if threshold is None else post[post["mw"] >= threshold]
 
@@ -109,6 +119,9 @@ def analyze_case(
         "mainshock_energy_j": float(energy_joules(mainshock["mw"])),
         "bath_mag": float(bath_mag(mainshock["mw"])),
         "fmd": fmd(mags, dm=dm) if len(post) else None,
+        "mc_methods": mc_methods,
+        "b_stability": stability,
+        "omori_fit_test": None,
         "n_unusable": n_unusable,
         "omori_warning": None,
         "note": None,
@@ -131,6 +144,7 @@ def analyze_case(
     times = above["dt_days"].to_numpy()
     result["omori"] = fit_omori(times)
     result["omori_warning"] = _omori_caution(result["omori"])
+    result["omori_fit_test"] = omori_fit_test(times, result["omori"])
     if n_boot:
         result["omori_bootstrap"] = bootstrap_omori(times, n_boot=n_boot, seed=seed)
     return result

@@ -155,10 +155,26 @@ def _report(result: dict[str, Any], source: Path) -> str:
         lines.append(f"incomplete rows      {result['n_unusable']} dropped")
     lines += [
         f"events in window     {result['n_events']}",
-        f"completeness Mc      {_show(result['mc'])}",
+        f"completeness Mc      {_show(result['mc'])}  (maximum curvature)",
         f"threshold used       {_show(result['threshold'])}"
         f"  ({_show(result['n_above'])} events at or above it)",
     ]
+    methods = result.get("mc_methods") or {}
+    if len(methods) > 1:
+        lines.append(
+            "Mc, other methods    "
+            + ", ".join(
+                f"{name.replace('_', ' ')} {_show(value)}"
+                for name, value in methods.items()
+                if name != "maximum_curvature"
+            )
+        )
+        spread = [v for v in methods.values() if v is not None]
+        if len(spread) > 1 and max(spread) - min(spread) > 1e-9:
+            lines.append(
+                f"                     the methods span M {min(spread)} to "
+                f"{max(spread)}; b depends on which is used"
+            )
     b, omori, spread = result["b_value"], result["omori"], result["omori_bootstrap"]
     if b is None or omori is None:
         lines.append(f"not estimated        {result['note']}")
@@ -171,6 +187,17 @@ def _report(result: dict[str, Any], source: Path) -> str:
             + (f" +/- {spread.c_std:.3f}" if spread else ""),
             f"Omori k              {omori.k:.1f}",
         ]
+        test = result.get("omori_fit_test")
+        if test is not None and test.p_value == test.p_value:
+            verdict = (
+                "consistent with one Omori decay"
+                if test.p_value > 0.05
+                else "NOT consistent with a single Omori decay"
+            )
+            lines.append(
+                f"decay fit test       KS {test.statistic:.4f}, "
+                f"p {test.p_value:.3f}  ({verdict})"
+            )
         if result.get("omori_warning"):
             lines.append(f"CAUTION              {result['omori_warning']}")
     lines += [
