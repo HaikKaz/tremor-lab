@@ -322,11 +322,19 @@ def omori_fit_test(
     """
     t = np.sort(np.asarray(times_days, float))
     t = t[t > t_start]
+    if t.size == 0:
+        return FitTest(float("nan"), float("nan"), 0, "no times after t_start")
     if t_end is None:
         t_end = float(t[-1])
+    if not (t_end > t_start) or not np.isfinite(fit.c) or not np.isfinite(fit.p):
+        return FitTest(
+            float("nan"), float("nan"), int(t.size), "interval or fit unusable"
+        )
     total = _integrated_rate(fit.c, fit.p, t_end, t_start)
     if not np.isfinite(total) or total <= 0:
-        return FitTest(float("nan"), float("nan"), int(t.size))
+        return FitTest(
+            float("nan"), float("nan"), int(t.size), "interval or fit unusable"
+        )
     if abs(fit.p - 1.0) < 1e-12:
         transformed = np.log((t + fit.c) / (t_start + fit.c))
     else:

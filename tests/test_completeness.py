@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from tremor_lab import constants
-from tremor_lab.completeness import fmd, mc_maxcurvature
+from tremor_lab.completeness import fmd, mc_goodness_of_fit, mc_maxcurvature
 
 DATA = Path(__file__).parent / "data"
 
@@ -79,3 +79,30 @@ def test_the_two_binning_conventions_agree_on_the_reference_catalogue():
     counts, edges = np.histogram(mags, bins=bins)
     legacy_mc = round(float(edges[np.argmax(counts)] + 0.2), 2)
     assert mc_maxcurvature(mags) == legacy_mc == 3.4
+
+
+def test_goodness_of_fit_on_the_reference_catalogue():
+    mags = pd.read_csv(DATA / "kahramanmaras_180d.csv")["mw"].to_numpy()
+    result = mc_goodness_of_fit(mags)
+    assert result.mc == pytest.approx(3.0)
+    assert result.r_value == pytest.approx(90.83, abs=0.05)
+    # R is 100 (1 - sum|observed - synthetic| / sum observed), a residual
+    # fraction, so it can never exceed 100. Dropping the absolute value would.
+    assert np.all(result.r_values <= 100.0)
+    assert result.candidates.size == result.r_values.size
+
+
+def test_goodness_of_fit_returns_nothing_when_the_level_is_unreachable():
+    mags = pd.read_csv(DATA / "kahramanmaras_180d.csv")["mw"].to_numpy()
+    result = mc_goodness_of_fit(mags, confidence=99.9)
+    assert result.mc is None
+    assert result.r_value is None
+    assert result.r_values.size > 0
+
+
+def test_goodness_of_fit_prefers_the_lowest_candidate_that_reaches_the_level():
+    mags = pd.read_csv(DATA / "kahramanmaras_180d.csv")["mw"].to_numpy()
+    strict = mc_goodness_of_fit(mags, confidence=95.0)
+    assert strict.mc is not None
+    assert strict.mc > mc_goodness_of_fit(mags, confidence=90.0).mc
+    assert strict.r_value >= 95.0

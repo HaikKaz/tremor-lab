@@ -70,6 +70,12 @@ def _load_settings(path: Path) -> dict[str, Any]:
     for section in ("catalog", "mainshock"):
         if section not in settings:
             raise KeyError(f"{path}: missing [{section}] section")
+    unknown = sorted(set(settings) - {"catalog", "mainshock", "analysis", "constants"})
+    if unknown:
+        raise KeyError(
+            f"{path}: unknown section(s) {unknown}. A mistyped section name would "
+            f"otherwise be ignored and the run would report different numbers"
+        )
     return settings
 
 

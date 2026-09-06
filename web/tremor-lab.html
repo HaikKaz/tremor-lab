@@ -1022,7 +1022,10 @@ function fitOmori(times, T) {
     var v = f(r);
     if (v < bestF) { bestF = v; best = r; }
   }
-  return { p: round3(best[2]), c: round3(best[1]), k: round1(best[0]), n: t.length };
+  // Not rounded here: a small c rounded to zero makes the fit test undefined,
+  // and the collapse caution then fires on the rounding rather than on the fit.
+  // Rounding belongs where the numbers are shown.
+  return { p: best[2], c: best[1], k: best[0], n: t.length };
 }
 
 /* Seeded pseudo-random generator, so a reported uncertainty is reproducible.
@@ -1803,7 +1806,8 @@ function drawOmori(result, s) {
 
   legend(document.getElementById("omoriLegend"), [
     { label: "observed rate", color: "var(--series-1)", shape: "dot" },
-    { label: om ? "fitted decay, p = " + om.p : "fitted decay", color: "var(--series-2)", shape: "line" }
+    { label: om ? "fitted decay, p = " + om.p.toFixed(3) : "fitted decay",
+      color: "var(--series-2)", shape: "line" }
   ]);
 
   dataTable(
@@ -2061,9 +2065,11 @@ function resultsAsText(result, s) {
   if (result.b) lines.push("b-value                 " + result.b.b.toFixed(3) + " +/- " +
                            result.b.sigma.toFixed(3) + " on " + result.b.n + " events");
   if (result.omori) {
-    lines.push("Omori p                 " + result.omori.p + (result.boot && isFinite(result.boot.pStd) ? " +/- " + result.boot.pStd : ""));
-    lines.push("Omori c                 " + result.omori.c + (result.boot && isFinite(result.boot.cStd) ? " +/- " + result.boot.cStd : ""));
-    lines.push("Omori k                 " + result.omori.k);
+    lines.push("Omori p                 " + result.omori.p.toFixed(3) +
+               (result.boot && isFinite(result.boot.pStd) ? " +/- " + result.boot.pStd.toFixed(3) : ""));
+    lines.push("Omori c                 " + result.omori.c.toFixed(3) +
+               (result.boot && isFinite(result.boot.cStd) ? " +/- " + result.boot.cStd.toFixed(3) : ""));
+    lines.push("Omori k                 " + result.omori.k.toFixed(1));
   }
   lines.push("mainshock energy        " +
              (result.energy == null ? "no mainshock Mw given"
@@ -2243,10 +2249,10 @@ function showError(msg, isWarning) {
 function clearResults() {
   LAST.result = null;
   LAST.settings = null;
-  ["resultsCard", "seqCard", "fmdCard", "omoriCard"].forEach(function (id) {
+  ["resultsCard", "seqCard", "fmdCard", "stabCard", "omoriCard"].forEach(function (id) {
     $(id).hidden = true;
   });
-  ["seqFrame", "fmdFrame", "omoriFrame"].forEach(function (id) {
+  ["seqFrame", "fmdFrame", "stabFrame", "omoriFrame"].forEach(function (id) {
     $(id).innerHTML = "";
   });
 }

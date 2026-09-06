@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from tremor_lab import constants
+from tremor_lab.completeness import fmd
 
 
 class BValue(NamedTuple):
@@ -109,8 +110,8 @@ def b_stability(
     mags : array_like
         Event magnitudes.
     thresholds : array_like, optional
-        Thresholds to evaluate. Defaults to the bin grid from the smallest
-        magnitude to two units above it.
+        Thresholds to evaluate. Defaults to a grid of 2.5 magnitude units
+        starting at the mode of the incremental distribution.
     dm : float, optional
         Magnitude bin width. Defaults to `constants.DM`.
     min_events : int, optional
@@ -129,8 +130,13 @@ def b_stability(
     dm = constants.DM if dm is None else dm
     m = np.asarray(mags, float)
     if thresholds is None:
-        lo = np.round(np.floor(m.min() / dm) * dm, 10)
-        thresholds = np.round(lo + dm * np.arange(round(2.0 / dm) + 1), 10)
+        # Anchored at the mode of the incremental distribution, not at the
+        # smallest magnitude: completeness cannot lie below the mode, which is
+        # the premise of the maximum-curvature method, and one anomalously small
+        # event moves the minimum while leaving the mode where it was.
+        edges, inc, _ = fmd(m, dm)
+        start = float(edges[int(np.argmax(inc))])
+        thresholds = np.round(start + dm * np.arange(round(2.5 / dm) + 1), 10)
     thresholds = np.atleast_1d(np.asarray(thresholds, float))
 
     kept, bs, sigmas, ns = [], [], [], []
