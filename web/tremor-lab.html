@@ -619,6 +619,17 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
     <div class="data-table" id="fmdTable"></div>
   </section>
 
+  <section class="card chart-card" aria-labelledby="h-stab" id="stabCard" hidden>
+    <div class="card-head">
+      <h2 id="h-stab">Does the b&#8209;value settle?</h2>
+      <p class="note tight">b re&#8209;estimated at every threshold. Above a correct completeness magnitude it should be flat.</p>
+    </div>
+    <div class="chart-frame" id="stabFrame"></div>
+    <div class="legend" id="stabLegend"></div>
+    <button class="table-toggle" data-table="stabTable" type="button">Show the data behind this chart</button>
+    <div class="data-table" id="stabTable"></div>
+  </section>
+
   <section class="card chart-card" aria-labelledby="h-omori" id="omoriCard" hidden>
     <div class="card-head">
       <h2 id="h-omori">Decay of the aftershock rate</h2>
@@ -781,6 +792,109 @@ function bValueAki(mags, mc, dm) {
   var ss = m.reduce(function (a, x) { return a + (x - mean) * (x - mean); }, 0);
   var sigma = 2.30 * b * b * Math.sqrt(ss / (n * (n - 1)));
   return { b: b, sigma: sigma, n: n };
+}
+
+/* b against the threshold it was estimated at. Above a correct completeness
+   magnitude b should not depend on where the threshold is put; a curve that
+   keeps climbing means completeness has been placed too low, or the sample is
+   not one Gutenberg-Richter population. Cao and Gao (2002); Woessner and
+   Wiemer (2005). */
+function bStability(mags, dm, minEvents) {
+  dm = dm || CONST.DM;
+  minEvents = minEvents || 50;
+  var lo = Math.floor(minOf(mags) / dm) * dm;
+  var out = { thresholds: [], b: [], sigma: [], n: [] };
+  for (var i = 0; i <= Math.round(2.0 / dm); i++) {
+    var thr = round2(lo + i * dm);
+    var kept = mags.filter(function (m) { return m >= thr - dm / 2; });
+    if (kept.length < minEvents) continue;
+    var r = bValueAki(mags, thr, dm);
+    if (!isFinite(r.b)) continue;
+    out.thresholds.push(thr);
+    out.b.push(r.b);
+    out.sigma.push(r.sigma);
+    out.n.push(r.n);
+  }
+  return out;
+}
+
+/* The lowest threshold at which b has stopped changing: b there is within its
+   own standard error of the mean of b over the next `span` magnitude units. */
+function mcBStability(mags, dm, span, minEvents) {
+  dm = dm || CONST.DM;
+  span = span || 0.5;
+  var curve = bStability(mags, dm, minEvents);
+  var steps = Math.round(span / dm);
+  for (var i = 0; i + steps < curve.thresholds.length; i++) {
+    var window = curve.b.slice(i, i + steps + 1);
+    var mean = sum(window) / window.length;
+    if (Math.abs(mean - curve.b[i]) <= curve.sigma[i]) return curve.thresholds[i];
+  }
+  return null;
+}
+
+/* Completeness by goodness of fit to a Gutenberg-Richter law: the lowest
+   candidate whose fitted law explains at least `confidence` per cent of the
+   observed cumulative distribution. Wiemer and Wyss (2000). */
+function mcGoodnessOfFit(mags, dm, confidence) {
+  dm = dm || CONST.DM;
+  confidence = confidence == null ? 90 : confidence;
+  var f = freqMag(mags, dm);
+  var out = { mc: null, rValue: null, candidates: [], rValues: [] };
+  for (var i = 0; i < Math.min(f.edges.length, 30); i++) {
+    var mc = f.edges[i];
+    var above = mags.filter(function (m) { return m >= mc - dm / 2; });
+    if (above.length < 2 || f.cum[i] <= 0) continue;
+    var mean = sum(above) / above.length;
+    if (mean <= mc - dm / 2) continue;
+    var b = 1 / (Math.LN10 * (mean - (mc - dm / 2)));
+    var absErr = 0, total = 0;
+    for (var j = i; j < f.edges.length; j++) {
+      var synthetic = f.cum[i] * Math.pow(10, -b * (f.edges[j] - mc));
+      absErr += Math.abs(f.cum[j] - synthetic);
+      total += f.cum[j];
+    }
+    var r = 100 * (1 - absErr / total);
+    out.candidates.push(mc);
+    out.rValues.push(r);
+    if (out.mc === null && r >= confidence) { out.mc = mc; out.rValue = r; }
+  }
+  return out;
+}
+
+/* Asymptotic Kolmogorov-Smirnov tail probability. */
+function ksProbability(lambda) {
+  if (lambda < 0.2) return 1;
+  var total = 0;
+  for (var j = 1; j <= 100; j++) {
+    total += (j % 2 ? 1 : -1) * Math.exp(-2 * j * j * lambda * lambda);
+  }
+  return Math.max(0, Math.min(1, 2 * total));
+}
+
+/* Test whether the fitted decay describes the times it was fitted to. Under the
+   model the transformed times are a unit-rate Poisson process, so rescaled by
+   the total expected count they are uniform on (0, 1). Ogata (1988). */
+function omoriFitTest(times, fit, T, t0) {
+  t0 = t0 || 0;
+  var t = times.filter(function (x) { return x > t0; }).sort(function (a, b) { return a - b; });
+  if (t.length < 5 || !isFinite(fit.p) || !isFinite(fit.c)) {
+    return { statistic: NaN, pValue: NaN, n: t.length };
+  }
+  if (!T) T = t[t.length - 1];
+  function lambda(x) {
+    if (Math.abs(fit.p - 1) < 1e-12) return Math.log((x + fit.c) / (t0 + fit.c));
+    return (Math.pow(x + fit.c, 1 - fit.p) - Math.pow(t0 + fit.c, 1 - fit.p)) / (1 - fit.p);
+  }
+  var total = lambda(T);
+  if (!isFinite(total) || total <= 0) return { statistic: NaN, pValue: NaN, n: t.length };
+  var n = t.length, d = 0;
+  for (var i = 0; i < n; i++) {
+    var u = Math.max(0, Math.min(1, lambda(t[i]) / total));
+    d = Math.max(d, Math.max((i + 1) / n - u, u - i / n));
+  }
+  var en = Math.sqrt(n);
+  return { statistic: d, pValue: ksProbability((en + 0.12 + 0.11 / en) * d), n: n };
 }
 
 /* Negative log-likelihood of n(t) = k/(c+t)^p observed on [0, T]. */
@@ -1118,6 +1232,7 @@ function analyse(events, s) {
   var out = {
     nEvents: post.length, post: post, mc: null, threshold: null, nAbove: null,
     b: null, omori: null, boot: null, fmd: null, note: null, caution: null,
+    mcMethods: null, stability: null, fitTest: null,
     // The window worth quoting is where the data actually end, which is often
     // earlier than the one requested.
     spanDays: post.length ? maxOf(post.map(function (e) { return e.dt; })) : 0,
@@ -1128,7 +1243,19 @@ function analyse(events, s) {
   if (!post.length) { out.note = "No events fall inside the window."; return out; }
 
   out.fmd = freqMag(mags, s.dm);
-  if (post.length > CONST.MIN_FOR_MC) out.mc = mcMaxCurvature(mags, s.dm, s.mcCorr);
+  if (post.length > CONST.MIN_FOR_MC) {
+    out.mc = mcMaxCurvature(mags, s.dm, s.mcCorr);
+    // Maximum curvature only finds the peak of the incremental distribution.
+    // Two further methods ask whether the data look like a power law at all,
+    // and where the slope stops moving. Their spread is the honest uncertainty
+    // in completeness, and it dwarfs the b-value's own standard error.
+    out.mcMethods = {
+      "maximum curvature": out.mc,
+      "goodness of fit": mcGoodnessOfFit(mags, s.dm).mc,
+      "b stability": mcBStability(mags, s.dm)
+    };
+    out.stability = bStability(mags, s.dm);
+  }
   out.threshold = (s.threshold == null) ? out.mc : s.threshold;
 
   if (out.threshold == null) {
@@ -1151,6 +1278,7 @@ function analyse(events, s) {
   out.times = above.map(function (e) { return e.dt; });
   out.omori = fitOmori(out.times);
   out.caution = omoriCaution(out.omori);
+  out.fitTest = omoriFitTest(out.times, out.omori);
   return out;
 }
 
@@ -1692,7 +1820,23 @@ function renderResults(result, s) {
 
   var rows = [];
   rows.push(["events in window", result.nEvents.toLocaleString()]);
-  rows.push(["completeness Mc", result.mc == null ? "not estimated" : result.mc.toFixed(1)]);
+  rows.push(["completeness Mc", result.mc == null ? "not estimated"
+             : result.mc.toFixed(1) + "  (maximum curvature)"]);
+  if (result.mcMethods) {
+    var others = [], spread = [];
+    for (var name in result.mcMethods) {
+      var value = result.mcMethods[name];
+      if (value != null) spread.push(value);
+      if (name !== "maximum curvature") {
+        others.push(name + " " + (value == null ? "none found" : value.toFixed(1)));
+      }
+    }
+    rows.push(["Mc, other methods", others.join(", ")]);
+    if (spread.length > 1 && maxOf(spread) - minOf(spread) > 1e-9) {
+      rows.push(["Mc spread", "M " + minOf(spread).toFixed(1) + " to " +
+                 maxOf(spread).toFixed(1) + ", and b depends on which is used"]);
+    }
+  }
   rows.push(["threshold used", result.threshold == null ? "not set" : result.threshold.toFixed(2)]);
   rows.push(["events at or above it", result.nAbove == null ? "\u2014" : result.nAbove.toLocaleString()]);
   if (result.b) {
@@ -1706,6 +1850,14 @@ function renderResults(result, s) {
     rows.push(["Omori c", result.omori.c.toFixed(3) + (bp && isFinite(bp.cStd) ? "  \u00B1 " + bp.cStd.toFixed(3) : "")]);
     rows.push(["Omori k", result.omori.k.toFixed(1)]);
     rows.push(["observation interval", maxOf(result.times).toFixed(3) + " days"]);
+    if (result.fitTest && isFinite(result.fitTest.pValue)) {
+      rows.push(["decay fit test",
+        "KS " + result.fitTest.statistic.toFixed(4) + ", p " +
+        result.fitTest.pValue.toFixed(3) + " " +
+        (result.fitTest.pValue > 0.05
+          ? "(consistent with one Omori decay)"
+          : "(NOT consistent with a single Omori decay)")]);
+    }
   }
   rows.push(["mainshock energy",
              result.energy == null ? "no mainshock Mw given"
@@ -1723,13 +1875,85 @@ function renderResults(result, s) {
   var hasEvents = !!(result.post && result.post.length);
   document.getElementById("seqCard").hidden = !hasEvents;
   document.getElementById("fmdCard").hidden = !result.fmd;
+  document.getElementById("stabCard").hidden =
+    !(result.stability && result.stability.thresholds.length > 2);
   document.getElementById("omoriCard").hidden = !result.omori;
 
   document.getElementById("provenance").textContent = provenanceLine(s);
 
   if (hasEvents) drawSequence(result, s);
   if (result.fmd) drawFmd(result, s);
+  if (result.stability && result.stability.thresholds.length > 2) {
+    drawStability(result, s);
+  }
   if (result.omori) drawOmori(result, s);
+}
+
+function drawStability(result, s) {
+  var frame = document.getElementById("stabFrame");
+  var c = result.stability;
+  var hi = 0, lo = 9;
+  for (var i = 0; i < c.b.length; i++) {
+    hi = Math.max(hi, c.b[i] + c.sigma[i]);
+    lo = Math.min(lo, c.b[i] - c.sigma[i]);
+  }
+  var plot = newPlot(frame, {
+    height: 320,
+    xDomain: [minOf(c.thresholds) - 0.1, maxOf(c.thresholds) + 0.1],
+    yDomain: [Math.max(0, lo - 0.05), hi + 0.05],
+    xLabel: "threshold magnitude",
+    yLabel: "b-value",
+    ariaLabel: "b-value against the threshold it was estimated at."
+  });
+
+  // Standard errors first, so the markers sit on top of them.
+  var band = el("g", { stroke: "var(--series-1)", "stroke-width": 1, opacity: .45 }, plot.layer);
+  var hover = [];
+  for (i = 0; i < c.b.length; i++) {
+    var px = plot.xs(c.thresholds[i]);
+    el("line", {
+      x1: px, x2: px,
+      y1: plot.ys(c.b[i] - c.sigma[i]), y2: plot.ys(c.b[i] + c.sigma[i])
+    }, band);
+    var py = plot.ys(c.b[i]);
+    el("circle", {
+      cx: px, cy: py, r: 3, fill: "var(--series-1)",
+      stroke: "var(--surface)", "stroke-width": 1.5
+    }, plot.layer);
+    hover.push({
+      px: px, py: py,
+      html: '<div class="tt-title">threshold M ' + c.thresholds[i].toFixed(1) + "</div>" +
+            "b " + c.b[i].toFixed(3) + " &plusmn; " + c.sigma[i].toFixed(3) +
+            " on " + c.n[i].toLocaleString() + " events"
+    });
+  }
+
+  var row = 0;
+  if (result.mcMethods) {
+    for (var name in result.mcMethods) {
+      var value = result.mcMethods[name];
+      if (value == null) continue;
+      marker(plot, value, name + " " + value.toFixed(1), "var(--ink-muted)", row++);
+    }
+  }
+  if (result.threshold != null) {
+    marker(plot, result.threshold, "threshold in use " + result.threshold,
+           "var(--series-2)", row);
+  }
+  attachHover(frame, plot, hover);
+
+  legend(document.getElementById("stabLegend"), [
+    { label: "b at each threshold, with its standard error", color: "var(--series-1)", shape: "dot" },
+    { label: "the threshold this analysis used", color: "var(--series-2)", shape: "line" }
+  ]);
+
+  dataTable(
+    document.getElementById("stabTable"),
+    ["threshold", "b", "standard error", "events"],
+    c.thresholds.map(function (t, i) {
+      return [t.toFixed(1), c.b[i].toFixed(3), c.sigma[i].toFixed(3), c.n[i]];
+    })
+  );
 }
 
 /* One line stating what was read and what was done to it, so a number never
