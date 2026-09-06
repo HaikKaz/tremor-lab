@@ -107,7 +107,7 @@ def mc_goodness_of_fit(
     mags: ArrayLike,
     dm: float | None = None,
     confidence: float = 90.0,
-    max_candidates: int = 30,
+    min_events: int = 50,
 ) -> GoodnessOfFit:
     """
     Completeness magnitude by goodness of fit to a Gutenberg-Richter law.
@@ -133,8 +133,11 @@ def mc_goodness_of_fit(
     confidence : float, optional
         Percentage of the observed distribution the fit must explain, 90 by
         default; 95 is the stricter level also in common use.
-    max_candidates : int, optional
-        How many bins upward to try before giving up.
+    min_events : int, optional
+        A candidate needs at least this many events at or above it to be worth
+        testing, 50 by default. Candidates are otherwise every populated bin: a
+        fixed cap counted up from the smallest magnitude would be pushed off the
+        data entirely by one anomalously small event.
 
     Returns
     -------
@@ -153,9 +156,9 @@ def mc_goodness_of_fit(
     chosen_mc, chosen_r = None, None
     candidates, r_values = [], []
 
-    for i, mc in enumerate(edges[:max_candidates]):
+    for i, mc in enumerate(edges):
         above = m[m >= mc - dm / 2]
-        if above.size < 2:
+        if above.size < max(2, min_events):
             continue
         mean_m = above.mean()
         if mean_m <= mc - dm / 2:

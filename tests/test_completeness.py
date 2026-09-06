@@ -106,3 +106,14 @@ def test_goodness_of_fit_prefers_the_lowest_candidate_that_reaches_the_level():
     assert strict.mc is not None
     assert strict.mc > mc_goodness_of_fit(mags, confidence=90.0).mc
     assert strict.r_value >= 95.0
+
+
+def test_one_anomalously_small_event_does_not_move_the_candidate_list():
+    # A fixed number of candidates counted up from the catalogue minimum would be
+    # pushed off the data entirely by a single stray event, and the method would
+    # return nothing for a catalogue it had just handled.
+    mags = pd.read_csv(DATA / "kahramanmaras_180d.csv")["mw"].to_numpy()
+    clean = mc_goodness_of_fit(mags)
+    with_outlier = mc_goodness_of_fit(np.append(mags, 0.0))
+    assert with_outlier.mc == clean.mc
+    assert with_outlier.r_value == pytest.approx(clean.r_value, abs=0.01)

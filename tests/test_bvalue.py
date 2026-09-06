@@ -105,3 +105,13 @@ def test_b_stability_finds_completeness_for_a_catalogue_missing_small_events():
     mc = mc_b_stability(mags[keep], dm=0.1, min_events=200)
     assert mc is not None
     assert 3.3 <= mc <= 3.8
+
+
+def test_one_anomalously_small_event_does_not_move_the_stability_grid():
+    # The grid is anchored to the mode of the incremental distribution, not to
+    # the smallest magnitude, which one stray event would drag below the data.
+    mags = gutenberg_richter_sample(b=1.0, mc=3.0, n=20000, seed=0)
+    clean = b_stability(mags)
+    with_outlier = b_stability(np.append(mags, 0.2))
+    assert with_outlier.thresholds.tolist() == clean.thresholds.tolist()
+    assert mc_b_stability(np.append(mags, 0.2)) == mc_b_stability(mags)

@@ -844,10 +844,12 @@ function mcGoodnessOfFit(mags, dm, confidence) {
   confidence = confidence == null ? 90 : confidence;
   var f = freqMag(mags, dm);
   var out = { mc: null, rValue: null, candidates: [], rValues: [] };
-  for (var i = 0; i < Math.min(f.edges.length, 30); i++) {
+  // Every populated bin is a candidate. A fixed cap counted up from the
+  // smallest magnitude would be pushed off the data by one stray event.
+  for (var i = 0; i < f.edges.length; i++) {
     var mc = f.edges[i];
     var above = mags.filter(function (m) { return m >= mc - dm / 2; });
-    if (above.length < 2 || f.cum[i] <= 0) continue;
+    if (above.length < 50 || f.cum[i] <= 0) continue;
     var mean = sum(above) / above.length;
     if (mean <= mc - dm / 2) continue;
     var b = 1 / (Math.LN10 * (mean - (mc - dm / 2)));
