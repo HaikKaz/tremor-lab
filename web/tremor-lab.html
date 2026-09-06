@@ -705,6 +705,9 @@ var CONST = {
   // Used only to judge whether a fitted decay is worth believing; they never
   // constrain the fit. Below the floor, c has collapsed onto the boundary of the
   // model, where the likelihood has no interior maximum and c is not identified.
+  // Replicates used to calibrate the decay fit test, whose parameters are
+  // estimated from the data being tested.
+  N_FIT_SIMULATIONS: 120,
   OMORI_C_FLOOR: 1e-3,
   OMORI_P_MIN: 0.5,
   OMORI_P_MAX: 2.0
@@ -872,6 +875,22 @@ function ksProbability(lambda) {
   return Math.max(0, Math.min(1, 2 * total));
 }
 
+/* Draw n occurrence times from k/(c+t)^p on (t0, T]. k cancels: conditioning on
+   n removes the scale. */
+function omoriSample(n, p, c, T, t0, rand) {
+  var out = new Array(n), i;
+  if (Math.abs(p - 1) < 1e-12) {
+    var llo = Math.log(t0 + c), lhi = Math.log(T + c);
+    for (i = 0; i < n; i++) out[i] = Math.exp(llo + rand() * (lhi - llo)) - c;
+    return out;
+  }
+  var lo = Math.pow(t0 + c, 1 - p), hi = Math.pow(T + c, 1 - p);
+  for (i = 0; i < n; i++) {
+    out[i] = Math.pow(lo + rand() * (hi - lo), 1 / (1 - p)) - c;
+  }
+  return out;
+}
+
 /* Test whether the fitted decay describes the times it was fitted to. Under the
    model the transformed times are a unit-rate Poisson process, so rescaled by
    the total expected count they are uniform on (0, 1). Ogata (1988). */
@@ -894,7 +913,53 @@ function omoriFitTest(times, fit, T, t0) {
     d = Math.max(d, Math.max((i + 1) / n - u, u - i / n));
   }
   var en = Math.sqrt(n);
-  return { statistic: d, pValue: ksProbability((en + 0.12 + 0.11 / en) * d), n: n };
+  return {
+    statistic: d,
+    pValue: ksProbability((en + 0.12 + 0.11 / en) * d),
+    n: n,
+    method: "asymptotic, uncalibrated"
+  };
+}
+
+/* The parameters were fitted to the very times being tested, so the fitted curve
+   hugs the data and the textbook Kolmogorov p-value is far too generous: on
+   sequences drawn from the model it essentially never rejects. The null
+   distribution is simulated instead, refitting each replicate. Run in slices,
+   because it is several hundred fits. */
+function calibrateFitTest(times, fit, T, t0, nSim, seed, onProgress, done, cancelled) {
+  var observed = omoriFitTest(times, fit, T, t0).statistic;
+  if (!isFinite(observed) || nSim < 20) {
+    done(omoriFitTest(times, fit, T, t0));
+    return;
+  }
+  var rand = mulberry32(seed >>> 0), i = 0, used = 0, exceeded = 0;
+  var n = times.filter(function (x) { return x > t0; }).length;
+  function step() {
+    if (cancelled && cancelled()) return;
+    var until = Math.min(i + 5, nSim);
+    for (; i < until; i++) {
+      var drawn = omoriSample(n, fit.p, fit.c, T, t0, rand);
+      var refit = fitOmori(drawn, T);
+      if (!isFinite(refit.p)) continue;
+      var sim = omoriFitTest(drawn, refit, T, t0).statistic;
+      if (!isFinite(sim)) continue;
+      used++;
+      if (sim >= observed) exceeded++;
+    }
+    onProgress(i / nSim);
+    if (i < nSim) setTimeout(step, 0);
+    else {
+      done({
+        statistic: observed,
+        pValue: used ? (1 + exceeded) / (1 + used) : NaN,
+        n: n,
+        method: used
+          ? "parametric bootstrap, " + used + " replicates"
+          : "simulation failed"
+      });
+    }
+  }
+  step();
 }
 
 /* Negative log-likelihood of n(t) = k/(c+t)^p observed on [0, T]. */
@@ -1857,6 +1922,7 @@ function renderResults(result, s) {
         (result.fitTest.pValue > 0.05
           ? "(consistent with one Omori decay)"
           : "(NOT consistent with a single Omori decay)")]);
+      rows.push(["fit test p from", result.fitTest.method]);
     }
   }
   rows.push(["mainshock energy",
@@ -2302,13 +2368,36 @@ function recompute() {
       },
       function (boot) {
         if (token !== bootToken) return;
-        bar.hidden = true;
         result.boot = boot;
         renderResults(result, s);
+        calibrate();
       },
       function () { return token !== bootToken; });
   } else {
-    bar.hidden = true;
+    calibrate();
+  }
+
+  // The fit test's p-value needs a simulated null; it is the slowest thing the
+  // page does, so it runs last and in slices.
+  function calibrate() {
+    if (!result.omori || !result.times) { bar.hidden = true; return; }
+    bar.hidden = false;
+    bar.firstElementChild.style.width = "0%";
+    calibrateFitTest(
+      result.times, result.omori, maxOf(result.times), 0,
+      CONST.N_FIT_SIMULATIONS, s.seed,
+      function (frac) {
+        if (token !== bootToken) return;
+        bar.firstElementChild.style.width = (frac * 100).toFixed(0) + "%";
+      },
+      function (test) {
+        if (token !== bootToken) return;
+        bar.hidden = true;
+        result.fitTest = test;
+        renderResults(result, s);
+      },
+      function () { return token !== bootToken; }
+    );
   }
 }
 

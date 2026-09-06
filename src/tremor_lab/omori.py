@@ -200,18 +200,27 @@ def _integrated_rate(c: float, p: float, t_end: float, t_start: float = 0.0) -> 
     return float(((t_end + c) ** (1.0 - p) - (t_start + c) ** (1.0 - p)) / (1.0 - p))
 
 
+# Returned where a parameter leaves the model's domain. A finite penalty rather
+# than infinity, so the optimiser's convergence test never subtracts infinities.
+_OUT_OF_DOMAIN = 1e12
+
+
 def _profiled_nll(
     cp: tuple[float, float], t: np.ndarray, t_end: float, t_start: float = 0.0
 ) -> float:
     """Negative log-likelihood with k replaced by its maximising value n / integral."""
     c, p = cp
     if c <= 0 or p <= 0:
-        return np.inf
+        return _OUT_OF_DOMAIN
     integral = _integrated_rate(c, p, t_end, t_start)
-    if integral <= 0:
-        return np.inf
+    if integral <= 0 or not np.isfinite(integral):
+        return _OUT_OF_DOMAIN
     n = t.size
-    return float(p * np.sum(np.log(t + c)) - n * np.log(n / integral) + n)
+    # The terms can still overflow for extreme but in-domain parameters, and a
+    # non-finite value here makes the optimiser's convergence test subtract
+    # infinities. Anything unusable is reported as out of domain instead.
+    value = p * np.sum(np.log(t + c)) - n * np.log(n / integral) + n
+    return float(value) if np.isfinite(value) else _OUT_OF_DOMAIN
 
 
 class FitTest(NamedTuple):
@@ -220,6 +229,25 @@ class FitTest(NamedTuple):
     statistic: float
     p_value: float
     n: int
+    method: str
+
+
+def omori_sample(
+    n: int, p: float, c: float, t_end: float, t_start: float, rng
+) -> np.ndarray:
+    """Draw n occurrence times from k / (c + t)^p on (t_start, t_end].
+
+    The density is inverted directly; k cancels, because conditioning on n
+    removes the scale.
+    """
+    u = rng.random(n)
+    if abs(p - 1.0) < 1e-12:
+        lo = np.log(t_start + c)
+        hi = np.log(t_end + c)
+        return np.exp(lo + u * (hi - lo)) - c
+    lo = (t_start + c) ** (1.0 - p)
+    hi = (t_end + c) ** (1.0 - p)
+    return (lo + u * (hi - lo)) ** (1.0 / (1.0 - p)) - c
 
 
 def omori_fit_test(
@@ -227,6 +255,8 @@ def omori_fit_test(
     fit: Omori,
     t_end: float | None = None,
     t_start: float = 0.0,
+    n_simulations: int | None = None,
+    seed: int = 0,
 ) -> FitTest:
     """
     Test whether the fitted decay actually describes the occurrence times.
@@ -253,15 +283,42 @@ def omori_fit_test(
     t_start : float, optional
         Start of the observation interval, 0 by default.
 
+    Because c and p were estimated from the very times being tested, the fitted
+    curve hugs the data and the statistic is systematically smaller than the
+    standard Kolmogorov distribution assumes. Taking the textbook p-value here
+    would be badly anti-conservative: on sequences drawn from the model it
+    rejects at 5 per cent in 0 per cent of cases, with a mean p-value near 0.87
+    rather than 0.5. The null distribution is therefore obtained by parametric
+    bootstrap, simulating from the fitted model, refitting each replicate, and
+    comparing statistics. Set `n_simulations=0` to fall back to the uncalibrated
+    asymptotic form, which is reported as such.
+
+    Parameters
+    ----------
+    times_days : array_like
+        The elapsed times the fit was made on.
+    fit : Omori
+        The fitted parameters.
+    t_end : float, optional
+        End of the observation interval. Defaults to the largest time supplied.
+    t_start : float, optional
+        Start of the observation interval, 0 by default.
+    n_simulations : int, optional
+        Replicates used to calibrate the null distribution. Defaults to
+        `constants.N_FIT_SIMULATIONS` (200). Zero selects the asymptotic form.
+    seed : int, optional
+        Seed of the simulation, so a reported p-value is reproducible.
+
     Returns
     -------
     FitTest
-        The KS statistic, its p-value, and the number of times tested. A p-value
-        below 0.05 is the conventional signal that the model is inadequate.
+        The KS statistic, its p-value, the number of times tested, and how the
+        p-value was obtained. A p-value below 0.05 is the conventional signal
+        that the model is inadequate.
 
     References
     ----------
-    Ogata, Y. (1988).
+    Ogata, Y. (1988). Lilliefors, H. W. (1967).
     """
     t = np.sort(np.asarray(times_days, float))
     t = t[t > t_start]
@@ -276,5 +333,37 @@ def omori_fit_test(
         transformed = (
             (t + fit.c) ** (1.0 - fit.p) - (t_start + fit.c) ** (1.0 - fit.p)
         ) / (1.0 - fit.p)
-    result = kstest(np.clip(transformed / total, 0.0, 1.0), "uniform")
-    return FitTest(float(result.statistic), float(result.pvalue), int(t.size))
+    scaled = np.clip(transformed / total, 0.0, 1.0)
+    observed = float(kstest(scaled, "uniform").statistic)
+
+    if n_simulations is None:
+        n_simulations = constants.N_FIT_SIMULATIONS
+    if n_simulations < 1:
+        asymptotic = float(kstest(scaled, "uniform").pvalue)
+        return FitTest(observed, asymptotic, int(t.size), "asymptotic, uncalibrated")
+
+    rng = np.random.default_rng(seed)
+    exceeded = 0
+    used = 0
+    for _ in range(n_simulations):
+        drawn = np.sort(omori_sample(t.size, fit.p, fit.c, t_end, t_start, rng))
+        try:
+            refit = fit_omori(drawn, t_end=t_end, t_start=t_start)
+        except ValueError:
+            continue
+        simulated = omori_fit_test(
+            drawn, refit, t_end=t_end, t_start=t_start, n_simulations=0
+        ).statistic
+        if not np.isfinite(simulated):
+            continue
+        used += 1
+        if simulated >= observed:
+            exceeded += 1
+    if used == 0:
+        return FitTest(observed, float("nan"), int(t.size), "simulation failed")
+    return FitTest(
+        observed,
+        (1.0 + exceeded) / (1.0 + used),
+        int(t.size),
+        f"parametric bootstrap, {used} replicates",
+    )

@@ -198,6 +198,7 @@ def _report(result: dict[str, Any], source: Path) -> str:
                 f"decay fit test       KS {test.statistic:.4f}, "
                 f"p {test.p_value:.3f}  ({verdict})"
             )
+            lines.append(f"                     p from a {test.method}")
         if result.get("omori_warning"):
             lines.append(f"CAUTION              {result['omori_warning']}")
     lines += [

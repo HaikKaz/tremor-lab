@@ -66,6 +66,11 @@ OMORI_P0 = 1.1
 # Bootstrap resamples used for the Omori uncertainty.
 N_BOOT = 200
 
+# Replicates used to calibrate the decay fit test. The parameters are estimated
+# from the data being tested, so the textbook Kolmogorov p-value does not apply
+# and the null distribution has to be simulated.
+N_FIT_SIMULATIONS = 200
+
 # Bounds used only to judge whether a fitted decay is worth believing; they never
 # constrain the fit itself. c below the floor means the offset has collapsed onto
 # the boundary of the model, where the likelihood has no interior maximum and c is

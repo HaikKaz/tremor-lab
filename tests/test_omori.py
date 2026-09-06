@@ -1,6 +1,9 @@
 """The Omori-Utsu fit: the likelihood itself, the k shortcut, and parameter recovery."""
 
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
 import pytest
 from scipy.optimize import minimize
 
@@ -48,6 +51,7 @@ def test_the_integrated_rate_is_continuous_through_p_equals_one():
     assert at_one == pytest.approx(just_above, abs=1e-6)
 
 
+@pytest.mark.filterwarnings("ignore:invalid value encountered in subtract")
 def test_the_profiled_fit_finds_the_same_optimum_as_a_full_three_parameter_search():
     t = omori_sample(3000, p=1.15, c=0.5, t_end=180.0, seed=0)
     profiled = fit_omori(t, t_end=180.0)
@@ -178,7 +182,7 @@ def test_starting_at_zero_is_unchanged():
 def test_times_from_the_fitted_model_pass_the_fit_test():
     t = omori_sample(3000, 1.15, 0.5, t_end=180.0, seed=0)
     fit = fit_omori(t, t_end=180.0)
-    assert omori_fit_test(t, fit, t_end=180.0).p_value > 0.05
+    assert omori_fit_test(t, fit, t_end=180.0, n_simulations=60).p_value > 0.05
 
 
 def test_times_that_are_not_an_omori_decay_are_rejected():
@@ -189,7 +193,7 @@ def test_times_that_are_not_an_omori_decay_are_rejected():
     rng = np.random.default_rng(0)
     t = np.sort(180.0 * rng.random(3000) ** (1 / 3))
     fit = fit_omori(t, t_end=180.0)
-    assert omori_fit_test(t, fit, t_end=180.0).p_value < 0.01
+    assert omori_fit_test(t, fit, t_end=180.0, n_simulations=60).p_value < 0.05
 
 
 def test_a_second_sequence_inside_the_window_is_detected():
@@ -199,4 +203,39 @@ def test_a_second_sequence_inside_the_window_is_detected():
     burst = 30.0 + omori_sample(1200, 1.2, 0.3, t_end=150.0, seed=1)
     t = np.sort(np.concatenate([main, burst]))
     fit = fit_omori(t, t_end=180.0)
-    assert omori_fit_test(t, fit, t_end=180.0).p_value < 0.01
+    assert omori_fit_test(t, fit, t_end=180.0, n_simulations=60).p_value < 0.05
+
+
+def test_the_asymptotic_p_value_is_anti_conservative_and_is_labelled_as_such():
+    # The parameters are fitted to the times being tested, so the fitted curve
+    # hugs the data and the textbook Kolmogorov p-value is far too generous. On
+    # sequences drawn from the model it essentially never rejects. The default
+    # calibrates by parametric bootstrap; the asymptotic form remains available
+    # but must say what it is.
+    t = omori_sample(1200, 1.15, 0.5, t_end=180.0, seed=0)
+    fit = fit_omori(t, t_end=180.0)
+    asymptotic = omori_fit_test(t, fit, t_end=180.0, n_simulations=0)
+    calibrated = omori_fit_test(t, fit, t_end=180.0, n_simulations=60)
+    assert asymptotic.method == "asymptotic, uncalibrated"
+    assert calibrated.method.startswith("parametric bootstrap")
+    assert asymptotic.statistic == pytest.approx(calibrated.statistic)
+    assert asymptotic.p_value > calibrated.p_value
+
+
+def test_the_calibrated_p_value_is_reproducible_from_its_seed():
+    t = omori_sample(600, 1.15, 0.5, t_end=180.0, seed=0)
+    fit = fit_omori(t, t_end=180.0)
+    first = omori_fit_test(t, fit, t_end=180.0, n_simulations=40, seed=5)
+    assert first == omori_fit_test(t, fit, t_end=180.0, n_simulations=40, seed=5)
+    assert first != omori_fit_test(t, fit, t_end=180.0, n_simulations=40, seed=6)
+
+
+def test_calibration_rejects_the_reference_sequence_the_asymptotic_test_accepts():
+    # The Kahramanmaras window contains the M 7.6 Elbistan event and its own
+    # aftershocks, so a single Omori decay should not describe it. Only the
+    # calibrated test notices.
+    frame = pd.read_csv(Path(__file__).parent / "data" / "kahramanmaras_180d.csv")
+    times = frame.loc[frame["mw"] >= 3.5, "dt_days"].to_numpy()
+    fit = fit_omori(times)
+    assert omori_fit_test(times, fit, n_simulations=0).p_value > 0.4
+    assert omori_fit_test(times, fit, n_simulations=120, seed=0).p_value < 0.10
