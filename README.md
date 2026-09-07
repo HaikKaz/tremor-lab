@@ -309,9 +309,12 @@ frozen, and is deliberately not part of this foundation.
 
 Two steps remain before the software is formally citable.
 
-**Continuous integration.** Create a GitHub repository, push, and add
-`.github/workflows/tests.yml` running `ruff check`, `ruff format --check` and `pytest`
-on every push, so a green badge in this README is evidence rather than assertion.
+**Continuous integration.** The repository is at
+[github.com/HaikKaz/tremor-lab](https://github.com/HaikKaz/tremor-lab), and
+`.github/workflows/tests.yml` runs `ruff check`, `ruff format --check` and the suite on
+Python 3.11 to 3.13 on every push, reproducing the reference values both directly and
+through the full catalogue pipeline. A green badge in this README is evidence rather
+than assertion only once that workflow has actually run.
 
 **Archive for a DOI.** Enable the repository in Zenodo, tag a release and push the tag,
 and Zenodo mints a versioned DOI. Put that DOI in `CITATION.cff` and in the paper's

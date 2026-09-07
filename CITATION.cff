@@ -22,6 +22,6 @@ keywords:
   - Gutenberg-Richter
   - b-value
   - Omori-Utsu
+repository-code: "https://github.com/HaikKaz/tremor-lab"
 # Add once the release is archived for a DOI:
 # doi: 10.5281/zenodo.0000000
-# repository-code: "https://github.com/<user>/tremor-lab"
