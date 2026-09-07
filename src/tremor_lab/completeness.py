@@ -1,11 +1,13 @@
 """Frequency-magnitude distribution and the completeness magnitude."""
 
+import decimal
 from typing import NamedTuple
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from tremor_lab import constants
+from tremor_lab.grid import at_or_above, bin_index
 
 
 class FMD(NamedTuple):
@@ -49,11 +51,12 @@ def fmd(mags: ArrayLike, dm: float | None = None) -> FMD:
     hi = np.ceil(m.max() / dm) * dm
     n_bins = int(np.rint((hi - lo) / dm)) + 1
     edges = np.round(lo + dm * np.arange(n_bins), _edge_decimals(dm))
-    # floor(x + 0.5), not rint: numpy sends exact halves to the nearest even
-    # bin while JavaScript sends them up, which put 225 events a bin apart
-    # between the two implementations at dm 0.2. The spreadsheet rounds up,
-    # so that is the convention both now follow.
-    inc = np.bincount(np.floor((m - lo) / dm + 0.5).astype(int), minlength=n_bins)
+    # Rounded up at the half-way point, and on the grid rather than in binary:
+    # see `grid.bin_index`. numpy's rint would send exact halves to the nearest
+    # even bin where JavaScript sends them up, and the division alone decided
+    # the rest by rounding error, which at dm 0.2 gave unequal bins for equal
+    # counts.
+    inc = np.bincount(bin_index(m, lo, dm), minlength=n_bins)
     return FMD(edges, inc, np.cumsum(inc[::-1])[::-1])
 
 
@@ -94,8 +97,16 @@ def mc_maxcurvature(
 
 
 def _edge_decimals(dm: float) -> int:
-    """Decimals that render a bin label as 3.2 rather than 3.2000000000000004."""
-    return int(np.ceil(-np.log10(dm))) + 1
+    """Decimals that render a bin label as 3.2 rather than 3.2000000000000004.
+
+    Taken from how the bin width is actually written rather than from its
+    logarithm. The logarithm under-counts whenever a width needs more digits
+    than its size suggests: it allowed two decimals for dm 0.125, whose edges
+    need three, so a bin standing for 3.125 was labelled 3.13 and that label
+    was what `mc_maxcurvature` returned as the completeness magnitude.
+    """
+    exponent = decimal.Decimal(repr(float(dm))).as_tuple().exponent
+    return max(0, -int(exponent)) + 1
 
 
 class GoodnessOfFit(NamedTuple):
@@ -161,7 +172,7 @@ def mc_goodness_of_fit(
     candidates, r_values = [], []
 
     for i, mc in enumerate(edges):
-        above = m[m >= mc - dm / 2]
+        above = m[at_or_above(m, mc - dm / 2)]
         if above.size < max(2, min_events):
             continue
         mean_m = above.mean()

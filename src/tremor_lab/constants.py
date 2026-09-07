@@ -63,6 +63,14 @@ WINDOW_DAYS = 180.0
 OMORI_C0 = 0.5
 OMORI_P0 = 1.1
 
+# How close a magnitude must come to a bin edge to count as sitting on it.
+# Reported magnitudes lie on a decimal grid, and decimals such as 0.1 and 4.1
+# have no exact binary representation, so "is this event at or above M 4.1" was
+# being decided by rounding error in the sixteenth decimal place. Any two
+# magnitudes a real catalogue distinguishes differ by at least 0.001, six orders
+# of magnitude more than this, so the tolerance cannot merge two real values.
+GRID_TOLERANCE = 1e-9
+
 # Bootstrap resamples used for the Omori uncertainty.
 N_BOOT = 200
 

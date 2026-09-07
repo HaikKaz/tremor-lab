@@ -7,6 +7,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from tremor_lab import constants
 from tremor_lab.completeness import fmd
+from tremor_lab.grid import at_or_above
 
 
 class BValue(NamedTuple):
@@ -68,7 +69,7 @@ def b_value_aki(
     shi_bolt_k = constants.SHI_BOLT_K if shi_bolt_k is None else shi_bolt_k
     threshold = mc - dm / 2
     m = np.asarray(mags, float)
-    m = m[m >= threshold]
+    m = m[at_or_above(m, threshold)]
     n = m.size
     if n < 2:
         raise ValueError(
@@ -141,7 +142,7 @@ def b_stability(
 
     kept, bs, sigmas, ns = [], [], [], []
     for threshold in thresholds:
-        if int((m >= threshold - dm / 2).sum()) < min_events:
+        if int(at_or_above(m, threshold - dm / 2).sum()) < min_events:
             continue
         estimate = b_value_aki(m, threshold, dm=dm)
         kept.append(threshold)
@@ -190,8 +191,21 @@ def mc_b_stability(
     Cao, A. and Gao, S. S. (2002). Woessner, J. and Wiemer, S. (2005).
     """
     dm = constants.DM if dm is None else dm
+    # How many bins the averaging window spans, rounded the same way magnitudes
+    # are binned: halves up, on the grid. Python's round() is banker's rounding
+    # and sends 2.5 down to 2 where JavaScript's Math.round sends it up to 3, so
+    # at dm 0.2 the package and the browser page averaged over different windows
+    # and reported different completeness magnitudes, 4.0 against 4.2, from
+    # identical b-stability curves. Where span is not a whole number of bins the
+    # window is the next bin up: 0.5 at dm 0.2 averages over 0.6.
+    steps = int(np.floor(span / dm + 0.5 + constants.GRID_TOLERANCE))
+    if steps < 1:
+        raise ValueError(
+            f"a bin width of {dm} rounds the averaging window of {span} down "
+            f"to no bins at all, so there is nothing to average over and "
+            f"stability cannot be tested; use a narrower dm or a wider span"
+        )
     curve = b_stability(mags, dm=dm, min_events=min_events)
-    steps = round(span / dm)
     for i in range(len(curve.thresholds) - steps):
         window = curve.b[i : i + steps + 1]
         if abs(window.mean() - curve.b[i]) <= curve.sigma[i]:
@@ -251,7 +265,7 @@ def b_value_tinti(
     shi_bolt_k = constants.SHI_BOLT_K if shi_bolt_k is None else shi_bolt_k
     threshold = mc - dm / 2
     m = np.asarray(mags, float)
-    m = m[m >= threshold]
+    m = m[at_or_above(m, threshold)]
     n = m.size
     if n < 2:
         raise ValueError(

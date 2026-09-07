@@ -99,7 +99,13 @@ unknown constant name is refused rather than silently ignored.
 ```toml
 [catalog]
 path = "catalogue.csv"          # forward slashes on Windows, or single quotes
-dayfirst = false                # true for European dates such as 06.02.2023
+dayfirst = false                # true for day-first dates such as 06.02.2023,
+                                # which month-first reading turns into 2 June.
+                                # A date that states its year first (2023.02.06,
+                                # or an ISO stamp) is read as written whatever
+                                # this says, and the run warns that it did not
+                                # apply: pandas would otherwise swap the day and
+                                # the month of those too
 # radius_km = 100               # optional distance limit from the epicentre;
                                 # omitted means no spatial cut, and the report
                                 # says so either way
@@ -110,7 +116,8 @@ time = "Saat"
 lat  = "Enlem"
 lon  = "Boylam"
 mag  = "Mag"
-mag_type = "Tip"                # optional; enables homogenisation to Mw
+mag_type = "Tip"                # optional; enables homogenisation to Mw on a raw
+                                # export, and the report counts what was converted
 
 [mainshock]
 t = "2023-02-06 01:17:32"       # on the same clock as the catalogue
@@ -132,10 +139,22 @@ DELTA_MB = 1.15
 
 For a USGS export, replace the `date` and `time` entries with a single
 `datetime = "time"`. For a catalogue that already carries elapsed days rather than
-timestamps, use `dt_days = "dt_days"` and `mag = "mw"`.
+timestamps, use `dt_days = "dt_days"` and `mag = "mw"`. That file is taken as it stands:
+no magnitude is converted on that route, so `mag_type` and `radius_km` are refused there
+rather than accepted and ignored, and the report says the magnitudes were used as
+published.
+
+The report ends with the choices behind its numbers - the window, the bin width, the
+completeness correction, whether the threshold was given or estimated, the resample and
+replicate counts, the seed, and any constant that differs from its published value - so
+the block can be pasted into a methods section without the settings file beside it. A
+setting reaches the analysis either as an `[analysis]` entry or as a `[constants]`
+override; the report states the value that was used, whichever route it came by.
 
 Add `--fmd-out table.csv` to write the frequency-magnitude table for a Gutenberg-Richter
-plot.
+plot. If the table cannot be written, or the window holds no events and there is no
+distribution to tabulate, the run says so and exits non-zero rather than leaving an
+older file at that path to be plotted as though it belonged to this sequence.
 
 ## Use from a browser
 
@@ -197,9 +216,10 @@ are taken as reported, since no global relation is published for them.
 
 ## Changing the constants
 
-Every published constant is a default, not a fixed law of the package. All 24 live in
+Every published constant is a default, not a fixed law of the package. All 25 live in
 `tremor_lab.constants`, including `N_FIT_SIMULATIONS`, the number of replicates used to
-simulate the null distribution of the decay fit test.
+simulate the null distribution of the decay fit test, and `GRID_TOLERANCE`, how close a
+magnitude must come to a bin edge to count as sitting on it.
 
 For a single call, pass the keyword argument:
 
@@ -216,12 +236,16 @@ from tremor_lab import constants
 constants.DELTA_MB = 1.2
 ```
 
-Without writing Python, set it in the `[constants]` section of a settings file.
+Without writing Python, set it in the `[constants]` section of a settings file. Only the
+published names can be set there, and only to numbers: `DELTA_MB = true` is refused,
+because Python counts `true` as 1 and the run would otherwise print a Bath expectation
+of M 6.80 as though it were a magnitude deficit of 1.15. A file that is refused for any
+reason leaves the constants exactly as it found them.
 
-Three of the 24 are the exception to the keyword route: `OMORI_C_FLOOR`, `OMORI_P_MIN`
+Three of the 25 are the exception to the keyword route: `OMORI_C_FLOOR`, `OMORI_P_MIN`
 and `OMORI_P_MAX` judge whether a fitted decay is worth believing rather than entering
 the fit, so they have no keyword argument and are changed by reassignment or from a
-settings file. The other 21 can be set all three ways.
+settings file. The other 22 can be set all three ways.
 
 ## Validation
 

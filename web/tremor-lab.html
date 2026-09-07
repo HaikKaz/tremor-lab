@@ -704,6 +704,12 @@ var CONST = {
   E_A: 1.5,         // energy relation slope,  log10 E = E_A*M + E_B
   E_B: 4.8,         // energy relation intercept (E in joules)
   DM: 0.1,          // magnitude bin width
+  // How close a magnitude must come to a bin edge to count as sitting on it.
+  // Reported magnitudes are decimal and decimals have no exact binary form, so
+  // "is this event at or above M 4.1" was decided by rounding error in the
+  // sixteenth decimal place. Any two magnitudes a catalogue distinguishes
+  // differ by at least 0.001, six orders of magnitude more than this.
+  GRID_TOLERANCE: 1e-9,
   MC_CORR: 0.2,     // maximum-curvature Mc correction
   MIN_FOR_MC: 50,   // minimum events to attempt Mc
   MIN_FOR_B: 100,   // minimum events above threshold to attempt b and Omori
@@ -768,14 +774,34 @@ function HAVERSINE_KM(lat1, lon1, lat2, lon2) {
 
 /* Frequency-magnitude distribution. Each magnitude goes to the nearest bin
    centre: reported magnitudes sit on a decimal grid that binary floating point
-   cannot represent, so a half-open interval can misfile a value on a boundary. */
+   cannot represent, so a half-open interval can misfile a value on a boundary.
+   Nearest centre is not enough on its own either - see binIndex. */
+/* Is this magnitude at or above that bin edge? On the grid the magnitudes are
+   reported on, not in binary. mc - dm/2 is itself a reported magnitude whenever
+   dm is an even number of grid steps, and comparing against it directly dropped
+   every event at that magnitude: at dm 0.2 and Mc 4.2 the b-value was computed
+   from 394 events instead of 498, giving 0.936 where the answer is 1.182. */
+function atOrAbove(m, threshold) {
+  return m >= threshold - CONST.GRID_TOLERANCE;
+}
+
+/* Which bin a magnitude falls in, counting from the bin centred on lo. Nearest
+   centre, with an exact half going up - the spreadsheet's convention, which the
+   Python package follows too. The tolerance is what makes that true: Math.round
+   does send a half up, but the division feeding it is inexact, so
+   (3.3 - 3.0) / 0.2 arrives as 1.4999999999999991 and went down, and a catalogue
+   with one event at every magnitude produced bins of 1, 3, 1, 2, 3. */
+function binIndex(m, lo, dm) {
+  return Math.floor((m - lo) / dm + 0.5 + CONST.GRID_TOLERANCE);
+}
+
 function freqMag(mags, dm) {
   dm = dm || CONST.DM;
   var mn = Math.floor(minOf(mags) / dm) * dm, mx = Math.ceil(maxOf(mags) / dm) * dm;
   var nb = Math.round((mx - mn) / dm) + 1;
   var edges = [], inc = [], i;
-  for (i = 0; i < nb; i++) { edges[i] = round2(mn + i * dm); inc[i] = 0; }
-  mags.forEach(function (m) { var j = Math.round((m - mn) / dm); if (j >= 0 && j < nb) inc[j]++; });
+  for (i = 0; i < nb; i++) { edges[i] = roundToGrid(mn + i * dm, dm); inc[i] = 0; }
+  mags.forEach(function (m) { var j = binIndex(m, mn, dm); if (j >= 0 && j < nb) inc[j]++; });
   var cum = [], s = 0;
   for (i = nb - 1; i >= 0; i--) { s += inc[i]; cum[i] = s; }
   return { edges: edges, inc: inc, cum: cum };
@@ -786,13 +812,13 @@ function mcMaxCurvature(mags, dm, corr) {
   corr = (corr == null) ? CONST.MC_CORR : corr;
   var f = freqMag(mags, dm), im = 0;
   for (var i = 1; i < f.inc.length; i++) if (f.inc[i] > f.inc[im]) im = i;
-  return round2(f.edges[im] + corr);
+  return roundToGrid(f.edges[im] + corr, dm);
 }
 
 /* b = 1 / (ln10 (mean(M) - (Mc - dm/2))), sigma by Shi & Bolt (1982). */
 function bValueAki(mags, mc, dm) {
   dm = dm == null ? CONST.DM : dm;
-  var m = mags.filter(function (x) { return x >= mc - dm / 2; });
+  var m = mags.filter(function (x) { return atOrAbove(x, mc - dm / 2); });
   var n = m.length;
   if (n < 2) return { b: NaN, sigma: NaN, n: n };
   var mean = sum(m) / n;
@@ -810,11 +836,19 @@ function bValueAki(mags, mc, dm) {
 function bStability(mags, dm, minEvents) {
   dm = dm || CONST.DM;
   minEvents = minEvents || 50;
-  var lo = Math.floor(minOf(mags) / dm) * dm;
+  // Anchored at the mode of the incremental distribution, not at the smallest
+  // magnitude, and matching the Python package exactly. Completeness cannot lie
+  // below the mode - that is the premise of the maximum-curvature method - and
+  // one anomalously small event moves the minimum while leaving the mode where
+  // it was. Anchoring at the minimum also made the page disagree with the
+  // package about the b-stability completeness at dM 0.2: 4.2 against 4.0.
+  var f = freqMag(mags, dm), mode = 0;
+  for (var k = 1; k < f.inc.length; k++) if (f.inc[k] > f.inc[mode]) mode = k;
+  var lo = f.edges[mode];
   var out = { thresholds: [], b: [], sigma: [], n: [] };
-  for (var i = 0; i <= Math.round(2.0 / dm); i++) {
-    var thr = round2(lo + i * dm);
-    var kept = mags.filter(function (m) { return m >= thr - dm / 2; });
+  for (var i = 0; i <= Math.round(2.5 / dm); i++) {
+    var thr = roundToGrid(lo + i * dm, dm);
+    var kept = mags.filter(function (m) { return atOrAbove(m, thr - dm / 2); });
     if (kept.length < minEvents) continue;
     var r = bValueAki(mags, thr, dm);
     if (!isFinite(r.b)) continue;
@@ -831,8 +865,13 @@ function bStability(mags, dm, minEvents) {
 function mcBStability(mags, dm, span, minEvents) {
   dm = dm || CONST.DM;
   span = span || 0.5;
-  var curve = bStability(mags, dm, minEvents);
   var steps = Math.round(span / dm);
+  // With a bin wider than the averaging window the window collapses onto the
+  // single value it is being compared against, the difference is exactly zero,
+  // and the lowest candidate comes back as though it had passed a test that
+  // never ran. There is no answer to give here, so none is given.
+  if (steps < 1) return null;
+  var curve = bStability(mags, dm, minEvents);
   for (var i = 0; i + steps < curve.thresholds.length; i++) {
     var window = curve.b.slice(i, i + steps + 1);
     var mean = sum(window) / window.length;
@@ -853,7 +892,7 @@ function mcGoodnessOfFit(mags, dm, confidence) {
   // smallest magnitude would be pushed off the data by one stray event.
   for (var i = 0; i < f.edges.length; i++) {
     var mc = f.edges[i];
-    var above = mags.filter(function (m) { return m >= mc - dm / 2; });
+    var above = mags.filter(function (m) { return atOrAbove(m, mc - dm / 2); });
     if (above.length < 50 || f.cum[i] <= 0) continue;
     var mean = sum(above) / above.length;
     if (mean <= mc - dm / 2) continue;
@@ -1081,6 +1120,16 @@ function std(a) {
   return Math.sqrt(a.reduce(function (s, x) { return s + (x - m) * (x - m); }, 0) / (a.length - 1));
 }
 function round1(x) { return Math.round(x * 10) / 10; }
+/* Enough decimals to name the edge itself. Two were assumed, which is right for
+   every bin width in ordinary use but labelled the 3.125 bin as 3.13 at dm 0.125
+   - and that label is what mcMaxCurvature returns as the completeness magnitude. */
+function roundToGrid(x, dm) {
+  var text = String(dm), dot = text.indexOf(".");
+  var decimals = (dot < 0 ? 0 : text.length - dot - 1) + 1;
+  var scale = Math.pow(10, Math.min(decimals, 12));
+  return Math.round(x * scale) / scale;
+}
+
 function round2(x) { return Math.round(x * 100) / 100; }
 function round3(x) { return Math.round(x * 1000) / 1000; }
 
@@ -2179,6 +2228,20 @@ function computeSelfTest() {
   check("reference catalogue: Omori p", om.p, 1.161, 0.001, f3);
   check("reference catalogue: Omori c", om.c, 0.497, 0.001, f3);
   check("reference catalogue: Omori k", om.k, 359, 1, f1);
+
+  // At a bin width of 0.2 the completeness threshold Mc - dm/2 is itself a
+  // reported magnitude, and comparing against it in binary dropped every event
+  // at that magnitude: 394 events instead of 498, b 0.936 instead of 1.182.
+  // These two are the only checks here at a width other than the default,
+  // which is exactly why the defect survived so long.
+  var wide = bValueAki(mags, 4.2, 0.2);
+  check("no magnitude class dropped at dM 0.2", wide.n, 498, 0, f0);
+  check("b at Mc 4.2, dM 0.2 (Python agrees)", wide.b, 1.182497, 5e-6, f3);
+  var evenGrid = [];
+  for (var g = 30; g <= 46; g++) evenGrid.push(g / 10);
+  var evenBins = freqMag(evenGrid, 0.2).inc;
+  var allTwo = evenBins.slice(1).every(function (c) { return c === 2; });
+  check("equal counts give equal bins at dM 0.2", allTwo ? 1 : 0, 1, 0, f0);
 
   return checks;
 }
