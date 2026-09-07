@@ -21,24 +21,63 @@ from tremor_lab import __version__, constants
 from tremor_lab.analysis import analyze_case
 from tremor_lab.catalog import read_catalog
 
+# The report is written in two columns: a label, then the value. Continuation lines
+# line up under the value rather than under the label, so a block that runs over one
+# line still reads as one entry.
+_INDENT = " " * 21
+
 
 def main(argv: list[str] | None = None) -> int:
     """Run the command-line tool. Returns the process exit status."""
     args = _build_parser().parse_args(argv)
+    previous: dict[str, Any] = {}
     try:
         settings = _load_settings(args.settings)
+        previous = _apply_constants(settings.get("constants", {}))
         result, source = _run(settings, args.settings.parent)
+        # Built while the overrides are still in force, because the last line of
+        # the report says which of them were changed from the published values.
+        report = _report(result, source)
     except (OSError, KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as e:
-        # KeyError formats itself with repr, which quotes the message and doubles
-        # every backslash in a Windows path.
-        message = e.args[0] if isinstance(e, KeyError) and e.args else e
-        print(f"tremor-lab: {message}", file=sys.stderr)
-        return 2
-    print(_report(result, source))
-    if args.fmd_out and result["fmd"] is not None:
+        return _refuse(e)
+    finally:
+        for name, value in previous.items():
+            setattr(constants, name, value)
+    print(report)
+    if not args.fmd_out:
+        return 0
+    # Everything below is the second half of what was asked for. It used to sit
+    # outside the error handler above, so an output folder that did not exist, or a
+    # CSV still open in Excel, ended the run with a Python traceback and exit 1 while
+    # every other failure printed one line and exited 2. And when the window held no
+    # events the table was skipped in silence at exit 0, which left whatever an
+    # earlier run had put at that path in place for a plotting step to pick up as
+    # though it belonged to this sequence.
+    if result["fmd"] is None:
+        return _refuse(
+            f"no frequency-magnitude table was written to {args.fmd_out}: the window "
+            f"holds no events, so there is no distribution to tabulate. Anything "
+            f"already at that path is left over from an earlier run"
+        )
+    try:
         _write_fmd(result, args.fmd_out)
-        print(f"\nfrequency-magnitude table written to {args.fmd_out}")
+    except (OSError, ValueError) as e:
+        return _refuse(
+            f"the frequency-magnitude table could not be written to {args.fmd_out}: {e}"
+        )
+    print(f"\nfrequency-magnitude table written to {args.fmd_out}")
     return 0
+
+
+def _refuse(problem) -> int:
+    """Report one problem the way every failure in this tool is reported, and exit 2."""
+    # KeyError formats itself with repr, which quotes the message and doubles
+    # every backslash in a Windows path.
+    message = (
+        problem.args[0] if isinstance(problem, KeyError) and problem.args else problem
+    )
+    print(f"tremor-lab: {message}", file=sys.stderr)
+    return 2
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -63,10 +102,6 @@ def _build_parser() -> argparse.ArgumentParser:
 def _load_settings(path: Path) -> dict[str, Any]:
     with open(path, "rb") as handle:
         settings = tomllib.load(handle)
-    for name, value in settings.get("constants", {}).items():
-        if not hasattr(constants, name):
-            raise KeyError(f"{path}: unknown constant {name!r} in [constants]")
-        setattr(constants, name, value)
     for section in ("catalog", "mainshock"):
         if section not in settings:
             raise KeyError(f"{path}: missing [{section}] section")
@@ -76,7 +111,84 @@ def _load_settings(path: Path) -> dict[str, Any]:
             f"{path}: unknown section(s) {unknown}. A mistyped section name would "
             f"otherwise be ignored and the run would report different numbers"
         )
+    for name, value in settings.get("constants", {}).items():
+        _check_constant(path, name, value)
+    for name, value in settings.get("analysis", {}).items():
+        _check_analysis_value(path, name, value)
     return settings
+
+
+def _apply_constants(overrides: dict[str, Any]) -> dict[str, Any]:
+    """Put the overrides in force, and hand back what was there before.
+
+    Nothing here decides whether they are allowed; `_load_settings` has already
+    refused anything that is not a published constant or not a number. This only
+    swaps the values in, so that a caller can swap them back.
+    """
+    previous = {name: getattr(constants, name) for name in overrides}
+    for name, value in overrides.items():
+        setattr(constants, name, value)
+    return previous
+
+
+def _check_constant(path: Path, name: str, value: Any) -> None:
+    """Refuse an entry in [constants] that is not a published constant, or not a number.
+
+    The gate here was once `hasattr`, which admits every attribute of the module and
+    not only the published constants. `_PUBLISHED` is one of them: it is the snapshot
+    the report compares against, so a settings file could set `_PUBLISHED = {}`,
+    change a constant, and have the report state that the published defaults were
+    used. Only the published names may be set.
+
+    Nothing checked the value either. `DELTA_MB = true` ran to completion and printed
+    a Bath expectation of M 6.80 instead of M 6.65, because Python's True is
+    arithmetically 1; `DM = "0.1"` failed much later with a numpy casting message that
+    named neither the constant nor the file. Every published constant is a number, so
+    anything else is refused here, by name, before it can reach a formula.
+    """
+    if name not in constants._PUBLISHED:
+        raise KeyError(
+            f"{path}: unknown constant {name!r} in [constants]. The constants that "
+            f"can be set here are {sorted(constants._PUBLISHED)}"
+        )
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(
+            f"{path}: [constants] {name} must be a number, but {value!r} was given. "
+            f"Its published value is {constants._PUBLISHED[name]}"
+        )
+
+
+_ANALYSIS_NUMBERS = {
+    "threshold",
+    "window_days",
+    "dm",
+    "mc_correction",
+    "n_boot",
+    "seed",
+    "min_events_for_mc",
+    "min_events_for_fit",
+    "n_fit_simulations",
+}
+
+
+def _check_analysis_value(path: Path, name: str, value: Any) -> None:
+    """Refuse an [analysis] entry that is not the number it has to be.
+
+    These are the same quantities as the [constants] overrides, reached by a
+    different route, and they had no check at all. `mc_correction = true` ran to
+    exit 0 and printed a completeness magnitude of 4.2 instead of 3.4, because
+    Python's True is arithmetically 1; `dm = "0.1"` died inside numpy with a
+    message about casting rules that named neither the setting nor the file.
+
+    An unknown name is left alone here: `analyze_case` refuses it by name, and its
+    suggestion of the nearest real keyword is better than anything this could say.
+    """
+    if name in _ANALYSIS_NUMBERS and (
+        isinstance(value, bool) or not isinstance(value, (int, float))
+    ):
+        raise TypeError(
+            f"{path}: [analysis] {name} must be a number, but {value!r} was given"
+        )
 
 
 def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
@@ -92,14 +204,28 @@ def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
         raise KeyError(f"unknown keys in [catalog]: {sorted(catalog_settings)}")
     threshold = analysis.pop("threshold", None)
     window_days = analysis.pop("window_days", None)
+    already_windowed = "dt_days" in columns
 
-    if "dt_days" in columns:
+    if already_windowed:
         if radius_km is not None:
             raise KeyError(
                 "radius_km cannot be applied to a catalogue configured with "
                 "dt_days: that file carries elapsed days, not positions to "
                 "measure from. Remove radius_km, or configure the raw export "
                 "with date, time, lat and lon columns"
+            )
+        if columns.get("mag_type"):
+            # No magnitude is converted on this route: `to_mw` is reached only
+            # through `read_catalog`. Accepting the entry meant a file whose scale
+            # column really did say Ms was analysed on raw Ms values while the
+            # report named the column as though a Scordilis conversion had been
+            # applied to them.
+            raise KeyError(
+                "mag_type cannot be applied to a catalogue configured with "
+                "dt_days: that file is taken as it stands and no magnitude is "
+                "converted to Mw on this route. Remove mag_type, or configure the "
+                "raw export with date, time, lat and lon columns, where the scale "
+                "column is read and the conversion is counted and reported"
             )
         # Already windowed: elapsed times are in the file, so there is nothing to parse
         # and no mainshock position to measure against.
@@ -133,20 +259,81 @@ def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
     )
     result.update({k: v for k, v in catalog.attrs.items() if k in carried})
     result["seed"] = analysis.get("seed", 0)
+    result["settings_used"] = _choices(
+        analysis,
+        window_days,
+        threshold,
+        dayfirst=dayfirst,
+        already_windowed=already_windowed,
+    )
     result["magnitude_note"] = _magnitude_note(
-        columns, catalog.attrs.get("scale_counts")
+        columns,
+        catalog.attrs.get("scale_counts"),
+        already_windowed=already_windowed,
     )
     return result, path
 
 
-def _magnitude_note(columns: Mapping[str, str], scales) -> str:
+def _choices(
+    analysis: Mapping[str, Any],
+    window_days,
+    threshold,
+    *,
+    dayfirst: bool,
+    already_windowed: bool,
+) -> dict[str, Any]:
+    """The value actually used for every choice that moves a number.
+
+    Each of these can arrive by two routes that leave no trace in one another:
+    `[analysis] mc_correction = 0.0` is a keyword argument passed to the estimator,
+    while `[constants] MC_CORRECTION = 0.0` reassigns the module. The report used to
+    list only the second. A run over a 30-day window with 0.5-wide bins and no
+    completeness correction therefore ended with exactly the same closing line as the
+    reference run, and a referee holding the two reports had no way to tell which
+    choices had produced which numbers.
+
+    Resolving each choice here - from the keyword where one was given, and from the
+    constant otherwise - is what lets the report state the value that was used rather
+    than the route it came by.
+    """
+    return {
+        "window_days": constants.WINDOW_DAYS if window_days is None else window_days,
+        "threshold": threshold,
+        "dm": analysis.get("dm", constants.DM),
+        "mc_correction": analysis.get("mc_correction", constants.MC_CORRECTION),
+        "n_boot": analysis.get("n_boot", constants.N_BOOT),
+        "n_fit_simulations": analysis.get(
+            "n_fit_simulations", constants.N_FIT_SIMULATIONS
+        ),
+        "seed": analysis.get("seed", 0),
+        # Not an [analysis] setting, but it decides how every timestamp is read
+        # and so which events fall inside the window at all. A block that leaves
+        # it out is not a complete account of a run on a raw catalogue.
+        "dayfirst": dayfirst,
+        "already_windowed": already_windowed,
+    }
+
+
+def _magnitude_note(
+    columns: Mapping[str, str], scales, *, already_windowed: bool
+) -> str:
     """State what happened to the magnitudes, from counts rather than intent."""
     source = f"column {columns.get('mag')!r}"
+    if already_windowed:
+        # A file of elapsed days and magnitudes is read straight through; no
+        # conversion happens on this route, so the note must not name a scale
+        # column, which would read as a homogenisation that never took place.
+        return (
+            f"{source}, used as published; a catalogue given as elapsed days is read "
+            f"as it stands and no scale conversion is performed"
+        )
     scale_col = columns.get("mag_type")
     if not scale_col:
         return f"{source}, used as published; no scale column given"
-    if not scales:
-        return f"{source}, scale column {scale_col!r}"
+    # An empty or missing record of what was converted means nothing was, which
+    # the next branch already says correctly; a separate branch for it only
+    # created a second sentence for the same outcome.
+    scales = scales or {}
     converted = scales.get("ms", 0) + scales.get("mb", 0)
     if not converted:
         return (
@@ -176,6 +363,9 @@ def _report(result: dict[str, Any], source: Path) -> str:
         )
     if result.get("n_unusable"):
         lines.append(f"incomplete rows      {result['n_unusable']} dropped")
+    # This is where the distance limit is reported, so the settings block below does
+    # not repeat it. The key is present whenever a spatial cut was possible at all;
+    # the other route refuses radius_km outright, because it has no positions.
     if "radius_km" in result:
         radius, removed = result["radius_km"], result.get("removed_by_radius", 0)
         farthest = result.get("farthest_km")
@@ -240,7 +430,9 @@ def _report(result: dict[str, Any], source: Path) -> str:
     ]
     if result.get("magnitude_note"):
         lines.append(f"magnitudes           {result['magnitude_note']}")
-    lines.append(f"settings             {_settings_line(result)}")
+    settings = _settings_lines(result)
+    lines.append(f"settings             {settings[0]}")
+    lines += [f"{_INDENT}{line}" for line in settings[1:]]
     return "\n".join(lines)
 
 
@@ -270,26 +462,78 @@ def fit_verdict(test) -> str:
     return "borderline; raise the replicate count to decide"
 
 
-def _settings_line(result: dict[str, Any]) -> str:
-    """Every constant that differs from its default, plus the seed.
+def _settings_lines(result: dict[str, Any]) -> list[str]:
+    """Every choice that moved a number, as a block a methods section can quote.
 
-    A printed number that does not carry its settings cannot be traced back to
-    the run that produced it.
+    A printed number that does not carry its settings cannot be traced back to the
+    run that produced it. This once printed only the constants that differ from their
+    published values, which is a small part of the answer: the window, the bin width,
+    the completeness correction, the resample and replicate counts and the seed are
+    just as capable of moving every number in the report, and when they were set in
+    [analysis] rather than [constants] none of them appeared anywhere. Two runs that
+    shared nothing but a catalogue could close with the same line. Each choice is now
+    stated as the value that was used, whichever route it arrived by, and the list of
+    changed constants is kept as well, because it says what the rest of the session
+    will do.
     """
+    used = result["settings_used"]
+    given = used["threshold"]
+    if given is not None:
+        threshold = f"threshold M {_number(given)}, given in the settings file"
+    elif result.get("threshold") is not None:
+        threshold = (
+            f"threshold M {_number(result['threshold'])}, the completeness magnitude "
+            f"estimated from the catalogue"
+        )
+    else:
+        threshold = "no threshold: the window was too sparse to estimate one"
     changed = [
         f"{name}={getattr(constants, name)}"
         for name in sorted(constants._PUBLISHED)
         if getattr(constants, name) != constants._PUBLISHED[name]
     ]
-    seed = result.get("seed")
-    parts = [
+    # Only the work that was actually done. A sparse window produces no decay fit
+    # and no bootstrap, and printing the counts regardless described replicates
+    # that were never drawn, in the block whose whole purpose is to say what
+    # produced the numbers above it.
+    if result.get("omori") is None:
+        effort = "no decay fit was made, so no resamples or replicates were drawn"
+    else:
+        effort = (
+            f"{used['n_boot']} bootstrap resamples"
+            if used["n_boot"]
+            else "no bootstrap: the uncertainty on p and c was not estimated"
+        )
+        effort += (
+            f"; {used['n_fit_simulations']} fit-test replicates"
+            if used["n_fit_simulations"]
+            else "; no fit-test replicates, so the p-value is the uncalibrated one"
+        )
+    reading = (
+        "elapsed days read from the file"
+        if used.get("already_windowed")
+        else (
+            "dates read day-first where the order is ambiguous"
+            if used.get("dayfirst")
+            else "dates read month-first where the order is ambiguous"
+        )
+    )
+    return [
+        f"window {_number(used['window_days'])} days; "
+        f"magnitude bins {_number(used['dm'])} wide; "
+        f"Mc correction {used['mc_correction']:+g}",
+        threshold,
+        reading,
+        f"{effort}; seed {used['seed']}",
         "constants at their published defaults"
         if not changed
-        else "changed: " + ", ".join(changed)
+        else "constants changed: " + ", ".join(changed),
     ]
-    if seed is not None:
-        parts.append(f"seed {seed}")
-    return "; ".join(parts)
+
+
+def _number(value) -> str:
+    """A number as a reader would write it: 180 rather than 180.0."""
+    return f"{value:g}"
 
 
 def _show(value) -> str:

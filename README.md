@@ -240,7 +240,10 @@ Without writing Python, set it in the `[constants]` section of a settings file. 
 published names can be set there, and only to numbers: `DELTA_MB = true` is refused,
 because Python counts `true` as 1 and the run would otherwise print a Bath expectation
 of M 6.80 as though it were a magnitude deficit of 1.15. A file that is refused for any
-reason leaves the constants exactly as it found them.
+reason leaves the constants exactly as it found them, and so does one that is accepted:
+the tool puts back every value it changed before it returns, so no run can steer the
+next one. The same quantities can be given under `[analysis]`, where they are checked
+the same way.
 
 Three of the 25 are the exception to the keyword route: `OMORI_C_FLOOR`, `OMORI_P_MIN`
 and `OMORI_P_MAX` judge whether a fitted decay is worth believing rather than entering
