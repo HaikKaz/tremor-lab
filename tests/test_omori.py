@@ -8,12 +8,15 @@ import pytest
 from scipy.optimize import minimize
 
 from tremor_lab import constants
+from tremor_lab.cli import fit_verdict
 from tremor_lab.omori import (
     bootstrap_omori,
     fit_omori,
     omori_fit_test,
     omori_nll,
 )
+
+DATA = Path(__file__).parent / "data"
 
 
 def omori_sample(n, p, c, t_end, seed):
@@ -239,3 +242,25 @@ def test_calibration_rejects_the_reference_sequence_the_asymptotic_test_accepts(
     fit = fit_omori(times)
     assert omori_fit_test(times, fit, n_simulations=0).p_value > 0.4
     assert omori_fit_test(times, fit, n_simulations=120, seed=0).p_value < 0.10
+
+
+@pytest.mark.full_calibration
+def test_the_published_default_is_paid_in_full():
+    """One call at the real replicate count, so the shipped default is exercised.
+
+    The rest of the suite lowers it for speed (see conftest). If nothing ran at
+    600, a default that had drifted to something unusable would pass every test.
+    """
+    catalog = pd.read_csv(DATA / "kahramanmaras_180d.csv")
+    times = catalog.loc[catalog["mw"] >= 3.5, "dt_days"].to_numpy()
+    fit = fit_omori(times)
+    test = omori_fit_test(times, fit, seed=0)
+
+    assert constants.N_FIT_SIMULATIONS == 600
+    assert test.method == "parametric bootstrap, 600 replicates"
+    # The reference sequence sits on the threshold: 0.042 with a standard error
+    # of 0.008. Both implementations reach it, and neither can call it either
+    # way, which is why the verdict says borderline rather than choosing.
+    assert test.p_value == pytest.approx(0.042, abs=0.005)
+    assert test.p_value_se == pytest.approx(0.008, abs=0.002)
+    assert "borderline" in fit_verdict(test)

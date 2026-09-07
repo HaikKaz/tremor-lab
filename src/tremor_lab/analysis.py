@@ -26,6 +26,7 @@ def analyze_case(
     seed: int = 0,
     min_events_for_mc: int | None = None,
     min_events_for_fit: int | None = None,
+    n_fit_simulations: int | None = None,
 ) -> dict[str, Any]:
     """
     Completeness, b-value, decay and energy for one aftershock sequence.
@@ -60,6 +61,10 @@ def analyze_case(
     min_events_for_mc, min_events_for_fit : int, optional
         Density rules described above. Default to `constants.MIN_EVENTS_FOR_MC` (50)
         and `constants.MIN_EVENTS_FOR_FIT` (100).
+    n_fit_simulations : int, optional
+        Replicates used to calibrate the decay fit test, the slowest thing here.
+        Defaults to `constants.N_FIT_SIMULATIONS` (600). Zero falls back to the
+        uncalibrated asymptotic p-value, which is reported without a verdict.
 
     Returns
     -------
@@ -144,7 +149,9 @@ def analyze_case(
     times = above["dt_days"].to_numpy()
     result["omori"] = fit_omori(times)
     result["omori_warning"] = _omori_caution(result["omori"])
-    result["omori_fit_test"] = omori_fit_test(times, result["omori"])
+    result["omori_fit_test"] = omori_fit_test(
+        times, result["omori"], n_simulations=n_fit_simulations, seed=seed
+    )
     if n_boot:
         result["omori_bootstrap"] = bootstrap_omori(times, n_boot=n_boot, seed=seed)
     return result

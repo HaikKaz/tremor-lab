@@ -21,9 +21,6 @@ from tremor_lab import __version__, constants
 from tremor_lab.analysis import analyze_case
 from tremor_lab.catalog import read_catalog
 
-# Captured at import, before any settings file can reassign them.
-_DEFAULT_CONSTANTS = {n: getattr(constants, n) for n in dir(constants) if n.isupper()}
-
 
 def main(argv: list[str] | None = None) -> int:
     """Run the command-line tool. Returns the process exit status."""
@@ -97,6 +94,13 @@ def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
     window_days = analysis.pop("window_days", None)
 
     if "dt_days" in columns:
+        if radius_km is not None:
+            raise KeyError(
+                "radius_km cannot be applied to a catalogue configured with "
+                "dt_days: that file carries elapsed days, not positions to "
+                "measure from. Remove radius_km, or configure the raw export "
+                "with date, time, lat and lon columns"
+            )
         # Already windowed: elapsed times are in the file, so there is nothing to parse
         # and no mainshock position to measure against.
         frame = pd.read_csv(path)
@@ -218,14 +222,14 @@ def _report(result: dict[str, Any], source: Path) -> str:
         ]
         test = result.get("omori_fit_test")
         if test is not None and test.p_value == test.p_value:
-            verdict = (
-                "consistent with one Omori decay"
-                if test.p_value > 0.05
-                else "NOT consistent with a single Omori decay"
-            )
+            verdict = fit_verdict(test)
+            se = test.p_value_se if test.p_value_se == test.p_value_se else 0.0
+            # A separate name from the bootstrap `spread` above: the two once
+            # shared one, and the reader had to prove they never overlapped.
+            se_text = f" +/- {se:.3f}" if se else ""
             lines.append(
                 f"decay fit test       KS {test.statistic:.4f}, "
-                f"p {test.p_value:.3f}  ({verdict})"
+                f"p {test.p_value:.3f}{se_text}  ({verdict})"
             )
             lines.append(f"                     p from a {test.method}")
         if result.get("omori_warning"):
@@ -240,6 +244,32 @@ def _report(result: dict[str, Any], source: Path) -> str:
     return "\n".join(lines)
 
 
+def fit_verdict(test) -> str:
+    """Say what a decay-fit p-value does and does not settle.
+
+    Two things stop a bare comparison against 0.05 from meaning anything.
+
+    The p-value may be uncalibrated. The Omori curve is fitted to the very times
+    being tested, so it hugs them, and the textbook Kolmogorov p-value is far too
+    generous: on the reference catalogue it reads 0.508 where the simulated null
+    reads about 0.03. That number is reported, because hiding it would be worse,
+    but no verdict may be read from it.
+
+    And a simulated p-value is itself an estimate. When it sits within two of its
+    own standard errors of the threshold, the comparison is decided by how many
+    replicates happened to run, not by the catalogue, and the honest answer is
+    that more replicates are needed.
+    """
+    se = test.p_value_se if test.p_value_se == test.p_value_se else 0.0
+    if "uncalibrated" in test.method:
+        return "no verdict: this p-value is uncalibrated"
+    if test.p_value + 2 * se < 0.05:
+        return "NOT consistent with a single Omori decay"
+    if test.p_value - 2 * se > 0.05:
+        return "consistent with one Omori decay"
+    return "borderline; raise the replicate count to decide"
+
+
 def _settings_line(result: dict[str, Any]) -> str:
     """Every constant that differs from its default, plus the seed.
 
@@ -248,8 +278,8 @@ def _settings_line(result: dict[str, Any]) -> str:
     """
     changed = [
         f"{name}={getattr(constants, name)}"
-        for name in sorted(n for n in dir(constants) if n.isupper())
-        if getattr(constants, name) != _DEFAULT_CONSTANTS[name]
+        for name in sorted(constants._PUBLISHED)
+        if getattr(constants, name) != constants._PUBLISHED[name]
     ]
     seed = result.get("seed")
     parts = [

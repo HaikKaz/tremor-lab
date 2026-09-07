@@ -230,6 +230,7 @@ class FitTest(NamedTuple):
     p_value: float
     n: int
     method: str
+    p_value_se: float
 
 
 def omori_sample(
@@ -305,16 +306,20 @@ def omori_fit_test(
         Start of the observation interval, 0 by default.
     n_simulations : int, optional
         Replicates used to calibrate the null distribution. Defaults to
-        `constants.N_FIT_SIMULATIONS` (200). Zero selects the asymptotic form.
+        `constants.N_FIT_SIMULATIONS` (600). Zero selects the asymptotic form,
+        whose p-value is far too generous here and must carry no verdict.
     seed : int, optional
         Seed of the simulation, so a reported p-value is reproducible.
 
     Returns
     -------
     FitTest
-        The KS statistic, its p-value, the number of times tested, and how the
-        p-value was obtained. A p-value below 0.05 is the conventional signal
-        that the model is inadequate.
+        The KS statistic, its p-value, the number of times tested, how the
+        p-value was obtained, and the Monte Carlo standard error of the p-value
+        itself. A p-value below 0.05 is the conventional signal that the model
+        is inadequate, but read it against that standard error: a simulated
+        p-value within two of them of the threshold decides nothing, and the
+        remedy is more replicates rather than a firmer verdict.
 
     References
     ----------
@@ -323,17 +328,27 @@ def omori_fit_test(
     t = np.sort(np.asarray(times_days, float))
     t = t[t > t_start]
     if t.size == 0:
-        return FitTest(float("nan"), float("nan"), 0, "no times after t_start")
+        return FitTest(
+            float("nan"), float("nan"), 0, "no times after t_start", float("nan")
+        )
     if t_end is None:
         t_end = float(t[-1])
     if not (t_end > t_start) or not np.isfinite(fit.c) or not np.isfinite(fit.p):
         return FitTest(
-            float("nan"), float("nan"), int(t.size), "interval or fit unusable"
+            float("nan"),
+            float("nan"),
+            int(t.size),
+            "interval or fit unusable",
+            float("nan"),
         )
     total = _integrated_rate(fit.c, fit.p, t_end, t_start)
     if not np.isfinite(total) or total <= 0:
         return FitTest(
-            float("nan"), float("nan"), int(t.size), "interval or fit unusable"
+            float("nan"),
+            float("nan"),
+            int(t.size),
+            "interval or fit unusable",
+            float("nan"),
         )
     if abs(fit.p - 1.0) < 1e-12:
         transformed = np.log((t + fit.c) / (t_start + fit.c))
@@ -348,7 +363,9 @@ def omori_fit_test(
         n_simulations = constants.N_FIT_SIMULATIONS
     if n_simulations < 1:
         asymptotic = float(kstest(scaled, "uniform").pvalue)
-        return FitTest(observed, asymptotic, int(t.size), "asymptotic, uncalibrated")
+        return FitTest(
+            observed, asymptotic, int(t.size), "asymptotic, uncalibrated", 0.0
+        )
 
     rng = np.random.default_rng(seed)
     exceeded = 0
@@ -368,10 +385,17 @@ def omori_fit_test(
         if simulated >= observed:
             exceeded += 1
     if used == 0:
-        return FitTest(observed, float("nan"), int(t.size), "simulation failed")
+        return FitTest(
+            observed, float("nan"), int(t.size), "simulation failed", float("nan")
+        )
+    p_value = (1.0 + exceeded) / (1.0 + used)
+    # The p-value is itself an estimate. Its binomial standard error decides
+    # whether a verdict against a threshold means anything at this many
+    # replicates, so it travels with the p-value rather than being implied.
     return FitTest(
         observed,
-        (1.0 + exceeded) / (1.0 + used),
+        p_value,
         int(t.size),
         f"parametric bootstrap, {used} replicates",
+        float(np.sqrt(p_value * (1.0 - p_value) / used)),
     )

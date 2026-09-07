@@ -68,8 +68,11 @@ N_BOOT = 200
 
 # Replicates used to calibrate the decay fit test. The parameters are estimated
 # from the data being tested, so the textbook Kolmogorov p-value does not apply
-# and the null distribution has to be simulated.
-N_FIT_SIMULATIONS = 200
+# and the null distribution has to be simulated. 600 rather than 200 because the
+# p-value is itself an estimate: at 200 its standard error is about a quarter of
+# a p-value near 0.05, and two runs of the same test land on opposite sides of
+# the threshold by luck. Costs about three seconds on a 1,500-event sequence.
+N_FIT_SIMULATIONS = 600
 
 # Bounds used only to judge whether a fitted decay is worth believing; they never
 # constrain the fit itself. c below the floor means the offset has collapsed onto
@@ -84,3 +87,11 @@ OMORI_P_MAX = 2.0
 # fitted to a catalogue too sparse to support it.
 MIN_EVENTS_FOR_MC = 50
 MIN_EVENTS_FOR_FIT = 100
+
+# A snapshot taken here, before any caller or settings file can reassign a
+# name, so a report can say which values were changed from the published ones.
+_PUBLISHED = {
+    name: value
+    for name, value in list(globals().items())
+    if name.isupper() and not name.startswith("_")
+}

@@ -49,7 +49,11 @@ def fmd(mags: ArrayLike, dm: float | None = None) -> FMD:
     hi = np.ceil(m.max() / dm) * dm
     n_bins = int(np.rint((hi - lo) / dm)) + 1
     edges = np.round(lo + dm * np.arange(n_bins), _edge_decimals(dm))
-    inc = np.bincount(np.rint((m - lo) / dm).astype(int), minlength=n_bins)
+    # floor(x + 0.5), not rint: numpy sends exact halves to the nearest even
+    # bin while JavaScript sends them up, which put 225 events a bin apart
+    # between the two implementations at dm 0.2. The spreadsheet rounds up,
+    # so that is the convention both now follow.
+    inc = np.bincount(np.floor((m - lo) / dm + 0.5).astype(int), minlength=n_bins)
     return FMD(edges, inc, np.cumsum(inc[::-1])[::-1])
 
 

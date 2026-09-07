@@ -187,7 +187,12 @@ def read_catalog(
     out.attrs = {
         **out.attrs,
         "rows_read": len(frame),
-        "rows_parsed": int(parsed.notna().all(axis=1).sum()),
+        "rows_parsed": int(
+            parsed[["t", "mw"] + [r for r in ("lat", "lon") if r in columns]]
+            .notna()
+            .all(axis=1)
+            .sum()
+        ),
         "events_in_window": len(out),
         "scale_counts": scales,
     }
@@ -234,6 +239,13 @@ def _check_columns(
             "no time column was given; set columns['datetime'] for a single "
             "ISO stamp, or columns['date'] and columns['time'] for separate "
             f"date and clock columns, from {list(frame.columns)}"
+        )
+    known = {"datetime", "date", "time", "lat", "lon", "mag", "mag_type", "dt_days"}
+    unknown = sorted(set(columns) - known)
+    if unknown:
+        raise KeyError(
+            f"unknown column roles {unknown}; a mistyped role is dropped in "
+            f"silence and its column never read. The roles are {sorted(known)}"
         )
     named = {role: name for role, name in columns.items() if role != "dt_days"}
     if mag_type_col:

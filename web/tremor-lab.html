@@ -576,6 +576,11 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
         <span class="hint">0 to skip</span>
       </div>
       <div class="field">
+        <label for="nFitSim">fit test replicates</label>
+        <input id="nFitSim" type="number" step="1" min="0" max="5000" value="600">
+        <span class="hint">raise to settle a borderline p</span>
+      </div>
+      <div class="field">
         <label for="seed">seed</label>
         <input id="seed" type="number" step="1" value="0">
         <span class="hint">same seed, same error bars</span>
@@ -707,7 +712,7 @@ var CONST = {
   // model, where the likelihood has no interior maximum and c is not identified.
   // Replicates used to calibrate the decay fit test, whose parameters are
   // estimated from the data being tested.
-  N_FIT_SIMULATIONS: 120,
+  N_FIT_SIMULATIONS: 600,
   OMORI_C_FLOOR: 1e-3,
   OMORI_P_MIN: 0.5,
   OMORI_P_MAX: 2.0
@@ -919,7 +924,8 @@ function omoriFitTest(times, fit, T, t0) {
     statistic: d,
     pValue: ksProbability((en + 0.12 + 0.11 / en) * d),
     n: n,
-    method: "asymptotic, uncalibrated"
+    method: "asymptotic, uncalibrated",
+    pValueSe: 0
   };
 }
 
@@ -951,13 +957,18 @@ function calibrateFitTest(times, fit, T, t0, nSim, seed, onProgress, done, cance
     onProgress(i / nSim);
     if (i < nSim) setTimeout(step, 0);
     else {
+      var pv = used ? (1 + exceeded) / (1 + used) : NaN;
       done({
         statistic: observed,
-        pValue: used ? (1 + exceeded) / (1 + used) : NaN,
+        pValue: pv,
         n: n,
         method: used
           ? "parametric bootstrap, " + used + " replicates"
-          : "simulation failed"
+          : "simulation failed",
+        // The p-value is itself an estimate. Its binomial standard error decides
+        // whether a verdict against a threshold means anything at this many
+        // replicates, so it travels with the p-value rather than being implied.
+        pValueSe: used ? Math.sqrt(pv * (1 - pv) / used) : NaN
       });
     }
   }
@@ -1833,6 +1844,77 @@ function fmtDays(d) {
 
 var LAST = { result: null, settings: null };
 
+/* Every measurement the page reports, as label and value. The table and the
+   copy button both render this, so a row cannot appear in one and not the
+   other - which is how the decay fit test came to be missing from the text a
+   reader pastes into a paper. */
+function resultRows(result, s) {
+  var bp = result.boot;
+  var rows = [];
+  rows.push(["events in window", result.nEvents.toLocaleString()]);
+  rows.push(["completeness Mc", result.mc == null ? "not estimated"
+             : result.mc.toFixed(1) + "  (maximum curvature)"]);
+  if (result.mcMethods) {
+    var others = [], spread = [];
+    for (var name in result.mcMethods) {
+      var value = result.mcMethods[name];
+      if (value != null) spread.push(value);
+      if (name !== "maximum curvature") {
+        others.push(name + " " + (value == null ? "none found" : value.toFixed(1)));
+      }
+    }
+    rows.push(["Mc, other methods", others.join(", ")]);
+    if (spread.length > 1 && maxOf(spread) - minOf(spread) > 1e-9) {
+      rows.push(["Mc spread", "M " + minOf(spread).toFixed(1) + " to " +
+                 maxOf(spread).toFixed(1) + ", and b depends on which is used"]);
+    }
+  }
+  rows.push(["threshold used", result.threshold == null ? "not set" : result.threshold.toFixed(2)]);
+  rows.push(["events at or above it", result.nAbove == null ? "\u2014" : result.nAbove.toLocaleString()]);
+  if (result.b) {
+    rows.push(["b-value", result.b.b.toFixed(3) + "  \u00B1 " + result.b.sigma.toFixed(3)]);
+  }
+  if (result.largestMw != null) {
+    rows.push(["largest event in window", "M " + result.largestMw.toFixed(1)]);
+  }
+  if (result.omori) {
+    rows.push(["Omori p", result.omori.p.toFixed(3) + (bp && isFinite(bp.pStd) ? "  \u00B1 " + bp.pStd.toFixed(3) : "")]);
+    rows.push(["Omori c", result.omori.c.toFixed(3) + (bp && isFinite(bp.cStd) ? "  \u00B1 " + bp.cStd.toFixed(3) : "")]);
+    rows.push(["Omori k", result.omori.k.toFixed(1)]);
+    rows.push(["observation interval", maxOf(result.times).toFixed(3) + " days"]);
+    if (result.fitTest && isFinite(result.fitTest.pValue)) {
+      var pv = result.fitTest.pValue;
+      var se = isFinite(result.fitTest.pValueSe) ? result.fitTest.pValueSe : 0;
+      var verdict;
+      if (/uncalibrated/.test(result.fitTest.method)) {
+        // The curve was fitted to the very times being tested, so this p-value
+        // is far too generous and no verdict may be read from it. On the
+        // reference catalogue it says 0.508 where the simulated null says 0.03.
+        verdict = "(no verdict: this p-value is uncalibrated)";
+      } else if (pv + 2 * se < 0.05) {
+        verdict = "(NOT consistent with a single Omori decay)";
+      } else if (pv - 2 * se > 0.05) {
+        verdict = "(consistent with one Omori decay)";
+      } else {
+        verdict = "(borderline; raise the replicate count to decide)";
+      }
+      rows.push(["decay fit test",
+        "KS " + result.fitTest.statistic.toFixed(4) + ", p " + pv.toFixed(3) +
+        (se ? "  \u00B1 " + se.toFixed(3) : "") + " " + verdict]);
+      rows.push(["fit test p from", result.fitTest.method +
+        (/uncalibrated/.test(result.fitTest.method)
+          ? "; the simulated null is still running" : "")]);
+    }
+  }
+  rows.push(["mainshock energy",
+             result.energy == null ? "no mainshock Mw given"
+                                   : result.energy.toExponential(3) + " J"]);
+  rows.push(["B\u00E5th expectation",
+             result.bathMag == null ? "no mainshock Mw given"
+                                    : "M " + result.bathMag.toFixed(2)]);
+  return rows;
+}
+
 function renderResults(result, s) {
   LAST.result = result;
   LAST.settings = s;
@@ -1889,55 +1971,7 @@ function renderResults(result, s) {
            '</span><span class="u">' + t.u + '</span><span class="d">' + t.d + "</span></div>";
   }).join("");
 
-  var rows = [];
-  rows.push(["events in window", result.nEvents.toLocaleString()]);
-  rows.push(["completeness Mc", result.mc == null ? "not estimated"
-             : result.mc.toFixed(1) + "  (maximum curvature)"]);
-  if (result.mcMethods) {
-    var others = [], spread = [];
-    for (var name in result.mcMethods) {
-      var value = result.mcMethods[name];
-      if (value != null) spread.push(value);
-      if (name !== "maximum curvature") {
-        others.push(name + " " + (value == null ? "none found" : value.toFixed(1)));
-      }
-    }
-    rows.push(["Mc, other methods", others.join(", ")]);
-    if (spread.length > 1 && maxOf(spread) - minOf(spread) > 1e-9) {
-      rows.push(["Mc spread", "M " + minOf(spread).toFixed(1) + " to " +
-                 maxOf(spread).toFixed(1) + ", and b depends on which is used"]);
-    }
-  }
-  rows.push(["threshold used", result.threshold == null ? "not set" : result.threshold.toFixed(2)]);
-  rows.push(["events at or above it", result.nAbove == null ? "\u2014" : result.nAbove.toLocaleString()]);
-  if (result.b) {
-    rows.push(["b-value", result.b.b.toFixed(3) + "  \u00B1 " + result.b.sigma.toFixed(3)]);
-  }
-  if (result.largestMw != null) {
-    rows.push(["largest event in window", "M " + result.largestMw.toFixed(1)]);
-  }
-  if (result.omori) {
-    rows.push(["Omori p", result.omori.p.toFixed(3) + (bp && isFinite(bp.pStd) ? "  \u00B1 " + bp.pStd.toFixed(3) : "")]);
-    rows.push(["Omori c", result.omori.c.toFixed(3) + (bp && isFinite(bp.cStd) ? "  \u00B1 " + bp.cStd.toFixed(3) : "")]);
-    rows.push(["Omori k", result.omori.k.toFixed(1)]);
-    rows.push(["observation interval", maxOf(result.times).toFixed(3) + " days"]);
-    if (result.fitTest && isFinite(result.fitTest.pValue)) {
-      rows.push(["decay fit test",
-        "KS " + result.fitTest.statistic.toFixed(4) + ", p " +
-        result.fitTest.pValue.toFixed(3) + " " +
-        (result.fitTest.pValue > 0.05
-          ? "(consistent with one Omori decay)"
-          : "(NOT consistent with a single Omori decay)")]);
-      rows.push(["fit test p from", result.fitTest.method]);
-    }
-  }
-  rows.push(["mainshock energy",
-             result.energy == null ? "no mainshock Mw given"
-                                   : result.energy.toExponential(3) + " J"]);
-  rows.push(["B\u00E5th expectation",
-             result.bathMag == null ? "no mainshock Mw given"
-                                    : "M " + result.bathMag.toFixed(2)]);
-
+  var rows = resultRows(result, s);
   document.getElementById("readout").innerHTML = rows.map(function (r) {
     return "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>";
   }).join("");
@@ -2048,6 +2082,16 @@ function provenanceLine(s, withFile) {
   return bits.join(" \u00B7 ");
 }
 
+/* Symbols that are formatting rather than spelling, written so they survive a
+   paste into a fixed-width table or a plain-text file. Letters are left alone:
+   Bath and Kahramanmaras are names, and stripping their accents would be a
+   misspelling rather than a conversion. */
+function asciiText(s) {
+  return s.replace(/\u00B1/g, "+/-")
+          .replace(/\u2014/g, "-").replace(/\u2013/g, "-")
+          .replace(/\u00B7/g, "-").replace(/\u2265/g, ">=");
+}
+
 function resultsAsText(result, s) {
   var lines = ["Tremor Lab 1.0.0"];
   // Everything needed to run this again, so the numbers never travel alone.
@@ -2057,27 +2101,19 @@ function resultsAsText(result, s) {
              "  lat " + ($("msLat").value.trim() || "-") +
              "  lon " + ($("msLon").value.trim() || "-") +
              "  Mw " + ($("msMw").value.trim() || "-"));
-  lines.push("columns                 " + provenanceLine(s, false));
+  lines.push("columns                 " + asciiText(provenanceLine(s, false)));
   lines.push("window " + s.windowDays + " days, threshold " +
              (result.threshold == null ? "the estimated Mc" : "M " + result.threshold) +
              ", bin " + s.dm + ", Mc correction " + s.mcCorr +
-             ", bootstrap " + s.nBoot + " runs, seed " + s.seed);
-  lines.push("events in window        " + result.nEvents);
-  lines.push("completeness Mc         " + (result.mc == null ? "not estimated" : result.mc));
-  if (result.b) lines.push("b-value                 " + result.b.b.toFixed(3) + " +/- " +
-                           result.b.sigma.toFixed(3) + " on " + result.b.n + " events");
-  if (result.omori) {
-    lines.push("Omori p                 " + result.omori.p.toFixed(3) +
-               (result.boot && isFinite(result.boot.pStd) ? " +/- " + result.boot.pStd.toFixed(3) : ""));
-    lines.push("Omori c                 " + result.omori.c.toFixed(3) +
-               (result.boot && isFinite(result.boot.cStd) ? " +/- " + result.boot.cStd.toFixed(3) : ""));
-    lines.push("Omori k                 " + result.omori.k.toFixed(1));
-  }
-  lines.push("mainshock energy        " +
-             (result.energy == null ? "no mainshock Mw given"
-                                    : result.energy.toExponential(3) + " J"));
-  lines.push("Bath expectation        " +
-             (result.bathMag == null ? "no mainshock Mw given" : "M " + result.bathMag.toFixed(2)));
+             ", bootstrap " + s.nBoot + " runs, fit test " + s.nFitSim +
+             " replicates, seed " + s.seed);
+  // The same rows the table shows, so nothing can be reported on screen and
+  // quietly dropped from what a reader pastes into a paper.
+  resultRows(result, s).forEach(function (row) {
+    var label = asciiText(row[0]), value = asciiText(String(row[1]));
+    while (label.length < 24) label += " ";
+    lines.push(label + value);
+  });
   if (result.spanDays && result.spanDays < s.windowDays * 0.995) {
     lines.push("note                    the catalogue ends " + result.spanDays.toFixed(2) +
                " days after the mainshock, so the effective window is shorter than the " +
@@ -2205,6 +2241,8 @@ function readSettings() {
     mcCorr: field("mcCorr", 0.2, "Mc correction"),
     deltaMb: field("deltaMb", 1.15, "Bath dM"),
     nBoot: Math.max(0, Math.min(1000, Math.round(field("nBoot", 100, "bootstrap runs")))),
+    nFitSim: Math.max(0, Math.min(5000,
+      Math.round(field("nFitSim", CONST.N_FIT_SIMULATIONS, "fit test replicates")))),
     seed: Math.round(field("seed", 0, "seed")),
     mainshockMw: mwRaw === "" ? NaN : parseFloat(mwRaw),
     fellBack: fellBack
@@ -2249,6 +2287,11 @@ function showError(msg, isWarning) {
    analysis must call this, or published-looking numbers sit under controls that
    no longer describe them. */
 function clearResults() {
+  // Supersede any bootstrap or calibration still running. Without this they
+  // finish seconds later and re-render the discarded catalogue's results on top
+  // of the error that replaced them.
+  bootToken++;
+  document.getElementById("bootProgress").hidden = true;
   LAST.result = null;
   LAST.settings = null;
   ["resultsCard", "seqCard", "fmdCard", "stabCard", "omoriCard"].forEach(function (id) {
@@ -2393,7 +2436,7 @@ function recompute() {
     bar.firstElementChild.style.width = "0%";
     calibrateFitTest(
       result.times, result.omori, maxOf(result.times), 0,
-      CONST.N_FIT_SIMULATIONS, s.seed,
+      s.nFitSim, s.seed,
       function (frac) {
         if (token !== bootToken) return;
         bar.firstElementChild.style.width = (frac * 100).toFixed(0) + "%";
@@ -2470,7 +2513,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 30);
   });
 
-  ["windowDays", "threshold", "dm", "mcCorr", "deltaMb", "nBoot", "seed",
+  ["windowDays", "threshold", "dm", "mcCorr", "deltaMb", "nBoot", "nFitSim", "seed",
    "msTime", "msLat", "msLon", "msMw", "dayFirst"].forEach(function (id) {
     $(id).addEventListener("change", recompute);
   });

@@ -24,7 +24,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<9", "ruff>=0.6"]
+# ruff below 0.8 cannot parse the PEP 639 license metadata in this file and
+# exits 1 on unmodified source, which would fail CI before any test ran.
+dev = ["pytest>=8,<9", "ruff>=0.8"]
 
 [project.scripts]
 tremor-lab = "tremor_lab.cli:main"

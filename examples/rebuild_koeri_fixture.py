@@ -77,7 +77,10 @@ def main() -> int:
     from tremor_lab import analyze_case, read_catalog
 
     frame = build()
-    KOERI.write_text(frame.to_csv(index=False), encoding="utf-8")
+    # newline="" so the CRLF that to_csv emits is not translated again into
+    # CRCRLF, which every reader except pandas sees as blank rows.
+    with open(KOERI, "w", newline="", encoding="utf-8") as handle:
+        frame.to_csv(handle, index=False, lineterminator="\n")
     print(
         f"wrote {KOERI.name}: {len(frame)} rows, KOERI shape, whole seconds, "
         f"of which {len(OUTSIDE_DAYS)} lie outside the window and must be excluded"

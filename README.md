@@ -122,6 +122,8 @@ mw = 7.8
 window_days = 180
 threshold = 3.5                 # omit to use the estimated Mc
 n_boot = 200
+n_fit_simulations = 600         # replicates behind the decay fit test's p-value;
+                                # raise it when the verdict says borderline
 seed = 0
 
 [constants]                     # optional; any name from tremor_lab.constants
@@ -143,9 +145,12 @@ the button to load the bundled 2023 Kahramanmaras sequence.
 
 It reports the same quantities as the package, draws the sequence, the
 frequency-magnitude distribution and the decay curve, and shows the data behind each
-chart. Every published constant is editable, and the page states which columns it read,
-how magnitudes were treated, and what it assumed, so a number never travels without the
-choices that produced it.
+chart. Eight settings are editable on the page - the window, the threshold, the bin
+width, the Mc correction, the Bath deficit, the bootstrap count, the fit-test replicate
+count and the seed - and the page states which columns it read, how magnitudes were treated, and what it assumed, so
+a number never travels without the choices that produced it. The remaining constants,
+including the Scordilis coefficients and the Earth radius, are fixed in the page; change
+those in the Python package, which is the authority for published values in any case.
 
 A self-test runs on load and reproduces the eight reference values below in the browser.
 
@@ -192,8 +197,9 @@ are taken as reported, since no global relation is published for them.
 
 ## Changing the constants
 
-Every published constant is a default, not a fixed law of the package. All 23 live in
-`tremor_lab.constants`.
+Every published constant is a default, not a fixed law of the package. All 24 live in
+`tremor_lab.constants`, including `N_FIT_SIMULATIONS`, the number of replicates used to
+simulate the null distribution of the decay fit test.
 
 For a single call, pass the keyword argument:
 
@@ -212,10 +218,10 @@ constants.DELTA_MB = 1.2
 
 Without writing Python, set it in the `[constants]` section of a settings file.
 
-Three of the 23 are the exception to the keyword route: `OMORI_C_FLOOR`, `OMORI_P_MIN`
+Three of the 24 are the exception to the keyword route: `OMORI_C_FLOOR`, `OMORI_P_MIN`
 and `OMORI_P_MAX` judge whether a fitted decay is worth believing rather than entering
 the fit, so they have no keyword argument and are changed by reassignment or from a
-settings file.
+settings file. The other 21 can be set all three ways.
 
 ## Validation
 

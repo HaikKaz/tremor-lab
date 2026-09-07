@@ -12,9 +12,8 @@ that will be lost.
 
 ---
 
-
 For whoever writes the software/methods article. Everything below is fact, checked
-against the code and the test suite on 5 September 2026. Section 12 lists the things
+against the code and the test suite on 7 September 2026. Section 12 lists the things
 that must **not** be claimed; read it before drafting.
 
 Author: Haik Kazarian. Single-author methods paper. Companion to the PhD thesis
@@ -266,8 +265,17 @@ now measures it instead of hiding it.
 ## 9a. A fourth finding: the reference sequence is not a single Omori decay
 
 With the fit test calibrated (see section 10), the 180-day Kahramanmaras window
-at threshold M 3.5 gives KS 0.0210 at **p of about 0.03, which rejects a single
-modified Omori-Utsu decay at the 5 per cent level.**
+at threshold M 3.5 gives KS 0.0210 at **p = 0.036 +/- 0.003, which rejects a
+single modified Omori-Utsu decay at the 5 per cent level.**
+
+That figure is from 5,000 replicates, and quote it with its Monte Carlo error,
+because the p-value is an estimate and this one sits close to the threshold.
+Three independent seeds at 5,000 gave 0.0372, 0.0358 and 0.0354. The shipped
+default is 600 replicates, where the standard error is about 0.008 and the tool
+reports the same case as *borderline* rather than choosing - which is the correct
+caution at that precision, not a different answer. For the paper, run it at 5,000:
+on the command line put `n_fit_simulations = 5000` under `[analysis]`, and in the
+browser raise the "fit test replicates" box.
 
 This is the physically expected answer and should be presented as a result, not
 an embarrassment. The window contains the M 7.6 Elbistan event nine hours after
@@ -289,7 +297,9 @@ Three consequences for the paper.
 
 Note for honesty: an earlier version of this handover reported p = 0.506 and
 called the fit adequate. That figure came from the uncalibrated test and is
-wrong. Do not use it.
+wrong. Do not use it. A later version reported "about 0.03" from a 200-replicate
+run whose own standard error was 0.011; the number was in the right place but
+quoted with more confidence than 200 replicates support. Use 0.036 +/- 0.003.
 
 ## 10. How correctness is demonstrated
 
@@ -314,6 +324,21 @@ the 5 per cent level in 0 per cent of cases, with a mean p-value of 0.87: it
 could hardly ever fail. The tool therefore simulates the null distribution by
 parametric bootstrap, refitting each replicate; that rejects at 7.5 per cent
 against a 5 per cent target, with a mean p-value of 0.473.
+
+The calibration itself reproduces across the two implementations, which is worth
+stating because it is the part a reader is most likely to doubt. On the reference
+catalogue, 600 replicates in Python and 600 in the browser's JavaScript - different
+random number generators, different optimisers - give a mean simulated KS statistic
+of 0.01445 against 0.01440, a 97.5th percentile of 0.02170 against 0.02181, and the
+same p-value of 0.0416. What is reproduced is not only the point estimate but the
+simulated null distribution behind its p-value.
+
+Because the p-value is an estimate, the tool reports its binomial standard error
+beside it and refuses a verdict when the two are within two standard errors of
+0.05. It also refuses a verdict outright on the uncalibrated asymptotic p-value,
+which on this catalogue reads 0.508 where the calibrated one reads 0.036: the
+number is shown, since hiding it would be worse, but nothing may be concluded
+from it.
 
 The result on the reference catalogue changes accordingly, and this is section
 9a below. The test has a negative control in the suite: a rate that rises with
@@ -384,9 +409,13 @@ Tinti and Mulargia, which converge as the magnitude bin narrows."*
 
 - Package: `tremor-lab` 1.0.0, MIT licence, Python 3.11+, tagged `v1.0.0`.
 - Runtime dependencies: NumPy (>=2.0,<3), SciPy (>=1.13,<2), pandas (>=2.2,<3). Nothing else.
-- Source: about 1,800 lines across 9 modules. **165 tests**.
-- Browser page: one file, 2,187 lines, 180 KB, pure ASCII, no external requests except
-  Google Fonts. Runs offline from a double-click.
+- Source: about 2,000 lines across 9 modules. **210 tests**.
+- Browser page: one file, 2,558 lines, 190 KB, pure ASCII, no external requests except
+  Google Fonts. Runs offline from a double-click. Eight settings are editable on it:
+  the window, the threshold, the bin width, the Mc correction, the Bath deficit, the
+  bootstrap count, the fit-test replicate count and the seed. The rest of the published
+  constants are fixed in the page and adjustable in the package, which is the authority
+  for published values in any case.
 - Public API: 30 names, including `b_stability`, `mc_b_stability`,
   `mc_goodness_of_fit`, `omori_fit_test` and `b_value_tinti`. 24 published
   constants. Twenty of them are overridable three
@@ -444,7 +473,7 @@ Read this before drafting. Each of these is a real trap.
 10. **Do not let the self-test stand for validation of a reader's own analysis.** It
    checks the estimators against known values on a bundled catalogue. It says nothing
    about whether the reader chose a sensible window, threshold or mainshock.
-11. **Do not present "165 tests" as coverage.** It is a count, not a measure. What can
+11. **Do not present "210 tests" as coverage.** It is a count, not a measure. What can
     honestly be said is stronger and more specific: ten deliberate breakages of the
     estimators were each caught by at least one test (section 10).
 12. **Do not describe the bundled fixture as raw data.** `kahramanmaras_180d.csv` is a
@@ -466,8 +495,11 @@ Outstanding before the paper can cite the software:
 - **A public repository.** None yet.
 - **A Zenodo DOI.** None yet. Required for the software availability statement.
 - **ORCID and affiliation** are blank placeholders in `CITATION.cff`.
-- **Continuous integration** was deliberately deferred; the same checks (`ruff` and
-  `pytest`) are run locally.
+- **Continuous integration** is committed at `.github/workflows/tests.yml`. It lints,
+  runs the suite on Python 3.11, 3.12 and 3.13, reproduces the reference values both
+  directly and through the full catalogue pipeline, and runs the `seismostats`
+  cross-check in a separate job. It has never executed, because nothing has been
+  pushed; say it exists, not that it passes.
 
 Until the DOI exists, the availability statement cannot be written. Draft around it, or
 leave a marked placeholder.

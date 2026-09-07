@@ -158,3 +158,64 @@ def test_the_report_says_how_much_of_the_file_was_usable(tmp_path, capsys):
     # three of the ten rows are deliberately unreadable in that fixture
     assert "10 read, 7 usable, 3 unreadable and left out" in out
     assert "converted to Mw by the Scordilis relations" in out
+
+
+# --------------------------------------------------------------- fit verdict
+# The rule that turns a p-value into a sentence had no test at all, which is
+# how the browser page came to print "consistent with one Omori decay" from an
+# uncalibrated p-value that the simulated null puts on the other side of 0.05.
+
+from tremor_lab.cli import fit_verdict  # noqa: E402
+from tremor_lab.omori import FitTest  # noqa: E402
+
+
+def _test(p_value, se, method="parametric bootstrap, 200 replicates"):
+    return FitTest(0.02, p_value, 1529, method, se)
+
+
+def test_an_uncalibrated_p_value_gets_no_verdict_however_large_it_is():
+    # 0.508 is the actual asymptotic value on the reference catalogue, where the
+    # simulated null reads about 0.03. A verdict from it would be backwards.
+    verdict = fit_verdict(_test(0.508, 0.0, "asymptotic, uncalibrated"))
+    assert "uncalibrated" in verdict
+    assert "consistent" not in verdict
+
+
+def test_a_clear_rejection_is_stated_as_one():
+    assert fit_verdict(_test(0.01, 0.007)) == "NOT consistent with a single Omori decay"
+
+
+def test_a_clear_pass_is_stated_as_one():
+    assert fit_verdict(_test(0.47, 0.035)) == "consistent with one Omori decay"
+
+
+def test_a_p_value_within_monte_carlo_error_of_the_threshold_decides_nothing():
+    # 0.06 looks like a pass and 0.04 like a failure, but at this many replicates
+    # neither is separable from 0.05 and the difference is the seed, not the data.
+    for p_value in (0.04, 0.05, 0.06):
+        assert "borderline" in fit_verdict(_test(p_value, 0.02))
+
+
+def test_a_missing_standard_error_falls_back_to_a_bare_comparison():
+    nan = float("nan")
+    assert fit_verdict(_test(0.60, nan)) == "consistent with one Omori decay"
+    assert fit_verdict(_test(0.01, nan)) == "NOT consistent with a single Omori decay"
+
+
+def test_the_browser_page_applies_the_same_rule_in_the_same_order():
+    from pathlib import Path
+
+    page = (Path(__file__).resolve().parents[1] / "web" / "tremor-lab.html").read_text(
+        encoding="utf-8"
+    )
+    branch = page[
+        page.index("var verdict;") : page.index('rows.push(["decay fit test"')
+    ]
+    order = [
+        "uncalibrated",
+        "pv + 2 * se < 0.05",
+        "pv - 2 * se > 0.05",
+        "borderline",
+    ]
+    positions = [branch.index(token) for token in order]
+    assert positions == sorted(positions), "the page tests the branches out of order"
