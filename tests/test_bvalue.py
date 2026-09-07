@@ -1,12 +1,21 @@
 """The Aki b-value: exact arithmetic, then recovery of a known b from synthetic
 draws."""
 
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
 import pytest
 
 from tremor_lab import constants
-from tremor_lab.bvalue import b_stability, b_value_aki, mc_b_stability
+from tremor_lab.bvalue import (
+    b_stability,
+    b_value_aki,
+    b_value_tinti,
+    mc_b_stability,
+)
 
+DATA = Path(__file__).parent / "data"
 LN10 = np.log(10)
 
 
@@ -115,3 +124,34 @@ def test_one_anomalously_small_event_does_not_move_the_stability_grid():
     with_outlier = b_stability(np.append(mags, 0.2))
     assert with_outlier.thresholds.tolist() == clean.thresholds.tolist()
     assert mc_b_stability(np.append(mags, 0.2)) == mc_b_stability(mags)
+
+
+def test_the_exact_binned_estimator_reproduces_the_independent_package():
+    # seismostats (ETH Zurich) computes the Tinti and Mulargia estimator and
+    # returns 0.846804 for this catalogue at Mc 3.5. Reproducing an independent
+    # implementation to six decimals is the strongest correctness evidence here,
+    # so the number is pinned rather than left to a script nobody runs.
+    mags = pd.read_csv(DATA / "kahramanmaras_180d.csv")["mw"].to_numpy()
+    assert b_value_tinti(mags, 3.5).b == pytest.approx(0.846804, abs=1e-6)
+    assert b_value_tinti(mags, 3.5).n == 1529
+
+
+def test_the_half_bin_form_approaches_the_exact_binned_estimator():
+    # Aki with Utsu's half-bin offset is the first-order approximation of the
+    # exact binned MLE, so the gap must shrink with the bin width. If it stopped
+    # shrinking, one of the two would be wrong.
+    mags = pd.read_csv(DATA / "kahramanmaras_180d.csv")["mw"].to_numpy()
+    gaps = [
+        abs(b_value_aki(mags, 3.5, dm=dm).b - b_value_tinti(mags, 3.5, dm=dm).b)
+        for dm in (0.2, 0.1, 0.05, 0.01)
+    ]
+    assert gaps == sorted(gaps, reverse=True)
+    assert gaps[-1] < 1e-4
+
+
+def test_the_two_b_estimators_agree_on_the_reference_catalogue_to_half_a_percent():
+    mags = pd.read_csv(DATA / "kahramanmaras_180d.csv")["mw"].to_numpy()
+    aki = b_value_aki(mags, 3.5).b
+    tinti = b_value_tinti(mags, 3.5).b
+    assert abs(aki / tinti - 1) < 0.005
+    assert b_value_tinti(mags, 3.5).n == b_value_aki(mags, 3.5).n

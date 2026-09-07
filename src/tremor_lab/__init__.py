@@ -11,6 +11,7 @@ from tremor_lab.bvalue import (
     BValue,
     b_stability,
     b_value_aki,
+    b_value_tinti,
     mc_b_stability,
 )
 from tremor_lab.catalog import CATALOG_COLUMNS, haversine_km, read_catalog, window
@@ -53,6 +54,7 @@ __all__ = [
     "analyze_case",
     "b_stability",
     "b_value_aki",
+    "b_value_tinti",
     "bath_mag",
     "bath_ratio",
     "bootstrap_omori",

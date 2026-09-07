@@ -219,6 +219,34 @@ with known p, c and k by inverse-CDF sampling, and the estimators must recover t
 across several seeds. **Regression**, which reproduces the reference values below on the
 bundled catalogue.
 
+### Checked against an independent implementation
+
+`examples/compare_with_seismostats.py` runs the same catalogue through
+[seismostats](https://pypi.org/project/seismostats/), an independent package from the
+Swiss Seismological Service at ETH Zurich. It is not a dependency; install it in a
+separate environment to reproduce the comparison.
+
+| quantity | Tremor Lab | seismostats | |
+| --- | --- | --- | --- |
+| maximum-curvature Mc | 3.4 | 3.4 | identical |
+| events above M 3.5 | 1529 | 1529 | identical |
+| b-value | 0.844132 | 0.846804 | 0.32% apart |
+| completeness by b-stability | 4.1 | 4.0 | one bin apart |
+
+Every difference is a documented difference of convention, not a disagreement about
+the data, and the script states which one accounts for each.
+
+The b-value gap is the important one. Tremor Lab reports the **Aki (1965) estimator
+with Utsu's half-bin offset**, which is what the thesis and the spreadsheet use.
+seismostats reports the **Tinti and Mulargia (1987)** estimator, the exact
+maximum-likelihood solution for magnitudes reported on a grid. The half-bin form is the
+first-order approximation of it, and the two converge as the bin narrows: they differ by
+0.32% at dM 0.1 and by 0.004% at dM 0.01. `b_value_tinti` implements the exact estimator
+and reproduces seismostats to six decimals, so the choice can be tested rather than
+assumed. Standard errors are not compared directly: both use Shi and Bolt (1982), but
+seismostats takes ln(10) as the coefficient where this package takes the published
+rounding of 2.30, which is `constants.SHI_BOLT_K` and adjustable.
+
 ### Reference values
 
 2023 Kahramanmaras sequence, KOERI catalogue, 180-day window, threshold M >= 3.5:

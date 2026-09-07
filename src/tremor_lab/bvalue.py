@@ -197,3 +197,70 @@ def mc_b_stability(
         if abs(window.mean() - curve.b[i]) <= curve.sigma[i]:
             return float(curve.thresholds[i])
     return None
+
+
+def b_value_tinti(
+    mags: ArrayLike,
+    mc: float,
+    dm: float | None = None,
+    shi_bolt_k: float | None = None,
+) -> BValue:
+    """
+    b-value by the exact maximum-likelihood estimator for binned magnitudes.
+
+    b = ln(1 + dm / mean(M - Mc)) / (dm ln10)
+
+    Where `b_value_aki` applies Utsu's half-bin offset to the Aki estimator,
+    which is a first-order approximation, this is the exact solution for
+    magnitudes reported on a grid of width dm. The two converge as dm shrinks:
+    on the reference catalogue they differ by 0.32 per cent at dm 0.1 and by
+    0.004 per cent at dm 0.01.
+
+    This is the estimator the independent package `seismostats` uses, and
+    `examples/compare_with_seismostats.py` checks that this implementation
+    reproduces it. The package's own reported values use `b_value_aki`, which is
+    the convention of the thesis and of the spreadsheet implementation; this
+    function exists so the choice can be tested rather than assumed.
+
+    Parameters
+    ----------
+    mags : array_like
+        Event magnitudes.
+    mc : float
+        Completeness magnitude.
+    dm : float, optional
+        Magnitude bin width. Defaults to `constants.DM` (0.1).
+    shi_bolt_k : float, optional
+        Coefficient of the standard error. Defaults to `constants.SHI_BOLT_K`.
+
+    Returns
+    -------
+    BValue
+        Named tuple of b, sigma and n.
+
+    Raises
+    ------
+    ValueError
+        If fewer than two events lie at or above the completeness threshold.
+
+    References
+    ----------
+    Tinti, S. and Mulargia, F. (1987). Shi, Y. and Bolt, B. A. (1982).
+    """
+    dm = constants.DM if dm is None else dm
+    shi_bolt_k = constants.SHI_BOLT_K if shi_bolt_k is None else shi_bolt_k
+    threshold = mc - dm / 2
+    m = np.asarray(mags, float)
+    m = m[m >= threshold]
+    n = m.size
+    if n < 2:
+        raise ValueError(
+            f"b-value needs at least two events at or above {threshold}; got {n}"
+        )
+    mean_above = (m - mc).mean()
+    if mean_above <= 0:
+        raise ValueError("mean magnitude does not exceed the completeness magnitude")
+    b = np.log1p(dm / mean_above) / (dm * np.log(10))
+    mean_m = m.mean()
+    sigma = shi_bolt_k * b**2 * np.sqrt(((m - mean_m) ** 2).sum() / (n * (n - 1)))
+    return BValue(float(b), float(sigma), n)
