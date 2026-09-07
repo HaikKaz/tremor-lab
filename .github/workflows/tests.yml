@@ -36,3 +36,26 @@ jobs:
       # catalogue. This step fails if any of them moves.
       - name: Reproduce the reference values
         run: python examples/reproduce_reference.py
+
+      # And again the long way, through parsing, homogenisation and windowing
+      # rather than around them.
+      - name: Reproduce them through the whole pipeline
+        run: python examples/rebuild_koeri_fixture.py
+
+  # The third-party check, in its own job so seismostats never becomes a
+  # dependency of the package. If this goes red the estimators have drifted from
+  # an independent implementation of the same literature.
+  cross-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install with the independent comparator
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install seismostats
+      - name: Compare against seismostats
+        run: python examples/compare_with_seismostats.py
