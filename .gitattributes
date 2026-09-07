@@ -1,0 +1,10 @@
+# Line endings are pinned rather than left to each machine's git configuration.
+# This repository was written on Windows with core.autocrlf=true, which converts
+# on checkout and again on commit; a file that had already been given CRLF once
+# came back as CRCRLF, which every reader except pandas saw as blank rows between
+# every line. Declaring the intent here means the working copy is LF everywhere,
+# on every machine, and no conversion happens at all.
+* text=auto eol=lf
+
+# The reference catalogues are compared byte for byte by the test suite.
+*.csv text eol=lf
