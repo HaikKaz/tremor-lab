@@ -174,3 +174,27 @@ def test_a_column_holding_no_scale_labels_converts_nothing():
         assert cat["mw"].to_list() == pytest.approx([4.5, 4.2, 5.5, 3.9])
     finally:
         scratch.unlink()
+
+
+def test_no_distance_limit_is_applied_unless_asked_for():
+    cat = read_koeri(mag_type_col="Tip")
+    assert cat.attrs["radius_km"] is None
+    assert cat.attrs["removed_by_radius"] == 0
+    assert len(cat) == 4
+
+
+def test_a_distance_limit_removes_only_events_beyond_it_and_says_how_many():
+    # the fixture's four in-window events sit at 0, 111.2, 0 and 0 km
+    near = read_koeri(mag_type_col="Tip", radius_km=50.0)
+    assert len(near) == 3
+    assert near.attrs["radius_km"] == 50.0
+    assert near.attrs["removed_by_radius"] == 1
+    assert near["dist_km"].max() <= 50.0
+    assert near.attrs["farthest_km"] == pytest.approx(0.0)
+
+
+def test_a_generous_distance_limit_removes_nothing():
+    cat = read_koeri(mag_type_col="Tip", radius_km=1000.0)
+    assert len(cat) == 4
+    assert cat.attrs["removed_by_radius"] == 0
+    assert cat.attrs["farthest_km"] == pytest.approx(111.19, abs=0.5)

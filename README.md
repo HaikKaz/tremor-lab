@@ -42,6 +42,17 @@ Omori k                        359       358.9   ok
 
 The script exits non-zero if any value disagrees.
 
+That command reads a file that already carries elapsed days, so it exercises the
+estimators but not the catalogue pipeline. `examples/rebuild_koeri_fixture.py` reaches
+the same values the long way: it reconstructs KOERI-shaped timestamps at whole-second
+precision, adds ten events outside the window that must be excluded, and runs the whole
+path — parsing, homogenisation, windowing, estimation — to land on 3,469 events, Mc 3.4,
+b 0.844 and p 1.161. `tests/test_regression.py` locks that path too.
+
+It is a pipeline test, not provenance: the timestamps are derived from the elapsed days,
+so the file cannot corroborate the elapsed days themselves. Only the original KOERI
+download can, and it should be archived with the release.
+
 ## Use from Python
 
 ```python
@@ -89,6 +100,9 @@ unknown constant name is refused rather than silently ignored.
 [catalog]
 path = "catalogue.csv"          # forward slashes on Windows, or single quotes
 dayfirst = false                # true for European dates such as 06.02.2023
+# radius_km = 100               # optional distance limit from the epicentre;
+                                # omitted means no spatial cut, and the report
+                                # says so either way
 
 [catalog.columns]
 date = "Tarih"                  # KOERI: separate date and time columns

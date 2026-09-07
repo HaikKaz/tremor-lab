@@ -50,7 +50,10 @@ def haversine_km(
 
 
 def window(
-    catalog: pd.DataFrame, mainshock: Mapping, window_days: float | None = None
+    catalog: pd.DataFrame,
+    mainshock: Mapping,
+    window_days: float | None = None,
+    radius_km: float | None = None,
 ) -> pd.DataFrame:
     """
     Restrict a catalogue to the post-mainshock window and attach the offsets.
@@ -68,6 +71,11 @@ def window(
     window_days : float, optional
         Length of the aftershock window in days. Defaults to
         `constants.WINDOW_DAYS` (180).
+    radius_km : float, optional
+        Keep only events within this great-circle distance of the mainshock
+        epicentre. No limit by default: a spatial cut is a choice that changes
+        the result, so it is never applied unless asked for, and the number of
+        events it removed is recorded in ``attrs``.
 
     Returns
     -------
@@ -82,7 +90,16 @@ def window(
         mainshock["lat"], mainshock["lon"], out["lat"].to_numpy(), out["lon"].to_numpy()
     )
     inside = (out["dt_days"] > 0) & (out["dt_days"] <= window_days)
-    return out.loc[inside, list(CATALOG_COLUMNS)].reset_index(drop=True)
+    in_time = int(inside.sum())
+    if radius_km is not None:
+        inside &= out["dist_km"] <= radius_km
+    kept = out.loc[inside, list(CATALOG_COLUMNS)].reset_index(drop=True)
+    kept.attrs = {
+        "radius_km": radius_km,
+        "removed_by_radius": in_time - len(kept),
+        "farthest_km": float(kept["dist_km"].max()) if len(kept) else None,
+    }
+    return kept
 
 
 def read_catalog(
@@ -92,6 +109,7 @@ def read_catalog(
     window_days: float | None = None,
     mag_type_col: str | None = None,
     dayfirst: bool = False,
+    radius_km: float | None = None,
 ) -> pd.DataFrame:
     """
     Read a catalogue file and reduce it to the analysis-ready aftershock window.
@@ -124,6 +142,9 @@ def read_catalog(
         Interpret ambiguous dates as day-first. False by default. Set it for European
         exports such as 06.02.2023: read as month-first, that date silently becomes
         2 June rather than 6 February.
+    radius_km : float, optional
+        Great-circle distance limit from the mainshock epicentre. No limit by
+        default; see `window`.
 
     Returns
     -------
@@ -147,8 +168,9 @@ def read_catalog(
     else:
         parsed["mw"] = mag
 
-    out = window(parsed, mainshock, window_days)
+    out = window(parsed, mainshock, window_days, radius_km)
     out.attrs = {
+        **out.attrs,
         "rows_read": len(frame),
         "rows_parsed": int(parsed.notna().all(axis=1).sum()),
         "events_in_window": len(out),

@@ -8,3 +8,6 @@ build/
 dist/
 .claude/
 web/_testdata/
+
+# build artefacts
+*.tar.gz

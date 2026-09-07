@@ -21,7 +21,13 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from tremor_lab import analyze_case, b_value_aki, fit_omori, mc_maxcurvature
+from tremor_lab import (
+    analyze_case,
+    b_value_aki,
+    fit_omori,
+    mc_maxcurvature,
+    read_catalog,
+)
 
 DATA = Path(__file__).parent / "data"
 
@@ -95,3 +101,65 @@ def test_the_observation_interval_is_the_last_event_not_the_window_length(catalo
     times = catalog.loc[catalog["mw"] >= THRESHOLD, "dt_days"].to_numpy()
     assert times.max() == pytest.approx(179.596, abs=0.001)
     assert fit_omori(times, t_end=180.0).p != fit_omori(times).p
+
+
+KOERI = DATA / "kahramanmaras_180d_koeri.csv"
+KOERI_COLUMNS = {
+    "date": "Tarih",
+    "time": "Saat",
+    "lat": "Enlem",
+    "lon": "Boylam",
+    "mag": "xM (Biggest Mag)",
+}
+
+
+@pytest.fixture(scope="module")
+def from_raw():
+    """The locked values, reached through the whole pipeline rather than around it.
+
+    The other fixture in this directory carries elapsed days, so reading it
+    exercises no time parsing, no homogenisation and no windowing. This one is
+    KOERI-shaped, at the whole-second precision the agency publishes, and carries
+    ten events outside the window that must be excluded. It is built by
+    `examples/rebuild_koeri_fixture.py`, whose docstring explains that it is a
+    pipeline test and not provenance for the elapsed days themselves.
+    """
+    catalog = read_catalog(
+        KOERI, KOERI_COLUMNS, MAINSHOCK, window_days=180, mag_type_col="Tip"
+    )
+    return catalog, analyze_case(
+        catalog, MAINSHOCK, mc_threshold=THRESHOLD, window_days=180, n_boot=0
+    )
+
+
+def test_the_raw_shaped_fixture_holds_events_outside_the_window():
+    # Without these the row count and the in-window count would be the same
+    # number, and asserting one against the other would test nothing.
+    assert len(pd.read_csv(KOERI)) == 3479
+
+
+def test_the_window_is_applied_rather_than_assumed(from_raw):
+    catalog, result = from_raw
+    assert catalog.attrs["rows_read"] == 3479
+    assert result["n_events"] == 3469
+    assert catalog["dt_days"].min() > 0
+    assert catalog["dt_days"].max() <= 180
+
+
+def test_the_full_pipeline_reproduces_the_locked_values(from_raw):
+    _, result = from_raw
+    assert result["mc"] == 3.4
+    assert result["b_value"].n == 1529
+    assert result["b_value"].b == pytest.approx(0.844, abs=0.0005)
+    assert result["omori"].p == pytest.approx(1.161, abs=0.001)
+    assert result["omori"].c == pytest.approx(0.497, abs=0.001)
+    assert result["omori"].k == pytest.approx(359, abs=1.0)
+
+
+def test_the_two_fixtures_describe_the_same_events(from_raw, catalog):
+    catalog_from_raw, _ = from_raw
+    assert catalog_from_raw["mw"].to_list() == pytest.approx(catalog["mw"].to_list())
+    # whole-second stamps, so elapsed days agree to well under a second
+    assert catalog_from_raw["dt_days"].to_numpy() == pytest.approx(
+        catalog["dt_days"].to_numpy(), abs=1.2e-5
+    )

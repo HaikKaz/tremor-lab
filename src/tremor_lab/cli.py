@@ -21,6 +21,9 @@ from tremor_lab import __version__, constants
 from tremor_lab.analysis import analyze_case
 from tremor_lab.catalog import read_catalog
 
+# Captured at import, before any settings file can reassign them.
+_DEFAULT_CONSTANTS = {n: getattr(constants, n) for n in dir(constants) if n.isupper()}
+
 
 def main(argv: list[str] | None = None) -> int:
     """Run the command-line tool. Returns the process exit status."""
@@ -87,6 +90,7 @@ def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
     columns = catalog_settings.pop("columns", {})
     path = base / catalog_settings.pop("path")
     dayfirst = catalog_settings.pop("dayfirst", False)
+    radius_km = catalog_settings.pop("radius_km", None)
     if catalog_settings:
         raise KeyError(f"unknown keys in [catalog]: {sorted(catalog_settings)}")
     threshold = analysis.pop("threshold", None)
@@ -107,6 +111,7 @@ def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
             window_days=window_days,
             mag_type_col=columns.get("mag_type"),
             dayfirst=dayfirst,
+            radius_km=radius_km,
         )
     result = analyze_case(
         catalog,
@@ -115,7 +120,15 @@ def _run(settings: dict[str, Any], base: Path) -> tuple[dict[str, Any], Path]:
         window_days=window_days,
         **analysis,
     )
-    result.update({k: v for k, v in catalog.attrs.items() if k.startswith("rows_")})
+    carried = (
+        "rows_read",
+        "rows_parsed",
+        "radius_km",
+        "removed_by_radius",
+        "farthest_km",
+    )
+    result.update({k: v for k, v in catalog.attrs.items() if k in carried})
+    result["seed"] = analysis.get("seed", 0)
     result["magnitude_note"] = _magnitude_note(
         columns, catalog.attrs.get("scale_counts")
     )
@@ -159,6 +172,16 @@ def _report(result: dict[str, Any], source: Path) -> str:
         )
     if result.get("n_unusable"):
         lines.append(f"incomplete rows      {result['n_unusable']} dropped")
+    if "radius_km" in result:
+        radius, removed = result["radius_km"], result.get("removed_by_radius", 0)
+        farthest = result.get("farthest_km")
+        reach = f"; farthest kept {farthest:.0f} km" if farthest else ""
+        lines.append(
+            f"distance limit       none, every event in the window is included{reach}"
+            if radius is None
+            else f"distance limit       {radius} km from the epicentre, "
+            f"{removed} events removed{reach}"
+        )
     lines += [
         f"events in window     {result['n_events']}",
         f"completeness Mc      {_show(result['mc'])}  (maximum curvature)",
@@ -213,7 +236,30 @@ def _report(result: dict[str, Any], source: Path) -> str:
     ]
     if result.get("magnitude_note"):
         lines.append(f"magnitudes           {result['magnitude_note']}")
+    lines.append(f"settings             {_settings_line(result)}")
     return "\n".join(lines)
+
+
+def _settings_line(result: dict[str, Any]) -> str:
+    """Every constant that differs from its default, plus the seed.
+
+    A printed number that does not carry its settings cannot be traced back to
+    the run that produced it.
+    """
+    changed = [
+        f"{name}={getattr(constants, name)}"
+        for name in sorted(n for n in dir(constants) if n.isupper())
+        if getattr(constants, name) != _DEFAULT_CONSTANTS[name]
+    ]
+    seed = result.get("seed")
+    parts = [
+        "constants at their published defaults"
+        if not changed
+        else "changed: " + ", ".join(changed)
+    ]
+    if seed is not None:
+        parts.append(f"seed {seed}")
+    return "; ".join(parts)
 
 
 def _show(value) -> str:
