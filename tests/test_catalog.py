@@ -198,3 +198,63 @@ def test_a_generous_distance_limit_removes_nothing():
     assert len(cat) == 4
     assert cat.attrs["removed_by_radius"] == 0
     assert cat.attrs["farthest_km"] == pytest.approx(111.19, abs=0.5)
+
+
+def test_a_column_name_that_is_not_in_the_file_is_named_in_the_error():
+    # A bare KeyError('Latitude') tells a reader nothing about which of their
+    # choices was wrong, or what the alternatives were.
+    with pytest.raises(KeyError, match="not in the file"):
+        read_catalog(
+            DATA / "raw_catalog_koeri.csv",
+            {**KOERI_COLUMNS, "lat": "Latitude"},
+            MAINSHOCK,
+        )
+
+
+def test_a_missing_magnitude_column_is_reported_as_such():
+    with pytest.raises(KeyError, match="no magnitude column"):
+        read_catalog(
+            DATA / "raw_catalog_koeri.csv",
+            {"date": "Tarih", "time": "Saat"},
+            MAINSHOCK,
+        )
+
+
+def test_a_missing_time_column_is_reported_as_such():
+    with pytest.raises(KeyError, match="no time column"):
+        read_catalog(DATA / "raw_catalog_koeri.csv", {"mag": "Mag"}, MAINSHOCK)
+
+
+def test_a_catalogue_without_coordinates_is_still_usable(tmp_path):
+    path = tmp_path / "nocoords.csv"
+    path.write_text(
+        "Tarih,Saat,Mag\n2023.02.06,13:17:32,4.5\n2023.02.07,01:17:32,4.2\n"
+    )
+    cat = read_catalog(path, {"date": "Tarih", "time": "Saat", "mag": "Mag"}, MAINSHOCK)
+    assert len(cat) == 2
+    assert cat["dist_km"].isna().all()
+    assert cat["dt_days"].to_list() == pytest.approx([0.5, 1.0])
+
+
+def test_a_distance_limit_is_refused_when_no_distance_can_be_measured(tmp_path):
+    # Comparisons against NaN are false, so without this guard the limit would
+    # remove every event and the report would blame the limit for it.
+    path = tmp_path / "nocoords.csv"
+    path.write_text("Tarih,Saat,Mag\n2023.02.06,13:17:32,4.5\n")
+    with pytest.raises(ValueError, match="no distance could be computed"):
+        read_catalog(
+            path,
+            {"date": "Tarih", "time": "Saat", "mag": "Mag"},
+            MAINSHOCK,
+            radius_km=500.0,
+        )
+
+
+def test_a_distance_limit_is_refused_when_the_mainshock_has_no_epicentre():
+    with pytest.raises(ValueError, match="no distance could be computed"):
+        read_catalog(
+            DATA / "raw_catalog_koeri.csv",
+            KOERI_COLUMNS,
+            {**MAINSHOCK, "lat": float("nan"), "lon": float("nan")},
+            radius_km=500.0,
+        )

@@ -83,7 +83,12 @@ def window(
         Columns as in `CATALOG_COLUMNS`, index reset.
     """
     window_days = constants.WINDOW_DAYS if window_days is None else window_days
-    out = catalog.dropna(subset=["t", "lat", "lon", "mw"]).copy()
+    # Coordinates are dropped on only when the catalogue actually carries them.
+    # A file without them is still usable for everything except distance.
+    required = ["t", "mw"]
+    if catalog[["lat", "lon"]].notna().to_numpy().any():
+        required += ["lat", "lon"]
+    out = catalog.dropna(subset=required).copy()
     origin = pd.Timestamp(mainshock["t"])
     out["dt_days"] = (out["t"] - origin).dt.total_seconds() / 86400.0
     out["dist_km"] = haversine_km(
@@ -92,6 +97,15 @@ def window(
     inside = (out["dt_days"] > 0) & (out["dt_days"] <= window_days)
     in_time = int(inside.sum())
     if radius_km is not None:
+        # A comparison against NaN is false, so an unmeasurable distance would
+        # silently remove every event and blame the limit for it.
+        if not np.isfinite(out["dist_km"]).any():
+            raise ValueError(
+                "a distance limit of "
+                f"{radius_km} km was asked for, but no distance could be "
+                "computed: the catalogue has no usable coordinates, or the "
+                "mainshock latitude and longitude are missing"
+            )
         inside &= out["dist_km"] <= radius_km
     kept = out.loc[inside, list(CATALOG_COLUMNS)].reset_index(drop=True)
     kept.attrs = {
@@ -152,13 +166,14 @@ def read_catalog(
         Columns as in `CATALOG_COLUMNS`.
     """
     frame = pd.read_csv(path)
-    parsed = pd.DataFrame(
-        {
-            "t": _parse_times(frame, columns, dayfirst),
-            "lat": pd.to_numeric(frame[columns["lat"]], errors="coerce"),
-            "lon": pd.to_numeric(frame[columns["lon"]], errors="coerce"),
-        }
-    )
+    _check_columns(frame, columns, mag_type_col)
+    parsed = pd.DataFrame({"t": _parse_times(frame, columns, dayfirst)})
+    for role in ("lat", "lon"):
+        parsed[role] = (
+            pd.to_numeric(frame[columns[role]], errors="coerce")
+            if role in columns
+            else np.nan
+        )
     mag = pd.to_numeric(frame[columns["mag"]], errors="coerce")
     scales: dict[str, int] = {}
     if mag_type_col:
@@ -198,6 +213,37 @@ def _scale_counts(labels) -> dict[str, int]:
         else:
             counts["unconverted"] += 1
     return counts
+
+
+def _check_columns(
+    frame: pd.DataFrame, columns: Mapping[str, str], mag_type_col: str | None
+) -> None:
+    """Reject a column mapping before it produces a bare KeyError.
+
+    Naming a column that is not in the file, or leaving out a role the reader
+    needs, otherwise surfaces as `KeyError: 'lat'`, which tells a reader nothing
+    about which of their choices was wrong.
+    """
+    if "mag" not in columns:
+        raise KeyError(
+            "no magnitude column was given; set columns['mag'] to one of "
+            f"{list(frame.columns)}"
+        )
+    if not ({"datetime", "date"} & set(columns)):
+        raise KeyError(
+            "no time column was given; set columns['datetime'] for a single "
+            "ISO stamp, or columns['date'] and columns['time'] for separate "
+            f"date and clock columns, from {list(frame.columns)}"
+        )
+    named = {role: name for role, name in columns.items() if role != "dt_days"}
+    if mag_type_col:
+        named["mag_type"] = mag_type_col
+    missing = {r: n for r, n in named.items() if n and n not in frame.columns}
+    if missing:
+        raise KeyError(
+            f"these column names are not in the file: {missing}. "
+            f"The file has {list(frame.columns)}"
+        )
 
 
 def _parse_times(
