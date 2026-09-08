@@ -109,7 +109,17 @@ def analyze_case(
     stability = None
     if dense_enough:
         mc_methods["goodness_of_fit"] = mc_goodness_of_fit(mags, dm=dm).mc
-        mc_methods["b_stability"] = mc_b_stability(mags, dm=dm)
+        try:
+            mc_methods["b_stability"] = mc_b_stability(mags, dm=dm)
+        except ValueError as reason:
+            # b-stability is one of three completeness estimates and the only one
+            # that can refuse: at a bin width wider than twice the averaging
+            # window there is nothing to average over. That is a reason to report
+            # no answer from this method, not to abandon the whole analysis - the
+            # browser page has always reported the rest, and the two disagreed
+            # about whether such a run is possible at all.
+            mc_methods["b_stability"] = None
+            mc_methods["b_stability_note"] = str(reason)
         stability = b_stability(mags, dm=dm)
     threshold = mc if mc_threshold is None else mc_threshold
     bin_width = constants.DM if dm is None else dm

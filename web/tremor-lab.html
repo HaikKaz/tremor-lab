@@ -1095,7 +1095,11 @@ function fitOmori(times, T) {
   var f = function (par) { return omoriNLL(par, t, T); };
   // One simplex can settle short of the maximum likelihood on a real sequence,
   // so the search is restarted from several points and the best fit kept.
-  var starts = [[100, 0.5, 1.1], [t.length / 10, 0.05, 1.0],
+  // The first restart is the published starting point, which is what the
+  // package searches from; the rest are spread around it because one start
+  // can settle short of the best fit. These were hard-coded, so CONST.OMORI_C0
+  // and CONST.OMORI_P0 sat in the constants block doing nothing.
+  var starts = [[100, CONST.OMORI_C0, CONST.OMORI_P0], [t.length / 10, 0.05, 1.0],
                 [t.length, 1.0, 1.3], [10, 0.01, 0.8]];
   var best = null, bestF = Infinity;
   for (var i = 0; i < starts.length; i++) {
@@ -1158,7 +1162,11 @@ function round1(x) { return Math.round(x * 10) / 10; }
    table labelled the thresholds 3.25 and 3.30 both "3.3". */
 function gridDecimals(dm) {
   var text = String(dm), dot = text.indexOf(".");
-  return Math.min((dot < 0 ? 0 : text.length - dot - 1) + 1, 12);
+  // An integer width counts as one decimal, not none: Python writes it as "1.0"
+  // and derives two decimals from that, and the two implementations have to
+  // render the same magnitude the same way.
+  var written = dot < 0 ? 1 : text.length - dot - 1;
+  return Math.min(written + 1, 12);
 }
 
 function showMag(x, dm) {
@@ -1169,7 +1177,10 @@ function roundToGrid(x, dm) {
   var text = String(dm), dot = text.indexOf(".");
   var decimals = (dot < 0 ? 0 : text.length - dot - 1) + 1;
   var scale = Math.pow(10, Math.min(decimals, 12));
-  return Math.round(x * scale) / scale;
+  // With the grid tolerance, as the package does: 3.3 + 0.195 is
+  // 3.4949999999999997 as a double, which rounds down to 3.49 unaided and to
+  // 3.50 with it. Without this the two implementations disagreed by a grid step.
+  return Math.floor(x * scale + 0.5 + CONST.GRID_TOLERANCE) / scale;
 }
 
 function round2(x) { return Math.round(x * 100) / 100; }
@@ -1399,6 +1410,17 @@ function parseStamp(dateStr, timeStr, dayFirst) {
   return Date.UTC(y, mo - 1, d, h, mi, Math.floor(se), Math.round((se % 1) * 1000));
 }
 
+/* A cell is a number only if the whole cell is one. parseFloat reads "37 12 30"
+   as 37 and "4.5 (revised)" as 4.5, so a coordinate in degrees, minutes and
+   seconds silently became bare degrees and the distance was measured to a place
+   the file never named. The Python reader coerces the same cells to NaN. */
+function strictNumber(text) {
+  if (text == null) return NaN;
+  var t = String(text).trim();
+  if (t === "") return NaN;
+  return /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(t) ? parseFloat(t) : NaN;
+}
+
 /* Turn parsed rows into events carrying elapsed days and magnitude on the
    moment scale. Returns the events plus a count of what could not be read. */
 function buildEvents(rows, cols, mainshock, dayFirst) {
@@ -1409,7 +1431,7 @@ function buildEvents(rows, cols, mainshock, dayFirst) {
   }
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i], dt, mag;
-    mag = parseFloat(r[cols.mag]);
+    mag = strictNumber(r[cols.mag]);
     if (!isFinite(mag)) { skipped++; continue; }
     if (cols.magType) mag = toMw(mag, r[cols.magType]);
 
@@ -1422,8 +1444,8 @@ function buildEvents(rows, cols, mainshock, dayFirst) {
     }
     if (!isFinite(dt)) { skipped++; continue; }
 
-    var lat = cols.lat ? parseFloat(r[cols.lat]) : NaN;
-    var lon = cols.lon ? parseFloat(r[cols.lon]) : NaN;
+    var lat = cols.lat ? strictNumber(r[cols.lat]) : NaN;
+    var lon = cols.lon ? strictNumber(r[cols.lon]) : NaN;
     var dist = (isFinite(lat) && isFinite(lon) && isFinite(mainshock.lat) && isFinite(mainshock.lon))
       ? HAVERSINE_KM(mainshock.lat, mainshock.lon, lat, lon) : NaN;
     events.push({ dt: dt, mw: mag, lat: lat, lon: lon, dist: dist });
@@ -2015,7 +2037,8 @@ function resultRows(result, s) {
                  showMag(maxOf(spread), s.dm) + ", and b depends on which is used"]);
     }
   }
-  rows.push(["threshold used", result.threshold == null ? "not set" : result.threshold.toFixed(2)]);
+  rows.push(["threshold used", result.threshold == null ? "not set"
+             : showMag(result.threshold, s.dm)]);
   rows.push(["events at or above it", result.nAbove == null ? "\u2014" : result.nAbove.toLocaleString()]);
   if (result.b) {
     rows.push(["b-value", result.b.b.toFixed(3) + "  \u00B1 " + result.b.sigma.toFixed(3)]);
@@ -2092,7 +2115,7 @@ function renderResults(result, s) {
       v: result.b ? result.b.b.toFixed(3) : "\u2014",
       u: result.b
         ? "\u00B1 " + result.b.sigma.toFixed(3) + " &middot; at M &ge; " +
-          result.threshold.toFixed(2) + " &middot; " + result.b.n.toLocaleString() + " events"
+          showMag(result.threshold, s.dm) + " &middot; " + result.b.n.toLocaleString() + " events"
         : "not estimated",
       d: "how sharply event numbers fall as magnitude rises; near 1 means about " +
          "ten times fewer events for each unit of magnitude" },
