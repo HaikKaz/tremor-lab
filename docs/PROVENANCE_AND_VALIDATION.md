@@ -50,7 +50,10 @@ It is:
 4. **A cross-implementation check that is genuinely independent** — see section 5 and
    the caveat in section 7, and now a third-party check against `seismostats`
    (section 10a), which reproduces the completeness magnitude exactly and the
-   b-value to 0.32 per cent.
+   b-value to 0.32 per cent. Read section 9b before leaning on it: the two
+   in-house implementations agreed for months on a floating-point defect they
+   both had, so agreement between them is evidence about the code, not proof
+   of it.
 
 Framing that works: this is infrastructure for teaching and for settings without a
 computational stack, and a worked example of what "validated" should mean for a small
@@ -238,8 +241,8 @@ The b-against-threshold curve shows why they disagree. b does not settle:
 | b | 0.743 | 0.829 | 0.851 | 0.878 | 0.985 | 1.028 | 1.048 | 1.124 |
 
 Above a correctly estimated completeness magnitude b should be flat. This one
-climbs by 0.28 across the range, which is roughly fifteen times the +/- 0.019
-quoted at the published threshold. **The Shi and Bolt standard error describes
+climbs by 0.381 across the range, from 0.743 to 1.124, which is twenty times the
++/- 0.019 quoted at the published threshold. **The Shi and Bolt standard error describes
 sampling scatter at one chosen threshold and nothing else.** Reporting
 b = 0.844 +/- 0.019 without the curve overstates the precision by more than an
 order of magnitude.
@@ -300,6 +303,71 @@ called the fit adequate. That figure came from the uncalibrated test and is
 wrong. Do not use it. A later version reported "about 0.03" from a 200-replicate
 run whose own standard error was 0.011; the number was in the right place but
 quoted with more confidence than 200 replicates support. Use 0.036 +/- 0.003.
+
+## 9b. A fifth finding, and a methodological one: reported magnitudes are
+decimal, and floating-point arithmetic is not
+
+This one is about software rather than about the Earth, and it is the kind of
+thing a methods paper is the right place to say.
+
+Every estimator here compares a magnitude against a bin edge. Is this event at or
+above the completeness threshold; which bin does it fall in. Magnitudes are
+reported on a decimal grid - 3.4, 3.5, 4.1 - and none of those numbers exists
+exactly in binary floating point, nor does an edge computed from them. Written
+the obvious way, `m >= mc - dm / 2`, those comparisons are settled by rounding
+error in the sixteenth decimal place.
+
+At the default bin width of 0.1 the errors fell harmlessly on the reference
+catalogue, which is why three earlier audits, a third-party cross-check and 210
+tests all passed over it. At 0.2 - a documented setting and an obvious
+sensitivity check for a referee - they did not:
+
+| at dM 0.2 | before | after |
+|---|---|---|
+| events at or above Mc 4.2 | 394 | 498 |
+| b at Mc 4.2 | 0.936 | 1.182 |
+| b-stability curve, thresholds 4.0 to 4.6 | 1.143, 0.936, 0.995, 1.309 | 1.143, 1.182, 1.192, 1.309 |
+| bins, for one event at every 0.1 step | 1, 3, 1, 2, 3, 2, 2, 1, 2 | 2 throughout |
+| goodness-of-fit R at candidate 3.4 | 84.5 | 91.7 |
+
+`4.2 - 0.2 / 2` evaluates to 4.1000000000000005, so every event reported at
+exactly M 4.1 failed its own completeness threshold and an entire magnitude class
+was dropped from the sample. b was wrong by 0.25, six times the standard error
+quoted beside it. The b-stability curve - the diagnostic whose whole purpose is to
+reveal a mis-set completeness magnitude - acquired a dip that was an artefact of
+arithmetic, and the goodness-of-fit statistic was scored seven points low against
+a threshold of 90.
+
+Three things to say about it in the paper.
+
+1. **The published values are unaffected.** They are on the dM 0.1 path, and every
+   locked number - 3,469 events, Mc 3.4, b 0.844 +/- 0.019 on 1,529, p 1.161,
+   c 0.497, k 358.9 - is unchanged, before and after. This is a defect in the
+   sensitivity analysis a referee would ask for, not in the headline result.
+2. **Agreement between implementations did not catch it, because both had it.**
+   The Python package and the JavaScript page made the same mistake for the same
+   reason, so they agreed with each other while both being wrong. That is worth
+   stating plainly: cross-implementation agreement is evidence, but it is evidence
+   of shared assumptions as much as of correctness, and it is blind to anything
+   inherited from the arithmetic both sit on.
+3. **The fix is one tolerance, applied everywhere a magnitude meets an edge.**
+   `constants.GRID_TOLERANCE`, 1e-9, is a published default like any other. Any
+   two magnitudes a real catalogue distinguishes differ by at least 0.001, six
+   orders of magnitude more, so it cannot merge two genuinely different values.
+
+Fixing it exposed a second divergence of the same kind. `span / dm` is exactly 2.5
+at dM 0.2, and Python's `round` sends a half down while JavaScript's `Math.round`
+sends it up, so the two implementations averaged the b-stability curve over
+different windows and reported different completeness magnitudes - 4.0 against 4.2
+- from curves that were identical row for row. Both now round halves up, as the
+binning does. The two implementations agree at every bin width tested: 3.2 at
+dM 0.05, 4.1 at 0.1, 4.2 at 0.2, 4.0 at 0.25, 4.5 at 0.5.
+
+A sentence that works: *"Magnitude comparisons are performed against the decimal
+grid on which magnitudes are reported rather than in binary floating point; at bin
+widths where a completeness threshold coincides with a reported magnitude, the
+naive comparison excludes that magnitude class entirely and biases b by several
+times its standard error."*
 
 ## 10. How correctness is demonstrated
 
@@ -409,16 +477,17 @@ Tinti and Mulargia, which converge as the magnitude bin narrows."*
 
 - Package: `tremor-lab` 1.0.0, MIT licence, Python 3.11+, tagged `v1.0.0`.
 - Runtime dependencies: NumPy (>=2.0,<3), SciPy (>=1.13,<2), pandas (>=2.2,<3). Nothing else.
-- Source: about 2,000 lines across 9 modules. **210 tests**.
-- Browser page: one file, 2,558 lines, 190 KB, pure ASCII, no external requests except
+- Source: about 2,600 lines across 10 modules. **284 tests**.
+- Browser page: one file, 2,660 lines, 196 KB, pure ASCII, no external requests except
   Google Fonts. Runs offline from a double-click. Eight settings are editable on it:
   the window, the threshold, the bin width, the Mc correction, the Bath deficit, the
   bootstrap count, the fit-test replicate count and the seed. The rest of the published
   constants are fixed in the page and adjustable in the package, which is the authority
   for published values in any case.
 - Public API: 30 names, including `b_stability`, `mc_b_stability`,
-  `mc_goodness_of_fit`, `omori_fit_test` and `b_value_tinti`. 24 published
-  constants. Twenty of them are overridable three
+  `mc_goodness_of_fit`, `omori_fit_test` and `b_value_tinti`. 25 published
+  constants, of which three - the two Omori plausibility bounds and the offset
+  floor - judge a fit rather than entering one and so have no keyword argument. Twenty of them are overridable three
   ways — per call by keyword, per session by reassignment, or from a settings file; the
   three fit-quality bounds (`OMORI_C_FLOOR`, `OMORI_P_MIN`, `OMORI_P_MAX`) have no
   keyword argument and are overridable the latter two ways only.
@@ -457,8 +526,11 @@ Read this before drafting. Each of these is a real trap.
    draws 8,678 synthetic events from p = 1.15, c = 0.5, k = 2000 and asserts only that k
    returns within 10%. At that test's own seed k comes back 1.3% low; across seeds 0-4 the
    k error reaches 6.4% while p stays within 1.4%. p is the robust number.
-6. **Do not claim a DOI, a public repository, or continuous integration.** As of this
-   handover none exists: the repository is local only. See section 12.
+6. **Do not claim a DOI.** None exists yet, and the software availability statement
+   cannot be written without one. The repository is public at
+   github.com/HaikKaz/tremor-lab and a CI workflow is committed at
+   `.github/workflows/tests.yml`; do not claim the workflow *passes* until it has
+   run there. See section 12.
 7. **Do not describe the probabilistic anomaly method** (spatial rarity, the simulation).
    It is deliberately outside this tool and is a separate layer to be added once its
    specification is frozen.
@@ -473,7 +545,7 @@ Read this before drafting. Each of these is a real trap.
 10. **Do not let the self-test stand for validation of a reader's own analysis.** It
    checks the estimators against known values on a bundled catalogue. It says nothing
    about whether the reader chose a sensible window, threshold or mainshock.
-11. **Do not present "210 tests" as coverage.** It is a count, not a measure. What can
+11. **Do not present "284 tests" as coverage.** It is a count, not a measure. What can
     honestly be said is stronger and more specific: ten deliberate breakages of the
     estimators were each caught by at least one test (section 10).
 12. **Do not describe the bundled fixture as raw data.** `kahramanmaras_180d.csv` is a
@@ -492,7 +564,9 @@ Done: package, tests, command-line tool, browser page, README, MIT licence,
 
 Outstanding before the paper can cite the software:
 
-- **A public repository.** None yet.
+- **A public repository.** Created at github.com/HaikKaz/tremor-lab. Confirm the
+  code is actually there before citing it; at the time of writing the first push
+  was still waiting on the author's GitHub sign-in.
 - **A Zenodo DOI.** None yet. Required for the software availability statement.
 - **ORCID and affiliation** are blank placeholders in `CITATION.cff`.
 - **Continuous integration** is committed at `.github/workflows/tests.yml`. It lints,
