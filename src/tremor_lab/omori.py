@@ -186,9 +186,14 @@ def bootstrap_omori(
         fit_omori(rng.choice(t, size=t.size, replace=True), t_end=t_end)
         for _ in range(n_boot)
     ]
+    # ddof=1, the divisor in Efron's own formula for a bootstrap standard error,
+    # and the one the browser page already used. numpy's default of ddof=0 made
+    # the two implementations report different numbers for the same quantity -
+    # half a per cent apart at 200 resamples, and 41 per cent apart at the two
+    # resamples the browser control will accept.
     return OmoriBootstrap(
-        float(np.std([f.p for f in fits])),
-        float(np.std([f.c for f in fits])),
+        float(np.std([f.p for f in fits], ddof=1)),
+        float(np.std([f.c for f in fits], ddof=1)),
         n_boot,
     )
 

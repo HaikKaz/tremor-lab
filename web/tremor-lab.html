@@ -572,13 +572,13 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
       </div>
       <div class="field">
         <label for="nBoot">bootstrap runs</label>
-        <input id="nBoot" type="number" step="1" min="0" max="1000" value="100">
+        <input id="nBoot" type="number" step="1" min="0" max="1000" value="200">
         <span class="hint">0 to skip</span>
       </div>
       <div class="field">
         <label for="nFitSim">fit test replicates</label>
         <input id="nFitSim" type="number" step="1" min="0" max="5000" value="600">
-        <span class="hint">raise to settle a borderline p</span>
+        <span class="hint">0 to skip; raise to settle a borderline p</span>
       </div>
       <div class="field">
         <label for="seed">seed</label>
@@ -701,6 +701,10 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
 
 var CONST = {
   DELTA_MB: 1.15,   // Bath magnitude deficit (central; plausible 1.1-1.2)
+  N_BOOT: 200,      // bootstrap resamples for the Omori uncertainty
+  WINDOW_DAYS: 180, // days after the mainshock
+  OMORI_C0: 0.5,    // starting offset for the decay search
+  OMORI_P0: 1.1,    // starting exponent for the decay search
   E_A: 1.5,         // energy relation slope,  log10 E = E_A*M + E_B
   E_B: 4.8,         // energy relation intercept (E in joules)
   DM: 0.1,          // magnitude bin width
@@ -975,8 +979,18 @@ function omoriFitTest(times, fit, T, t0) {
    because it is several hundred fits. */
 function calibrateFitTest(times, fit, T, t0, nSim, seed, onProgress, done, cancelled) {
   var observed = omoriFitTest(times, fit, T, t0).statistic;
-  if (!isFinite(observed) || nSim < 20) {
-    done(omoriFitTest(times, fit, T, t0));
+  // Zero replicates means the reader asked for no calibration; the package
+  // behaves the same way, and calibrates for any count above zero. Saying so in
+  // the method string matters, because the readout used to add "the simulated
+  // null is still running" to every uncalibrated p-value - including this one,
+  // where nothing was running and nothing ever would be.
+  if (!isFinite(observed) || nSim < 1) {
+    var plain = omoriFitTest(times, fit, T, t0);
+    plain.method = isFinite(observed)
+      ? "asymptotic, uncalibrated: no replicates were asked for"
+      : "asymptotic, uncalibrated";
+    plain.pValueSe = 0;
+    done(plain);
     return;
   }
   var rand = mulberry32(seed >>> 0), i = 0, used = 0, exceeded = 0;
@@ -1163,6 +1177,23 @@ function parseCsv(text) {
   var sep = counts[0].sep;
   if (counts[0].n < 2) throw new Error("Could not find separate columns in that file. Is it a CSV?");
   var header = splitLine(lines[0], sep);
+  // Rows are objects keyed by header text, so two columns sharing a name would
+  // collapse into the rightmost one - silently, with the mapping menu offering
+  // two entries that did the same thing and the provenance line naming a column
+  // whose values were never read. Two magnitude columns side by side is the
+  // ordinary result of merging two agencies' exports in a spreadsheet.
+  var seen = {}, repeated = [];
+  for (var h = 0; h < header.length; h++) {
+    var name = header[h];
+    if (seen[name]) { if (repeated.indexOf(name) < 0) repeated.push(name); }
+    seen[name] = true;
+  }
+  if (repeated.length) {
+    throw new Error("The header repeats " +
+      repeated.map(function (n) { return '"' + n + '"'; }).join(", ") +
+      ". Every column has to have its own name, or there is no way to say which " +
+      "of them a setting refers to. Rename the duplicates and load the file again.");
+  }
   var rows = [];
   for (var i = 1; i < lines.length; i++) {
     var cells = splitLine(lines[i], sep);
@@ -1290,7 +1321,12 @@ function parseStamp(dateStr, timeStr, dayFirst) {
   var s = String(dateStr == null ? "" : dateStr).trim();
   if (!s) return NaN;
   if (timeStr != null && String(timeStr).trim() !== "") s += " " + String(timeStr).trim();
-  s = s.replace(/[T]/g, " ").replace(/Z$/i, "").replace(/[+-]\d{2}:?\d{2}$/, "");
+  // The offset is only an offset when it follows a clock. Anchored at the end
+  // alone, this pattern also matched the "-2023" of a date written 06-02-2023,
+  // left "06-02" behind, and made every row of a day-first date-only catalogue
+  // unreadable - while the error pointed at the column mapping, which was right.
+  s = s.replace(/[T]/g, " ").replace(/Z$/i, "")
+       .replace(/(\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?)\s*[+-]\d{2}:?\d{2}$/, "$1");
 
   var dm = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
   var y, mo, d;
@@ -1950,8 +1986,10 @@ function resultRows(result, s) {
       rows.push(["decay fit test",
         "KS " + result.fitTest.statistic.toFixed(4) + ", p " + pv.toFixed(3) +
         (se ? "  \u00B1 " + se.toFixed(3) : "") + " " + verdict]);
+      // Only the bare "asymptotic, uncalibrated" means a simulation is on its
+      // way; a method string that says why it was declined is the final answer.
       rows.push(["fit test p from", result.fitTest.method +
-        (/uncalibrated/.test(result.fitTest.method)
+        (result.fitTest.method === "asymptotic, uncalibrated"
           ? "; the simulated null is still running" : "")]);
     }
   }
@@ -2298,12 +2336,13 @@ function readSettings() {
   // example value would put a plausible energy under the wrong earthquake.
   var mwRaw = String($("msMw").value).trim().replace(",", ".");
   return {
-    windowDays: field("windowDays", 180, "window"),
+    windowDays: field("windowDays", CONST.WINDOW_DAYS, "window"),
     threshold: threshold,
-    dm: Math.max(0.001, field("dm", 0.1, "bin width")),
-    mcCorr: field("mcCorr", 0.2, "Mc correction"),
-    deltaMb: field("deltaMb", 1.15, "Bath dM"),
-    nBoot: Math.max(0, Math.min(1000, Math.round(field("nBoot", 100, "bootstrap runs")))),
+    dm: Math.max(0.001, field("dm", CONST.DM, "bin width")),
+    mcCorr: field("mcCorr", CONST.MC_CORR, "Mc correction"),
+    deltaMb: field("deltaMb", CONST.DELTA_MB, "Bath dM"),
+    nBoot: Math.max(0, Math.min(1000,
+      Math.round(field("nBoot", CONST.N_BOOT, "bootstrap runs")))),
     nFitSim: Math.max(0, Math.min(5000,
       Math.round(field("nFitSim", CONST.N_FIT_SIMULATIONS, "fit test replicates")))),
     seed: Math.round(field("seed", 0, "seed")),
