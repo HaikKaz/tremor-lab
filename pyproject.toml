@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tremor-lab"
-version = "1.1.0"
+version = "1.1.1"
 description = "Aftershock-sequence statistics: completeness, Gutenberg-Richter b-value, Omori-Utsu decay, and magnitude-energy relations"
 readme = "README.md"
 requires-python = ">=3.11"

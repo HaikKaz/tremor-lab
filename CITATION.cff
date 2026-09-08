@@ -8,7 +8,7 @@ abstract: >-
   with a bootstrap uncertainty, radiated energy and the Bath energy screen, and
   magnitude homogenisation to Mw by the Scordilis relations.
 type: software
-version: 1.1.0
+version: 1.1.1
 license: MIT
 authors:
   - given-names: Aik
@@ -31,4 +31,4 @@ identifiers:
     description: Concept DOI, resolving to the latest version.
   - type: doi
     value: 10.5281/zenodo.22653580
-    description: Version 1.1.0, the release this file describes.
+    description: Version 1.1.0, the first published release.

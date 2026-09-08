@@ -40,7 +40,7 @@ from tremor_lab.omori import (
     omori_nll,
 )
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 __all__ = [
     "CATALOG_COLUMNS",
