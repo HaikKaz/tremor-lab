@@ -527,10 +527,11 @@ Read this before drafting. Each of these is a real trap.
    draws 8,678 synthetic events from p = 1.15, c = 0.5, k = 2000 and asserts only that k
    returns within 10%. At that test's own seed k comes back 1.3% low; across seeds 0-4 the
    k error reaches 6.4% while p stays within 1.4%. p is the robust number.
-6. **Do not claim a DOI.** None exists yet, and the software availability statement
-   cannot be written without one. The repository is public at
-   github.com/HaikKaz/tremor-lab and its CI has run and passed, so both of those
-   may be stated.
+6. **The DOI exists; cite the right one.** Cite the concept DOI,
+   10.5281/zenodo.22653579, which always resolves to the latest version. The DOI of
+   version 1.1.0 specifically is 10.5281/zenodo.22653580; use that only where the
+   exact version matters, such as a reproducibility statement. Do not cite the
+   GitHub URL in place of the DOI: a repository can be renamed or deleted.
 7. **Do not describe the probabilistic anomaly method** (spatial rarity, the simulation).
    It is deliberately outside this tool and is a separate layer to be added once its
    specification is frozen.
@@ -565,7 +566,9 @@ Done: package, tests, command-line tool, browser page, README, MIT licence,
 Outstanding before the paper can cite the software:
 
 - **A public repository.** Done: github.com/HaikKaz/tremor-lab.
-- **A Zenodo DOI.** None yet. Required for the software availability statement.
+- **A Zenodo DOI.** Done: concept 10.5281/zenodo.22653579, version 1.1.0
+  10.5281/zenodo.22653580. The archive also carries a Software Heritage identifier,
+  swh:1:dir:d09344f80b18a2ba5ad8408d0140ee9450182652.
 - **ORCID and affiliation** are filled in: ORCID 0009-0007-1842-1590, National
   Academy of Sciences of Armenia.
 
@@ -584,8 +587,19 @@ record in two.
   locked values reproduce on a clean checkout with freshly resolved dependencies,
   on three Python versions, and not only on the author's machine.
 
-Until the DOI exists, the availability statement cannot be written. Draft around it, or
-leave a marked placeholder.
+The availability statement can now be written. One that is accurate:
+
+> *Tremor Lab v1.1.0 is openly available under the MIT licence at
+> https://github.com/HaikKaz/tremor-lab and archived at
+> https://doi.org/10.5281/zenodo.22653579. The version used in this work is
+> v1.1.0 (https://doi.org/10.5281/zenodo.22653580). It reproduces every value
+> reported here from the bundled catalogue with a single command, and its test
+> suite runs on Python 3.11 to 3.13 in continuous integration.*
+
+Two cautions on that wording. "Reproduces every value reported here" is true of the
+values in section 4 and false of anything computed outside this tool, so check it
+against the final manuscript before using it. And it says the suite *runs*, not that
+the software is correct; section 12 lists what may not be claimed.
 
 ## 14. Limitations to state in the paper
 

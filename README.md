@@ -1,6 +1,7 @@
 # Tremor Lab
 
 [![tests](https://github.com/HaikKaz/tremor-lab/actions/workflows/tests.yml/badge.svg)](https://github.com/HaikKaz/tremor-lab/actions/workflows/tests.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22653579.svg)](https://doi.org/10.5281/zenodo.22653579)
 
 Aftershock-sequence statistics in Python: the magnitude of completeness, the
 Gutenberg-Richter b-value, the modified Omori-Utsu decay, radiated energy and the Bath
@@ -335,9 +336,9 @@ This package computes the estimators and the energy diagnostics. The probabilist
 largest-secondary anomaly statistic is a separate layer, added once its specification is
 frozen, and is deliberately not part of this foundation.
 
-## When you are ready to publish
+## Publishing a new version
 
-Two steps remain before the software is formally citable.
+The software is citable: see the DOI badge above.
 
 **Continuous integration.** Done. `.github/workflows/tests.yml` runs `ruff check`,
 `ruff format --check` and the suite on Python 3.11, 3.12 and 3.13 on every push,
@@ -346,9 +347,12 @@ and runs the `seismostats` cross-check in its own job. The badge above is the re
 that workflow on a clean checkout with freshly resolved dependencies, which is what
 makes it evidence rather than assertion.
 
-**Archive for a DOI.** Enable the repository in Zenodo, tag a release and push the tag,
-and Zenodo mints a versioned DOI. Put that DOI in `CITATION.cff` and in the paper's
-software availability statement.
+**Archive for a DOI.** Done. Every GitHub release is archived by Zenodo, which mints a
+DOI for it. Cite the concept DOI, [10.5281/zenodo.22653579](https://doi.org/10.5281/zenodo.22653579),
+which always resolves to the latest version; version 1.1.0 itself is
+[10.5281/zenodo.22653580](https://doi.org/10.5281/zenodo.22653580). Both are in
+`CITATION.cff`. To publish a new version, tag it and create a GitHub release - a bare
+tag is not enough, because Zenodo watches releases.
 
 ## Licence and citation
 

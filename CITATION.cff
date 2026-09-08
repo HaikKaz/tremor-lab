@@ -22,5 +22,13 @@ keywords:
   - b-value
   - Omori-Utsu
 repository-code: "https://github.com/HaikKaz/tremor-lab"
-# Add once the release is archived for a DOI:
-# doi: 10.5281/zenodo.0000000
+# The concept DOI: it always resolves to the latest version, and is what to cite
+# for the software itself rather than for one release of it.
+doi: 10.5281/zenodo.22653579
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22653579
+    description: Concept DOI, resolving to the latest version.
+  - type: doi
+    value: 10.5281/zenodo.22653580
+    description: Version 1.1.0, the release this file describes.
