@@ -264,3 +264,23 @@ def test_the_published_default_is_paid_in_full():
     assert test.p_value == pytest.approx(0.042, abs=0.005)
     assert test.p_value_se == pytest.approx(0.008, abs=0.002)
     assert "borderline" in fit_verdict(test)
+
+
+def test_the_observation_interval_is_held_fixed_across_every_refit():
+    """The interval belongs to the catalogue, not to the resample.
+
+    Each bootstrap resample has its own last event, and letting each refit take
+    the interval from its own draw makes the answer identical whatever interval
+    the caller asked for - which is how this was found: deleting `t_end=t_end`
+    from the refit left the whole suite green while understating the uncertainty
+    on c by 62 per cent at a 365-day interval.
+    """
+    catalog = pd.read_csv(DATA / "kahramanmaras_180d.csv")
+    times = catalog.loc[catalog["mw"] >= 3.5, "dt_days"].to_numpy()
+    spreads = [
+        bootstrap_omori(times, n_boot=40, seed=0, t_end=t_end).c_std
+        for t_end in (180.0, 365.0, 3650.0)
+    ]
+    # A longer observation interval over the same events means the decay is less
+    # constrained, so the spread has to grow with it.
+    assert spreads[0] < spreads[1] < spreads[2]

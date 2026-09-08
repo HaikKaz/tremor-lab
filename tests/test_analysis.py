@@ -161,3 +161,27 @@ def test_rows_with_a_missing_magnitude_are_dropped_and_counted(kahramanmaras):
     assert result["n_unusable"] == 2
     assert result["n_events"] == 3467
     assert result["mc"] == 3.4
+
+
+def test_an_event_landing_exactly_on_the_window_edge_is_inside_it():
+    """The window is closed at its end: 180 days means up to and including 180.
+
+    The reference catalogue's last event is at 179.596 days, so no test ever put
+    an event on the boundary, and changing <= to < left the suite green while
+    silently dropping any event that landed there.
+    """
+    catalog = pd.DataFrame(
+        {
+            "dt_days": [0.5, 90.0, 180.0],
+            "mw": [4.5, 4.2, 5.0],
+            "lat": [37.2, 37.3, 37.4],
+            "lon": [37.0, 37.1, 37.2],
+        }
+    )
+    result = analyze_case(catalog, MAINSHOCK, window_days=180.0, n_boot=0)
+    assert result["n_events"] == 3
+    # And one just outside it is outside it.
+    catalog.loc[2, "dt_days"] = 180.0001
+    assert (
+        analyze_case(catalog, MAINSHOCK, window_days=180.0, n_boot=0)["n_events"] == 2
+    )

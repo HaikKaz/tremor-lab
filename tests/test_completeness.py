@@ -117,3 +117,16 @@ def test_one_anomalously_small_event_does_not_move_the_candidate_list():
     with_outlier = mc_goodness_of_fit(np.append(mags, 0.0))
     assert with_outlier.mc == clean.mc
     assert with_outlier.r_value == pytest.approx(clean.r_value, abs=0.01)
+
+
+def test_a_tie_between_two_modal_bins_is_broken_by_taking_the_lower():
+    """Two equally populated bins is a real case, and it needs a stated rule.
+
+    The lower one wins, which is the conservative choice: a completeness
+    magnitude set too low is visible in the b-stability curve, while one set too
+    high silently throws away events. The reference catalogue's mode is unique,
+    so selecting the last maximal bin instead of the first left the suite green.
+    """
+    # Two events in the bin at 3.0 and two in the bin at 3.4, nothing between.
+    mags = np.array([3.0, 3.0, 3.4, 3.4])
+    assert mc_maxcurvature(mags, dm=0.1, correction=0.0) == 3.0

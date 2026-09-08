@@ -155,3 +155,44 @@ def test_the_two_b_estimators_agree_on_the_reference_catalogue_to_half_a_percent
     tinti = b_value_tinti(mags, 3.5).b
     assert abs(aki / tinti - 1) < 0.005
     assert b_value_tinti(mags, 3.5).n == b_value_aki(mags, 3.5).n
+
+
+def test_the_standard_error_uses_the_finite_sample_denominator():
+    """Shi and Bolt divide by n(n-1), not by n squared.
+
+    The difference is a factor sqrt(n/(n-1)): invisible at the 1,529 events of
+    the reference catalogue, where it moves sigma by six millionths, and 1 per
+    cent at fifty events. Every other test that touches sigma either compares a
+    ratio in which the denominator cancels, or allows a tolerance wider than the
+    difference, so replacing n(n-1) with n squared left the suite green.
+    """
+    rng = np.random.default_rng(0)
+    mags = np.round(2.0 + rng.exponential(1 / (1.0 * np.log(10)), 50), 1)
+    estimate = b_value_aki(mags, 2.0)
+    n = estimate.n
+    mean = mags[mags >= 2.0 - 0.05].mean()
+    above = mags[mags >= 2.0 - 0.05]
+    expected = (
+        2.30 * estimate.b**2 * np.sqrt(((above - mean) ** 2).sum() / (n * (n - 1)))
+    )
+    assert estimate.sigma == pytest.approx(expected, rel=1e-12)
+    # And it is not the n-squared form, which the suite could not previously see.
+    wrong = 2.30 * estimate.b**2 * np.sqrt(((above - mean) ** 2).sum() / (n * n))
+    assert estimate.sigma != pytest.approx(wrong, rel=1e-6)
+
+
+def test_a_threshold_is_judged_usable_by_the_events_the_estimator_will_use():
+    """The count that gates a threshold must match the sample taken at it.
+
+    The gate counts events at or above threshold - dm/2, because that is the
+    half-bin edge b_value_aki itself selects from. Counting from the threshold
+    instead makes the gate reject a threshold the estimator could have used, and
+    on the reference catalogue at dm 0.1 the two counts differ at every step.
+    """
+    catalog = pd.read_csv(DATA / "kahramanmaras_180d.csv")
+    mags = catalog["mw"].to_numpy()
+    curve = b_stability(mags, dm=0.1, min_events=50)
+    for threshold, n in zip(curve.thresholds, curve.n, strict=True):
+        # Every threshold that survived the gate reports the count the estimator
+        # actually used, which is the half-bin one.
+        assert n == int((mags >= threshold - 0.1 / 2 - 1e-9).sum())
