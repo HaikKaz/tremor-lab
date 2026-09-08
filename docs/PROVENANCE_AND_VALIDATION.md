@@ -528,9 +528,8 @@ Read this before drafting. Each of these is a real trap.
    k error reaches 6.4% while p stays within 1.4%. p is the robust number.
 6. **Do not claim a DOI.** None exists yet, and the software availability statement
    cannot be written without one. The repository is public at
-   github.com/HaikKaz/tremor-lab and a CI workflow is committed at
-   `.github/workflows/tests.yml`; do not claim the workflow *passes* until it has
-   run there. See section 12.
+   github.com/HaikKaz/tremor-lab and its CI has run and passed, so both of those
+   may be stated. See section 12.
 7. **Do not describe the probabilistic anomaly method** (spatial rarity, the simulation).
    It is deliberately outside this tool and is a separate layer to be added once its
    specification is frozen.
@@ -564,16 +563,20 @@ Done: package, tests, command-line tool, browser page, README, MIT licence,
 
 Outstanding before the paper can cite the software:
 
-- **A public repository.** Created at github.com/HaikKaz/tremor-lab. Confirm the
-  code is actually there before citing it; at the time of writing the first push
-  was still waiting on the author's GitHub sign-in.
+- **A public repository.** Done: github.com/HaikKaz/tremor-lab, 38 commits.
 - **A Zenodo DOI.** None yet. Required for the software availability statement.
-- **ORCID and affiliation** are blank placeholders in `CITATION.cff`.
-- **Continuous integration** is committed at `.github/workflows/tests.yml`. It lints,
+- **ORCID and affiliation** are filled in: ORCID 0009-0007-1842-1590, National
+  Academy of Sciences of Armenia. Note that the ORCID record gives the name as
+  "Aik Kazarian" while `CITATION.cff` and the thesis give "Haik Kazarian"; the
+  identifier is what indexers match on, so this is not an error, but the paper
+  and the record should agree on the spelling before submission.
+- **Continuous integration** runs and passes. `.github/workflows/tests.yml` lints,
   runs the suite on Python 3.11, 3.12 and 3.13, reproduces the reference values both
   directly and through the full catalogue pipeline, and runs the `seismostats`
-  cross-check in a separate job. It has never executed, because nothing has been
-  pushed; say it exists, not that it passes.
+  cross-check in a separate job. Its first execution, on commit 5c123d3, passed all
+  four jobs in 63 seconds. This is worth a sentence in the paper: it means the
+  locked values reproduce on a clean checkout with freshly resolved dependencies,
+  on three Python versions, and not only on the author's machine.
 
 Until the DOI exists, the availability statement cannot be written. Draft around it, or
 leave a marked placeholder.

@@ -13,9 +13,8 @@ license: MIT
 authors:
   - given-names: Haik
     family-names: Kazarian
-    # Fill these in before archiving:
-    # orcid: "https://orcid.org/0000-0000-0000-0000"
-    # affiliation: ""
+    orcid: "https://orcid.org/0009-0007-1842-1590"
+    affiliation: "National Academy of Sciences of Armenia"
 keywords:
   - seismology
   - aftershocks

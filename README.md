@@ -1,5 +1,7 @@
 # Tremor Lab
 
+[![tests](https://github.com/HaikKaz/tremor-lab/actions/workflows/tests.yml/badge.svg)](https://github.com/HaikKaz/tremor-lab/actions/workflows/tests.yml)
+
 Aftershock-sequence statistics in Python: the magnitude of completeness, the
 Gutenberg-Richter b-value, the modified Omori-Utsu decay, radiated energy and the Bath
 energy screen, and magnitude homogenisation to Mw.
@@ -166,8 +168,9 @@ It reports the same quantities as the package, draws the sequence, the
 frequency-magnitude distribution and the decay curve, and shows the data behind each
 chart. Eight settings are editable on the page - the window, the threshold, the bin
 width, the Mc correction, the Bath deficit, the bootstrap count, the fit-test replicate
-count and the seed - and the page states which columns it read, how magnitudes were treated, and what it assumed, so
-a number never travels without the choices that produced it. The remaining constants,
+count and the seed - and the page states which columns it read, how magnitudes were
+treated, and what it assumed, so a number never travels without the choices that
+produced it. The remaining constants,
 including the Scordilis coefficients and the Earth radius, are fixed in the page; change
 those in the Python package, which is the authority for published values in any case.
 
@@ -336,12 +339,12 @@ frozen, and is deliberately not part of this foundation.
 
 Two steps remain before the software is formally citable.
 
-**Continuous integration.** The repository is at
-[github.com/HaikKaz/tremor-lab](https://github.com/HaikKaz/tremor-lab), and
-`.github/workflows/tests.yml` runs `ruff check`, `ruff format --check` and the suite on
-Python 3.11 to 3.13 on every push, reproducing the reference values both directly and
-through the full catalogue pipeline. A green badge in this README is evidence rather
-than assertion only once that workflow has actually run.
+**Continuous integration.** Done. `.github/workflows/tests.yml` runs `ruff check`,
+`ruff format --check` and the suite on Python 3.11, 3.12 and 3.13 on every push,
+reproduces the reference values both directly and through the full catalogue pipeline,
+and runs the `seismostats` cross-check in its own job. The badge above is the result of
+that workflow on a clean checkout with freshly resolved dependencies, which is what
+makes it evidence rather than assertion.
 
 **Archive for a DOI.** Enable the repository in Zenodo, tag a release and push the tag,
 and Zenodo mints a versioned DOI. Put that DOI in `CITATION.cff` and in the paper's
