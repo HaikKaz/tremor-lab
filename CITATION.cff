@@ -30,5 +30,8 @@ identifiers:
     value: 10.5281/zenodo.22653579
     description: Concept DOI, resolving to the latest version.
   - type: doi
+    value: 10.5281/zenodo.22661044
+    description: Version 1.1.1, the release this file describes.
+  - type: doi
     value: 10.5281/zenodo.22653580
     description: Version 1.1.0, the first published release.

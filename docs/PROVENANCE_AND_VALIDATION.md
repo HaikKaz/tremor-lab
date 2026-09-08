@@ -506,8 +506,8 @@ Tinti and Mulargia, which converge as the magnitude bin narrows."*
 
 ## 11. Facts and figures
 
-- Package: `tremor-lab` 1.1.0, MIT licence, Python 3.11+, released as `v1.1.0` and
-  archived at doi.org/10.5281/zenodo.22653580.
+- Package: `tremor-lab` 1.1.1, MIT licence, Python 3.11+, released as `v1.1.1` and
+  archived at doi.org/10.5281/zenodo.22661044.
 - Runtime dependencies: NumPy (>=2.0,<3), SciPy (>=1.13,<2), pandas (>=2.2,<3). Nothing else.
 - Source: about 2,700 lines across 10 modules. **293 tests**, green in continuous
   integration on Python 3.11, 3.12 and 3.13.
@@ -563,8 +563,10 @@ Read this before drafting. Each of these is a real trap.
    k error reaches 6.4% while p stays within 1.4%. p is the robust number.
 6. **The DOI exists; cite the right one.** Cite the concept DOI,
    10.5281/zenodo.22653579, which always resolves to the latest version. The DOI of
-   version 1.1.0 specifically is 10.5281/zenodo.22653580; use that only where the
-   exact version matters, such as a reproducibility statement. Do not cite the
+   the current release is 10.5281/zenodo.22661044 (v1.1.1); use a version DOI only
+   where the exact release matters, and use 1.1.1 rather than 1.1.0 - the estimators
+   are the same, but 1.1.0 mis-reads a European CSV export and takes the b-value
+   sample at a bound its own estimator does not assume. Do not cite the
    GitHub URL in place of the DOI: a repository can be renamed or deleted.
 7. **Do not describe the probabilistic anomaly method** (spatial rarity, the simulation).
    It is deliberately outside this tool and is a separate layer to be added once its
@@ -596,10 +598,11 @@ Read this before drafting. Each of these is a real trap.
 
 Everything is done. The software is public, released, archived and citable.
 
-- **Repository:** github.com/HaikKaz/tremor-lab, release `v1.1.0`.
+- **Repository:** github.com/HaikKaz/tremor-lab, current release `v1.1.1`.
 - **DOI:** concept 10.5281/zenodo.22653579, which always resolves to the latest
-  version and is the one to cite; version 1.1.0 is 10.5281/zenodo.22653580. The
-  archive also carries a Software Heritage identifier,
+  version and is the one to cite. Version 1.1.1 is 10.5281/zenodo.22661044; version
+  1.1.0 is 10.5281/zenodo.22653580 and should not be cited in preference to it. The
+  1.1.0 archive also carries a Software Heritage identifier,
   `swh:1:dir:d09344f80b18a2ba5ad8408d0140ee9450182652`.
 - **ORCID:** 0009-0007-1842-1590, affiliation National Academy of Sciences of
   Armenia, both in `CITATION.cff` and in the Zenodo metadata.
@@ -619,10 +622,10 @@ cited software is how one citation record becomes two.
 
 The availability statement can now be written. One that is accurate:
 
-> *Tremor Lab v1.1.0 is openly available under the MIT licence at
+> *Tremor Lab v1.1.1 is openly available under the MIT licence at
 > https://github.com/HaikKaz/tremor-lab and archived at
 > https://doi.org/10.5281/zenodo.22653579. The version used in this work is
-> v1.1.0 (https://doi.org/10.5281/zenodo.22653580). It reproduces every value
+> v1.1.1 (https://doi.org/10.5281/zenodo.22661044). It reproduces every value
 > reported here from the bundled catalogue with a single command, and its test
 > suite runs on Python 3.11 to 3.13 in continuous integration.*
 
