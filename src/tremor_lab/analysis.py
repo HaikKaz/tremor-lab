@@ -187,9 +187,15 @@ def analyze_case(
         times, result["omori"], n_simulations=n_fit_simulations, seed=seed
     )
     if n_boot:
-        result["omori_bootstrap"] = bootstrap_omori(times, n_boot=n_boot, seed=seed)
+        try:
+            result["omori_bootstrap"] = bootstrap_omori(times, n_boot=n_boot, seed=seed)
+        except ValueError as reason:
+            # One resample cannot give a spread. That is a setting to correct, not
+            # a reason to print nothing: the whole report used to be replaced by
+            # this sentence, with no Mc, no b and no decay in it.
+            result["omori_bootstrap"] = None
+            result["bootstrap_note"] = str(reason)
     return result
-
 
 
 def _stability_or_none(mags, dm):

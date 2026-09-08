@@ -1241,12 +1241,15 @@ function parseCsv(text) {
   for (var i = 1; i < lines.length; i++) {
     var cells = splitLine(lines[i], sep);
     if (cells.length < 2) continue;
-    // A row with a different number of fields than the header is malformed, and
-    // reading its leftmost cells silently shifts every column to the right of the
-    // extra separator - an unquoted "Kahramanmaras, Turkiye" or a European 4,5
-    // written without quotes would move the magnitude into the scale column and
-    // report a magnitude of 4 with nothing counted as unreadable.
-    if (cells.length !== header.length) {
+    // A row with MORE fields than the header has an unquoted separator in it -
+    // an unquoted "Kahramanmaras, Turkiye", or a European 4,5 written bare - and
+    // reading its leftmost cells would move the magnitude into the scale column
+    // and report a magnitude of 4 with nothing counted as unreadable.
+    // A row with FEWER is not malformed: the leftmost cells still line up and the
+    // missing trailing ones are empty, which is what pandas does and what an
+    // export with an optional last column looks like. Refusing those threw away
+    // half of an ordinary catalogue that the package reads in full.
+    if (cells.length > header.length) {
       if (!ragged) raggedExample = i + 1;
       ragged++;
       continue;
@@ -1271,16 +1274,15 @@ function parseCsv(text) {
     // prints, so a reader comparing against their own file would find it
     // short with nothing on screen to explain the difference.
     parsedWarning = ragged + ' of ' + (lines.length - 1) + ' rows had a '
-      + 'different number of columns than the header, starting at line '
-      + raggedExample + ', and were left out. A stray separator inside a '
-      + 'text field will do this; quoting that field fixes it.';
+      + 'more columns than the header, starting at line ' + raggedExample
+      + ', and were left out. That happens when a text field contains the '
+      + 'separator without being quoted; quoting that field fixes it.';
   }
   if (!rows.length) {
     throw new Error(ragged
-      ? "Every one of the " + ragged + " data rows has a different number of " +
-        "columns than the header, starting at line " + raggedExample +
-        ". The separator was read as \"" + sep + "\"; if that is wrong, the file " +
-        "cannot be read as it stands."
+      ? "Every one of the " + ragged + " data rows has more columns than the " +
+        "header, starting at line " + raggedExample + ". The separator was read " +
+        "as \"" + sep + "\"; if that is wrong, the file cannot be read as it stands."
       : "That file has a header but no data rows.");
   }
   return { header: header, rows: rows, sep: sep, warning: parsedWarning };
@@ -2128,7 +2130,7 @@ function renderResults(result, s) {
       v: result.b ? result.b.b.toFixed(3) : "\u2014",
       u: result.b
         ? "\u00B1 " + result.b.sigma.toFixed(3) + " &middot; at M &ge; " +
-          showMag(result.threshold, s.dm) + " &middot; " + result.b.n.toLocaleString() + " events"
+          showMag(result.sampleFloor, s.dm) + " &middot; " + result.b.n.toLocaleString() + " events"
         : "not estimated",
       d: "how sharply event numbers fall as magnitude rises; near 1 means about " +
          "ten times fewer events for each unit of magnitude" },
@@ -2566,10 +2568,15 @@ function loadText(text, name) {
     buildMappingUi();
     $("loadedChip").textContent = name + " \u00B7 " + parsed.rows.length.toLocaleString() + " rows";
     recompute();
-    // After recompute, which clears the banner. Rows dropped while reading the
-    // file are gone from every count on screen, so the reader has to be told -
-    // and told after the call that would otherwise wipe the message.
-    if (parsed.warning) showError(parsed.warning, true);
+    // Kept for the session, because recompute() clears the banner on every
+    // settings change and these rows stay gone from every count on screen.
+    STATE.parseWarning = parsed.warning || null;
+    // Last, and only into a banner nothing more important is using: a guessed
+    // magnitude column or unreadable rows both matter more than dropped ones,
+    // and this used to overwrite them.
+    if (STATE.parseWarning && $("loadError").hidden) {
+      showError(STATE.parseWarning, true);
+    }
     // Only when nothing more urgent is already on screen.
     if (STATE.cols.magGuessed && $("loadError").hidden) {
       showError("No column was recognised as the magnitude, so \"" + STATE.cols.mag +
@@ -2585,6 +2592,19 @@ function loadText(text, name) {
 }
 
 var bootToken = 0;
+
+/* What the progress label last said, so the listener below can rewrite it when the
+   reader returns to a tab whose timers were throttled. Module level, and the
+   listener is registered once: it used to be added inside recompute and removed on
+   only two of the paths out, so a session that touched the settings a few dozen
+   times held a few dozen dead closures, each keeping a whole analysis alive. */
+var lastSaid = null;
+document.addEventListener("visibilitychange", function () {
+  var label = document.getElementById("bootLabel");
+  if (label && !label.hidden && lastSaid) {
+    lastSaid.repaint(lastSaid.what, lastSaid.done, lastSaid.total);
+  }
+});
 
 function recompute() {
   if (!STATE.rows.length) return;
@@ -2623,6 +2643,10 @@ function recompute() {
   }
 
   // Bootstrap in slices so the page stays responsive.
+  if (STATE.parseWarning && $("loadError").hidden) {
+    showError(STATE.parseWarning, true);
+  }
+
   var bar = $("bootProgress"), label = $("bootLabel");
 
   /* A bare progress strip with no words is indistinguishable from a page that has
@@ -2643,18 +2667,10 @@ function recompute() {
              " and it will finish" + tail;
     }
     label.textContent = what + "... " + pct + "%" + tail;
-    lastSaid = { what: what, done: done, total: total };
+    lastSaid = { what: what, done: done, total: total, repaint: say };
   }
-  function stopProgress() {
-    bar.hidden = true;
-    label.hidden = true;
-    document.removeEventListener("visibilitychange", onVisibility);
-  }
-  function onVisibility() {
-    if (!label.hidden && lastSaid) say(lastSaid.what, lastSaid.done, lastSaid.total);
-  }
-  document.addEventListener("visibilitychange", onVisibility);
-  var lastSaid = null;
+  function stopProgress() { bar.hidden = true; label.hidden = true; }
+
 
   if (result.omori && s.nBoot >= 2) {
     bar.hidden = false;

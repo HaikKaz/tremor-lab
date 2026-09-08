@@ -430,6 +430,10 @@ def _report(result: dict[str, Any], source: Path) -> str:
                 f"p {test.p_value:.3f}{se_text}  ({verdict})"
             )
             lines.append(f"                     p from a {test.method}")
+        if result.get("bootstrap_note"):
+            lines.append(
+                f"                     no error bars: {result['bootstrap_note']}"
+            )
         if result.get("omori_warning"):
             lines.append(f"CAUTION              {result['omori_warning']}")
     lines += [

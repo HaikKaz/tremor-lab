@@ -66,7 +66,9 @@ incremental frequency-magnitude distribution, plus an additive correction, +0.2 
 default. *Wiemer and Wyss (2000).*
 
 **Gutenberg-Richter b-value** — Aki maximum-likelihood estimator on events at or above
-Mc, with the Shi and Bolt standard error:
+Mc - dM/2, the lower edge of the completeness bin and the bound the estimator
+itself uses in its denominator (section 7 shows why selecting at Mc instead is
+biased off the grid), with the Shi and Bolt standard error:
 
     b     = 1 / (ln10 (mean(M) - (Mc - dM/2)))
     sigma = 2.30 b^2 sqrt( sum (M - mean(M))^2 / (n (n - 1)) )

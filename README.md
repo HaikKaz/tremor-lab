@@ -189,8 +189,12 @@ frequency-magnitude distribution plus a correction, +0.2 by default (Wiemer and 
 interval, because reported magnitudes sit on a decimal grid that binary floating point
 cannot represent exactly. On the reference catalogue this agrees with half-open binning.
 
-**Gutenberg-Richter b-value**, Aki (1965) maximum-likelihood estimator on events at or
-above Mc, with the Shi and Bolt (1982) standard error:
+**Gutenberg-Richter b-value**, Aki (1965) maximum-likelihood estimator with the Shi and
+Bolt (1982) standard error. The sample is every event at or above Mc - dm/2, the lower
+edge of the completeness bin, which is also the bound the estimator puts in its
+denominator; selecting at Mc instead while keeping that denominator is a mismatch
+between the data and the model, invisible on magnitudes reported on the dm grid and
+biased low off it.
 
     b = 1 / (ln10 (mean(M) - (Mc - dm/2)))
     sigma = 2.30 b^2 sqrt(sum (M - mean(M))^2 / (n (n - 1)))
