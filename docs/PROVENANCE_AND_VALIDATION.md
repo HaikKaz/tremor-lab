@@ -304,8 +304,7 @@ wrong. Do not use it. A later version reported "about 0.03" from a 200-replicate
 run whose own standard error was 0.011; the number was in the right place but
 quoted with more confidence than 200 replicates support. Use 0.036 +/- 0.003.
 
-## 9b. A fifth finding, and a methodological one: reported magnitudes are
-decimal, and floating-point arithmetic is not
+## 9b. A fifth finding, methodological: magnitudes are decimal, arithmetic is not
 
 This one is about software rather than about the Earth, and it is the kind of
 thing a methods paper is the right place to say.
@@ -475,11 +474,15 @@ Tinti and Mulargia, which converge as the magnitude bin narrows."*
 
 ## 11. Facts and figures
 
-- Package: `tremor-lab` 1.0.0, MIT licence, Python 3.11+, tagged `v1.0.0`.
+- Package: `tremor-lab` 1.1.0, MIT licence, Python 3.11+, released as `v1.1.0` and
+  archived at doi.org/10.5281/zenodo.22653580.
 - Runtime dependencies: NumPy (>=2.0,<3), SciPy (>=1.13,<2), pandas (>=2.2,<3). Nothing else.
-- Source: about 2,600 lines across 10 modules. **284 tests**.
-- Browser page: one file, 2,660 lines, 196 KB, pure ASCII, no external requests except
-  Google Fonts. Runs offline from a double-click. Eight settings are editable on it:
+- Source: 2,609 lines across 10 modules. **284 tests**, green in continuous
+  integration on Python 3.11, 3.12 and 3.13.
+- Browser page: one file, 2,694 lines, 197 KB, pure ASCII, no external requests except
+  the Google Fonts stylesheet, which is the one thing it fetches; with no network it
+  falls back to system fonts and every number is still computed. Runs from a
+  double-click, with nothing installed. Eight settings are editable on it:
   the window, the threshold, the bin width, the Mc correction, the Bath deficit, the
   bootstrap count, the fit-test replicate count and the seed. The rest of the published
   constants are fixed in the page and adjustable in the package, which is the authority
@@ -488,10 +491,9 @@ Tinti and Mulargia, which converge as the magnitude bin narrows."*
   `mc_goodness_of_fit`, `omori_fit_test` and `b_value_tinti`. 25 published
   constants, of which three - the two Omori plausibility bounds and the offset
   floor - judge a fit rather than entering one and so have no keyword argument. The
-  other 22 are overridable three
-  ways — per call by keyword, per session by reassignment, or from a settings file; the
-  three fit-quality bounds (`OMORI_C_FLOOR`, `OMORI_P_MIN`, `OMORI_P_MAX`) have no
-  keyword argument and are overridable the latter two ways only.
+  other 22 are overridable three ways: per call by keyword, per session by
+  reassignment, or from a settings file. The three bounds
+  (`OMORI_C_FLOOR`, `OMORI_P_MIN`, `OMORI_P_MAX`) take the latter two only.
 - **Speed: do not quote a figure from this handover.** The tool analyses the
   3,469-event reference catalogue and draws all four charts in well under a second in a
   desktop browser, and the self-test costs more than one analysis rather than less,
@@ -560,32 +562,28 @@ Read this before drafting. Each of these is a real trap.
 
 ## 13. Status and what is outstanding
 
-Done: package, tests, command-line tool, browser page, README, MIT licence,
-`CITATION.cff`, local git repository tagged v1.0.0, published as a private web page.
+Everything is done. The software is public, released, archived and citable.
 
-Outstanding before the paper can cite the software:
+- **Repository:** github.com/HaikKaz/tremor-lab, release `v1.1.0`.
+- **DOI:** concept 10.5281/zenodo.22653579, which always resolves to the latest
+  version and is the one to cite; version 1.1.0 is 10.5281/zenodo.22653580. The
+  archive also carries a Software Heritage identifier,
+  `swh:1:dir:d09344f80b18a2ba5ad8408d0140ee9450182652`.
+- **ORCID:** 0009-0007-1842-1590, affiliation National Academy of Sciences of
+  Armenia, both in `CITATION.cff` and in the Zenodo metadata.
+- **Continuous integration** runs and passes: `.github/workflows/tests.yml` lints,
+  runs the suite on Python 3.11, 3.12 and 3.13, reproduces the reference values
+  both directly and through the full catalogue pipeline, and runs the `seismostats`
+  cross-check in a separate job. This is worth a sentence in the paper: it means the
+  locked values reproduce on a clean checkout with freshly resolved dependencies, on
+  three Python versions, and not only on the author's machine.
 
-- **A public repository.** Done: github.com/HaikKaz/tremor-lab.
-- **A Zenodo DOI.** Done: concept 10.5281/zenodo.22653579, version 1.1.0
-  10.5281/zenodo.22653580. The archive also carries a Software Heritage identifier,
-  swh:1:dir:d09344f80b18a2ba5ad8408d0140ee9450182652.
-- **ORCID and affiliation** are filled in: ORCID 0009-0007-1842-1590, National
-  Academy of Sciences of Armenia.
-
-**Name.** The author's name is **Aik Kazarian**, as on the passport and on the
-ORCID record, and that is what `CITATION.cff` and the Zenodo metadata carry. Earlier
-drafts of the thesis and of this handover used "Haik"; use "Aik" in the paper, the
-author list and the availability statement, so the byline, the ORCID record and the
-software archive all match. A single author whose name is spelled two ways across a
-paper and its cited software is exactly the sort of thing that splits a citation
-record in two.
-- **Continuous integration** runs and passes. `.github/workflows/tests.yml` lints,
-  runs the suite on Python 3.11, 3.12 and 3.13, reproduces the reference values both
-  directly and through the full catalogue pipeline, and runs the `seismostats`
-  cross-check in a separate job. Its first execution, on commit 5c123d3, passed all
-  four jobs in 63 seconds. This is worth a sentence in the paper: it means the
-  locked values reproduce on a clean checkout with freshly resolved dependencies,
-  on three Python versions, and not only on the author's machine.
+**One thing for the author, not the writer.** The name is **Aik Kazarian**, as on
+the passport and the ORCID record, and that is what `CITATION.cff` and the Zenodo
+metadata carry. Earlier thesis drafts use "Haik". Use "Aik" in the byline, the
+author list and the availability statement, so the paper, the ORCID record and the
+software archive agree. A single author spelled two ways across a paper and its
+cited software is how one citation record becomes two.
 
 The availability statement can now be written. One that is accurate:
 
