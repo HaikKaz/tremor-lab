@@ -137,7 +137,11 @@ def b_stability(
         # event moves the minimum while leaving the mode where it was.
         edges, inc, _ = fmd(m, dm)
         start = float(edges[int(np.argmax(inc))])
-        thresholds = np.round(start + dm * np.arange(round(2.5 / dm) + 1), 10)
+        # Halves up, as everywhere else: 2.5/0.2 is exactly 12.5, and Python's
+        # round sends that down where JavaScript's Math.round sends it up, so the
+        # package and the browser page searched different numbers of thresholds.
+        steps = int(np.floor(2.5 / dm + 0.5 + constants.GRID_TOLERANCE))
+        thresholds = np.round(start + dm * np.arange(steps + 1), 10)
     thresholds = np.atleast_1d(np.asarray(thresholds, float))
 
     kept, bs, sigmas, ns = [], [], [], []

@@ -487,12 +487,13 @@ Tinti and Mulargia, which converge as the magnitude bin narrows."*
 - Public API: 30 names, including `b_stability`, `mc_b_stability`,
   `mc_goodness_of_fit`, `omori_fit_test` and `b_value_tinti`. 25 published
   constants, of which three - the two Omori plausibility bounds and the offset
-  floor - judge a fit rather than entering one and so have no keyword argument. Twenty of them are overridable three
+  floor - judge a fit rather than entering one and so have no keyword argument. The
+  other 22 are overridable three
   ways — per call by keyword, per session by reassignment, or from a settings file; the
   three fit-quality bounds (`OMORI_C_FLOOR`, `OMORI_P_MIN`, `OMORI_P_MAX`) have no
   keyword argument and are overridable the latter two ways only.
 - **Speed: do not quote a figure from this handover.** The tool analyses the
-  3,469-event reference catalogue and draws all three charts in well under a second in a
+  3,469-event reference catalogue and draws all four charts in well under a second in a
   desktop browser, and the self-test costs more than one analysis rather than less,
   because it repeats the reference fit and adds a second Omori fit to 4,000 synthetic
   times. Neither implementation carries timing instrumentation, so any number in the
@@ -529,7 +530,7 @@ Read this before drafting. Each of these is a real trap.
 6. **Do not claim a DOI.** None exists yet, and the software availability statement
    cannot be written without one. The repository is public at
    github.com/HaikKaz/tremor-lab and its CI has run and passed, so both of those
-   may be stated. See section 12.
+   may be stated.
 7. **Do not describe the probabilistic anomaly method** (spatial rarity, the simulation).
    It is deliberately outside this tool and is a separate layer to be added once its
    specification is frozen.
@@ -563,7 +564,7 @@ Done: package, tests, command-line tool, browser page, README, MIT licence,
 
 Outstanding before the paper can cite the software:
 
-- **A public repository.** Done: github.com/HaikKaz/tremor-lab, 38 commits.
+- **A public repository.** Done: github.com/HaikKaz/tremor-lab.
 - **A Zenodo DOI.** None yet. Required for the software availability statement.
 - **ORCID and affiliation** are filled in: ORCID 0009-0007-1842-1590, National
   Academy of Sciences of Armenia.

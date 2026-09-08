@@ -58,4 +58,4 @@ jobs:
           pip install -e .
           pip install seismostats
       - name: Compare against seismostats
-        run: python examples/compare_with_seismostats.py
+        run: python examples/compare_with_seismostats.py --required

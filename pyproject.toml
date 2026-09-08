@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tremor-lab"
-version = "1.0.0"
+version = "1.1.0"
 description = "Aftershock-sequence statistics: completeness, Gutenberg-Richter b-value, Omori-Utsu decay, and magnitude-energy relations"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "H. Kazarian" }]
+authors = [{ name = "Aik Kazarian" }]
 keywords = ["seismology", "aftershocks", "gutenberg-richter", "b-value", "omori-utsu"]
 classifiers = [
     "Intended Audience :: Science/Research",

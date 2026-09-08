@@ -41,6 +41,17 @@ def main() -> int:
     except ImportError:
         print(__doc__)
         print("seismostats is not installed here; nothing to compare.")
+        # Skipping is right on a machine that simply does not have the
+        # comparator, and wrong in CI, where it is installed on purpose: a job
+        # whose whole point is the third-party comparison reported success
+        # having compared nothing at all. --required turns the skip into a
+        # failure, and the workflow passes it.
+        if "--required" in sys.argv:
+            print(
+                "but --required was given, so this counts as a failure: the "
+                "comparison this run exists to perform did not happen"
+            )
+            return 1
         return 0
 
     mags = pd.read_csv(CATALOG)["mw"].to_numpy()

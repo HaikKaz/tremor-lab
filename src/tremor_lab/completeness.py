@@ -93,7 +93,13 @@ def mc_maxcurvature(
     dm = constants.DM if dm is None else dm
     correction = constants.MC_CORRECTION if correction is None else correction
     edges, inc, _ = fmd(mags, dm)
-    return float(np.round(edges[np.argmax(inc)] + correction, _edge_decimals(dm)))
+    # Halves up, like every other rounding here, and unlike numpy's round, which
+    # sends them to the nearest even digit. With a correction of 0.225 on a mode
+    # of 3.2 that was the difference between 3.43 and 3.42, and the browser page
+    # - which rounds halves up - reported the other one.
+    scale = 10.0 ** _edge_decimals(dm)
+    value = edges[int(np.argmax(inc))] + correction
+    return float(np.floor(value * scale + 0.5 + constants.GRID_TOLERANCE) / scale)
 
 
 def _edge_decimals(dm: float) -> int:

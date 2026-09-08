@@ -47,7 +47,7 @@ def test_version_is_reported(capsys):
     with pytest.raises(SystemExit) as exit_status:
         main(["--version"])
     assert exit_status.value.code == 0
-    assert "Tremor Lab 1.0.0" in capsys.readouterr().out
+    assert "Tremor Lab 1.1.0" in capsys.readouterr().out
 
 
 def test_a_constant_set_in_the_settings_file_changes_the_result(tmp_path, capsys):

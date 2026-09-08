@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tremor Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -461,7 +465,9 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
   * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
 </style>
+</head>
 
+<body>
 <div class="wrap">
 
   <div class="calibration tall" aria-hidden="true"></div>
@@ -685,7 +691,7 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
       completeness magnitude, more than 100 above the threshold for a b&#8209;value or a decay
       fit &mdash; rather than the spreadsheet&rsquo;s lower ones.
     </p>
-    <p class="note tight">MIT licence &middot; H. Kazarian &middot; Tremor Lab 1.0.0</p>
+    <p class="note tight">MIT licence &middot; Aik Kazarian &middot; Tremor Lab 1.1.0</p>
   </footer>
 </div>
 
@@ -1137,6 +1143,19 @@ function round1(x) { return Math.round(x * 10) / 10; }
 /* Enough decimals to name the edge itself. Two were assumed, which is right for
    every bin width in ordinary use but labelled the 3.125 bin as 3.13 at dm 0.125
    - and that label is what mcMaxCurvature returns as the completeness magnitude. */
+/* How many decimals a magnitude at this bin width actually carries. Showing
+   fewer made the page contradict itself: at dM 0.25 the completeness tile read
+   3.5 while the threshold row beneath it read 3.45, and at dM 0.05 a stability
+   table labelled the thresholds 3.25 and 3.30 both "3.3". */
+function gridDecimals(dm) {
+  var text = String(dm), dot = text.indexOf(".");
+  return Math.min((dot < 0 ? 0 : text.length - dot - 1) + 1, 12);
+}
+
+function showMag(x, dm) {
+  return x == null ? "-" : Number(x).toFixed(gridDecimals(dm));
+}
+
 function roundToGrid(x, dm) {
   var text = String(dm), dot = text.indexOf(".");
   var decimals = (dot < 0 ? 0 : text.length - dot - 1) + 1;
@@ -1836,7 +1855,7 @@ function drawFmd(result, s) {
   dataTable(
     document.getElementById("fmdTable"),
     ["magnitude", "in bin", "at or above"],
-    f.edges.map(function (m, i) { return [m.toFixed(1), f.inc[i], f.cum[i]]; })
+    f.edges.map(function (m, i) { return [showMag(m, s.dm), f.inc[i], f.cum[i]]; })
   );
 }
 
@@ -1938,20 +1957,20 @@ function resultRows(result, s) {
   var rows = [];
   rows.push(["events in window", result.nEvents.toLocaleString()]);
   rows.push(["completeness Mc", result.mc == null ? "not estimated"
-             : result.mc.toFixed(1) + "  (maximum curvature)"]);
+             : showMag(result.mc, s.dm) + "  (maximum curvature)"]);
   if (result.mcMethods) {
     var others = [], spread = [];
     for (var name in result.mcMethods) {
       var value = result.mcMethods[name];
       if (value != null) spread.push(value);
       if (name !== "maximum curvature") {
-        others.push(name + " " + (value == null ? "none found" : value.toFixed(1)));
+        others.push(name + " " + (value == null ? "none found" : showMag(value, s.dm)));
       }
     }
     rows.push(["Mc, other methods", others.join(", ")]);
     if (spread.length > 1 && maxOf(spread) - minOf(spread) > 1e-9) {
-      rows.push(["Mc spread", "M " + minOf(spread).toFixed(1) + " to " +
-                 maxOf(spread).toFixed(1) + ", and b depends on which is used"]);
+      rows.push(["Mc spread", "M " + showMag(minOf(spread), s.dm) + " to " +
+                 showMag(maxOf(spread), s.dm) + ", and b depends on which is used"]);
     }
   }
   rows.push(["threshold used", result.threshold == null ? "not set" : result.threshold.toFixed(2)]);
@@ -2023,7 +2042,7 @@ function renderResults(result, s) {
   var bp = result.boot;
   var tiles = [
     { k: "completeness Mc",
-      v: result.mc == null ? "\u2014" : result.mc.toFixed(1),
+      v: result.mc == null ? "\u2014" : showMag(result.mc, s.dm),
       u: "magnitude",
       d: "the magnitude above which the catalogue is believed complete; smaller " +
          "events below it are missing from the record, not absent from the ground" },
@@ -2115,7 +2134,7 @@ function drawStability(result, s) {
     }, plot.layer);
     hover.push({
       px: px, py: py,
-      html: '<div class="tt-title">threshold M ' + c.thresholds[i].toFixed(1) + "</div>" +
+      html: '<div class="tt-title">threshold M ' + showMag(c.thresholds[i], s.dm) + "</div>" +
             "b " + c.b[i].toFixed(3) + " &plusmn; " + c.sigma[i].toFixed(3) +
             " on " + c.n[i].toLocaleString() + " events"
     });
@@ -2144,7 +2163,7 @@ function drawStability(result, s) {
     document.getElementById("stabTable"),
     ["threshold", "b", "standard error", "events"],
     c.thresholds.map(function (t, i) {
-      return [t.toFixed(1), c.b[i].toFixed(3), c.sigma[i].toFixed(3), c.n[i]];
+      return [showMag(t, s.dm), c.b[i].toFixed(3), c.sigma[i].toFixed(3), c.n[i]];
     })
   );
 }
@@ -2180,7 +2199,7 @@ function asciiText(s) {
 }
 
 function resultsAsText(result, s) {
-  var lines = ["Tremor Lab 1.0.0"];
+  var lines = ["Tremor Lab 1.1.0"];
   // Everything needed to run this again, so the numbers never travel alone.
   lines.push("catalogue               " + (STATE.name || "?") + ", " +
              STATE.rows.length.toLocaleString() + " rows");
@@ -2385,6 +2404,17 @@ function showError(msg, isWarning) {
   b.className = "banner" + (isWarning ? "" : " error");
 }
 
+/* A file the browser cannot finish reading - moved, deleted, permissions changed,
+   drive unplugged between choosing it and reading it - used to leave the previous
+   catalogue's results, charts and Copy button on screen with no error at all,
+   which is the one thing clearResults exists to prevent. */
+function readFailed(err) {
+  clearResults();
+  showError("That file could not be read" +
+    (err && err.message ? ": " + err.message : "") +
+    ". Nothing was analysed, and the previous results have been cleared.");
+}
+
 /* Take the previous catalogue's results off the screen. Anything that stops the
    analysis must call this, or published-looking numbers sit under controls that
    no longer describe them. */
@@ -2576,7 +2606,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   fileInput.addEventListener("change", function () {
     var f = fileInput.files && fileInput.files[0];
-    if (f) f.text().then(function (t) { clearMainshock(); loadText(t, f.name); });
+    if (f) f.text().then(function (t) { clearMainshock(); loadText(t, f.name); })
+    .catch(readFailed);
   });
   ["dragenter", "dragover"].forEach(function (ev) {
     dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("is-over"); });
@@ -2586,7 +2617,8 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   dz.addEventListener("drop", function (e) {
     var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) f.text().then(function (t) { clearMainshock(); loadText(t, f.name); });
+    if (f) f.text().then(function (t) { clearMainshock(); loadText(t, f.name); })
+    .catch(readFailed);
   });
 
   $("loadExample").addEventListener("click", function () {
@@ -2658,3 +2690,5 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 </script>
+</body>
+</html>
