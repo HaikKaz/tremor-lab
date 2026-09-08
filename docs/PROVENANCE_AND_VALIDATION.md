@@ -485,10 +485,12 @@ analysed one more event. Say so if the page's numbers are quoted.
 
 ### What is not claimed
 
-The b and p values above have not been compared with the published Ridgecrest
-literature, which is extensive. Doing that is the obvious next step and would be a
-genuine external check on the estimators; until it is done, do not present these as
-agreeing with anyone.
+The completeness and b-value results have since been compared with the published
+literature: see section 10b, which confirms the time-varying completeness against
+Gulia et al. (2020) using the same method, and the b-value consequence against two
+further groups. The Omori parameters remain unchecked against anyone, because the
+published Ridgecrest decay work is ETAS-based and its p and c are not the same
+quantities as a single modified Omori-Utsu fit.
 
 ## 9d. The control that corrects section 9a, and what the test actually measures
 
@@ -659,6 +661,124 @@ exactly against an independent implementation; the b-value agrees to 0.32 per
 cent, the residual being the documented difference between the Aki estimator with
 Utsu's half-bin correction and the exact binned maximum-likelihood solution of
 Tinti and Mulargia, which converge as the magnitude bin narrows."*
+
+## 10b. The published literature on Ridgecrest, and what it confirms
+
+Section 9c said the Ridgecrest results had not been compared with the published
+literature and must not be presented as agreeing with anyone. They have now. Every
+citation below was fetched and checked; the one that carries the most weight was
+read directly from the paper by the author of this document rather than taken on
+trust, and is marked.
+
+### The time-varying completeness result is confirmed, by the same method
+
+**Gulia, L., Wiemer, S. and Vannucci, G. (2020),** *Pseudo-prospective evaluation of
+the Foreshock Traffic Light System in Ridgecrest and implications for aftershock
+hazard assessment*, Seismological Research Letters 91(5), 2828-2842,
+doi:10.1785/0220190307. **Verified first-hand:** the PDF was downloaded from
+zenodo.org/records/5076000 and the text extracted. Their line 234 states they use
+"the Maximum Curvature method (Wiemer and Wyss, 2000)" - the estimator this package
+implements. Lines 187-190 read, verbatim:
+
+> "after the Mw6.4 Mc increased from the background value (Mc=1.2) to about 1.8,
+> before dropping back to a near-to-background value within 12 hours. After the
+> Mw7.1 event, it increased to between 3.3 and 3.5, then recovered within three days
+> to near-to-background values."
+
+Against section 9c, measured independently with this tool on USGS ComCat:
+
+| time after the M 7.1 | this tool | Gulia et al. (2020) |
+|---|---|---|
+| first half hour | Mc 3.7 | rises to 3.3-3.5 |
+| 29 min to 2.4 h | Mc 3.2 | |
+| 2.4 h to 1 day | Mc 2.2 | |
+| 1 to 7 days | Mc 1.6 | recovered near background within 3 days |
+| 7 days on | Mc 1.3 | background Mc 1.2 |
+
+The same phenomenon, the same method, the same magnitudes. Our peak is 0.2 to 0.4
+higher than theirs, which is what a narrower early window should give: they use
+300-event moving windows, we use a fixed 29-minute band. **This is independent
+published confirmation of the finding in section 9c, and it should be cited rather
+than the finding presented as new.** What is new here is not that completeness
+varies - that is established - but the size of the consequence for b, below.
+
+### The b-value consequence is corroborated
+
+Two independent groups report the same time dependence in b that section 9c
+attributes to the missing early population.
+
+- **Hainzl, S. (2022),** *ETAS-Approach Accounting for Short-Term Incompleteness of
+  Earthquake Catalogs*, BSSA 112(1), doi:10.1785/0120210146. Reports the apparent b
+  below 0.5 immediately after the mainshock, rising to about 1, converging after
+  about a day for Ridgecrest - and attributes the depression to missing small events
+  rather than to a real change in b.
+- **Huang, K., Tang, L. and Feng, W. (2022),** on the SCEDC catalogue with an
+  Aki/Utsu maximum-likelihood estimator with the half-bin correction - the same
+  estimator as this package - report mean b recovering from 0.59 to 0.86.
+
+Our single-Mc figure of 0.733 sits between the depressed early values and the
+recovered ones, which is exactly what an average over a period of changing apparent
+completeness should give, and our band-by-band values of 0.90 to 1.00 sit with the
+recovered ones. **Do not present 0.733 as a measurement of b for this sequence.**
+It is an artefact of applying one completeness magnitude to a window in which
+completeness moved by 2.4 magnitude units, and the literature says so independently.
+
+### Whole-catalogue completeness
+
+Two studies report a maximum-curvature Mc for the Ridgecrest region close to ours.
+These were verified by the search agents rather than first-hand, so treat them as
+indicative until checked:
+
+| source | catalogue and window | Mc |
+|---|---|---|
+| this tool | USGS ComCat, 180 days from the M 7.1, 100 km | 1.3 |
+| Herrmann and Marzocchi (2021), SRL 92(2) | SCSN, Apr-Dec 2019, 100 km | MAXC+0.2 = 1.10 |
+| Huang, Tang and Feng (2022) | SCEDC, Jul-Dec 2019 | MAXC = 1.10 |
+
+One bin apart, on a different catalogue over a different window - ours begins at the
+mainshock and so contains proportionally more of the incomplete early period, which
+raises Mc. Comparable, not identical, and the difference is explained.
+
+### What the literature says about the decay-fit rejection
+
+Section 9d concluded from the Hector Mine control that rejection of a single
+Omori-Utsu decay is not evidence of doublet structure. The literature supports the
+more specific reading offered there. Work on Ridgecrest routinely uses ETAS rather
+than a single Omori law, and the incompleteness-corrected variants exist precisely
+because the uncorrected fit is biased: Hainzl's ETASI and the PETAI approach of
+**Mizrahi, L., Nandan, S. and Wiemer, S. (2021),** *Embracing Data Incompleteness for
+Better Earthquake Forecasting*, JGR Solid Earth, doi:10.1029/2021JB022379, which
+reports that fifteen minutes after the M 7.1 an event below M 3.0 had almost no
+chance of being detected and M 3.5 roughly even odds. That is the missing population
+section 9d blames for the large fitted c.
+
+### References to cite for short-term aftershock incompleteness
+
+The phenomenon has a name and a literature; the paper should cite it rather than
+describe it from scratch.
+
+- **Kagan, Y. Y. (2004),** *Short-Term Properties of Earthquake Catalogs and Models of
+  Earthquake Source*, BSSA 94(4), 1207-1228, doi:10.1785/012003098. The standard
+  early reference. **No numeric value has been read from it** - the full text was not
+  reachable - so cite it for the phenomenon, not for a number.
+- **Helmstetter, A., Kagan, Y. Y. and Jackson, D. D. (2006),** BSSA 96(1), 90-106,
+  doi:10.1785/0120050067. Usually cited for the empirical relation
+  mc(t) = M - 4.5 - 0.75 log10(t) for southern California. **The constants were not
+  verified first-hand** - the full text is paywalled and the attribution comes from
+  later papers citing it. If that formula enters the manuscript, read Figure 6 first.
+- **Lippiello, E., Cirillo, A., Godano, C., Papadimitriou, E. and Karakostas, V.
+  (2019),** *Post Seismic Catalog Incompleteness*, Geosciences 9(8), 355,
+  doi:10.3390/geosciences9080355. Open access, and the cleanest available statement
+  of the standard parameterisation.
+
+### What is still not compared
+
+The Omori parameters. Published Ridgecrest decay work is almost entirely ETAS, whose
+p and c are not the same quantities as a single modified Omori-Utsu fit and must not
+be set beside ours in a table. A like-for-like comparison would need a published
+single-Omori fit on a comparable window and threshold, and none was found. Say the
+comparison covers completeness and the b-value, as with `seismostats` in section 10a,
+and that the decay parameters remain unchecked against anyone.
 
 ## 11. Facts and figures
 
