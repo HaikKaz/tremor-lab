@@ -374,15 +374,26 @@ def _report(result: dict[str, Any], source: Path) -> str:
             f"distance limit       none, every event in the window is included{reach}"
             if radius is None
             else f"distance limit       {radius} km from the epicentre, "
-            f"{removed} events removed{reach}"
+            f"{removed} of the {removed + result['n_events']} events inside the "
+            f"window removed{reach}"
         )
     lines += [
         f"events in window     {result['n_events']}",
         f"completeness Mc      {_show(result['mc'])}  (maximum curvature)",
-        f"threshold used       {_show(result['threshold'])}"
-        f"  ({_show(result['n_above'])} events in its completeness class, "
-        f"at or above {_show(result.get('sample_floor'))})",
     ]
+    if result.get("threshold") is None:
+        # No threshold means no sample, and the clause that describes the sample
+        # rendered as "not estimated events in its completeness class, at or
+        # above not estimated". Say the one true thing instead.
+        lines.append(
+            "threshold used       none: no completeness magnitude was estimated"
+        )
+    else:
+        lines.append(
+            f"threshold used       {_show(result['threshold'])}"
+            f"  ({_show(result['n_above'])} events in its completeness class, "
+            f"at or above {_show(result.get('sample_floor'))})"
+        )
     methods = result.get("mc_methods") or {}
     if len(methods) > 1:
         lines.append(
@@ -408,7 +419,9 @@ def _report(result: dict[str, Any], source: Path) -> str:
             )
     b, omori, spread = result["b_value"], result["omori"], result["omori_bootstrap"]
     if b is None or omori is None:
-        lines.append(f"not estimated        {result['note']}")
+        # The label column names a quantity everywhere else in this block; here it
+        # said "not estimated", which reads as the name of one.
+        lines.append(f"b and decay          not estimated: {result['note']}")
     else:
         lines += [
             f"b-value              {b.b:.3f} +/- {b.sigma:.3f}  on {b.n} events",

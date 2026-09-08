@@ -530,3 +530,51 @@ def test_the_report_names_the_bound_the_sample_was_actually_taken_at(capsys):
     assert "threshold used       3.5" in out
     assert "at or above 3.45" in out
     assert "in its completeness class" in out
+
+
+def test_a_window_too_sparse_to_analyse_reports_it_in_plain_words(tmp_path, capsys):
+    """Found by running a real catalogue, not by imagining one.
+
+    A USGS query around the 2026 Venezuela doublet returns 21 events inside 300 km
+    of the mainshock - the global network detects little there, because Venezuela
+    has no dense local network feeding it. The tool correctly declines, but said:
+
+        threshold used  not estimated  (not estimated events in its completeness
+        class, at or above not estimated)
+        not estimated   21 events in the window; ...
+
+    Three substitutions into a clause that has no meaning without a threshold, and
+    a label column reading "not estimated" as though that were a quantity.
+    """
+    data = tmp_path / "sparse.csv"
+    rows = ["dt_days,mw"] + [
+        f"{0.5 + i:.3f},{4.0 + (i % 5) / 10:.1f}" for i in range(21)
+    ]
+    data.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    settings = tmp_path / "sparse.toml"
+    settings.write_text(
+        f"""
+[catalog]
+path = "{data.as_posix()}"
+[catalog.columns]
+dt_days = "dt_days"
+mag = "mw"
+[mainshock]
+t = "2026-06-24 22:05:04"
+lat = 10.5955
+lon = -67.2205
+mw = 7.5
+[analysis]
+window_days = 180
+n_boot = 0
+""",
+        encoding="utf-8",
+    )
+    assert main(["run", str(settings)]) == 0
+    out = capsys.readouterr().out
+    assert "threshold used       none: no completeness magnitude was estimated" in out
+    assert "b and decay          not estimated:" in out
+    # The nonsense the real run produced must not come back.
+    assert "not estimated events in its completeness class" not in out
+    assert "at or above not estimated" not in out
+    assert "\nnot estimated  " not in out

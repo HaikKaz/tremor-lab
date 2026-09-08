@@ -509,7 +509,7 @@ Tinti and Mulargia, which converge as the magnitude bin narrows."*
 - Package: `tremor-lab` 1.1.1, MIT licence, Python 3.11+, released as `v1.1.1` and
   archived at doi.org/10.5281/zenodo.22661044.
 - Runtime dependencies: NumPy (>=2.0,<3), SciPy (>=1.13,<2), pandas (>=2.2,<3). Nothing else.
-- Source: about 2,700 lines across 10 modules. **293 tests**, green in continuous
+- Source: about 2,700 lines across 10 modules. **294 tests**, green in continuous
   integration on Python 3.11, 3.12 and 3.13.
 - Browser page: one file, about 2,800 lines, 205 KB, pure ASCII. The only things it
   fetches are the Google Fonts stylesheet and the font files it points at; with no network it
@@ -582,7 +582,7 @@ Read this before drafting. Each of these is a real trap.
 10. **Do not let the self-test stand for validation of a reader's own analysis.** It
    checks the estimators against known values on a bundled catalogue. It says nothing
    about whether the reader chose a sensible window, threshold or mainshock.
-11. **Do not present "293 tests" as coverage.** It is a count, not a measure. What can
+11. **Do not present "294 tests" as coverage.** It is a count, not a measure. What can
     honestly be said is stronger and more specific: ten deliberate breakages of the
     estimators were each caught by at least one test (section 10).
 12. **Do not describe the bundled fixture as raw data.** `kahramanmaras_180d.csv` is a
