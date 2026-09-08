@@ -1174,9 +1174,10 @@ function showMag(x, dm) {
 }
 
 function roundToGrid(x, dm) {
-  var text = String(dm), dot = text.indexOf(".");
-  var decimals = (dot < 0 ? 0 : text.length - dot - 1) + 1;
-  var scale = Math.pow(10, Math.min(decimals, 12));
+  // The same decimal count the display uses. These were computed separately and
+  // drifted apart at an integer bin width: the value was rounded to one decimal
+  // and printed with two, and the package disagreed by a grid step.
+  var scale = Math.pow(10, gridDecimals(dm));
   // With the grid tolerance, as the package does: 3.3 + 0.195 is
   // 3.4949999999999997 as a double, which rounds down to 3.49 unaided and to
   // 3.50 with it. Without this the two implementations disagreed by a grid step.
@@ -1236,7 +1237,7 @@ function parseCsv(text) {
       ". Every column has to have its own name, or there is no way to say which " +
       "of them a setting refers to. Rename the duplicates and load the file again.");
   }
-  var rows = [], ragged = 0, raggedExample = 0;
+  var rows = [], ragged = 0, raggedExample = 0, parsedWarning = null;
   for (var i = 1; i < lines.length; i++) {
     var cells = splitLine(lines[i], sep);
     if (cells.length < 2) continue;
@@ -1265,6 +1266,15 @@ function parseCsv(text) {
     }
     rows.push(row);
   }
+  if (rows.length && ragged) {
+    // Surfaced, not swallowed. These rows are gone from every count the page
+    // prints, so a reader comparing against their own file would find it
+    // short with nothing on screen to explain the difference.
+    parsedWarning = ragged + ' of ' + (lines.length - 1) + ' rows had a '
+      + 'different number of columns than the header, starting at line '
+      + raggedExample + ', and were left out. A stray separator inside a '
+      + 'text field will do this; quoting that field fixes it.';
+  }
   if (!rows.length) {
     throw new Error(ragged
       ? "Every one of the " + ragged + " data rows has a different number of " +
@@ -1273,7 +1283,7 @@ function parseCsv(text) {
         "cannot be read as it stands."
       : "That file has a header but no data rows.");
   }
-  return { header: header, rows: rows, sep: sep };
+  return { header: header, rows: rows, sep: sep, warning: parsedWarning };
 }
 
 /* Agencies punctuate headings differently: "Origin Time", "origin_time",
@@ -1436,7 +1446,7 @@ function buildEvents(rows, cols, mainshock, dayFirst) {
     if (cols.magType) mag = toMw(mag, r[cols.magType]);
 
     if (cols.dtDays) {
-      dt = parseFloat(r[cols.dtDays]);
+      dt = strictNumber(r[cols.dtDays]);
     } else {
       var ms = cols.datetime ? parseStamp(r[cols.datetime], "", dayFirst)
                              : parseStamp(r[cols.date], cols.time ? r[cols.time] : "", dayFirst);
@@ -1511,8 +1521,9 @@ function analyse(events, s) {
   // Mc +/- dm/2. Selecting at Mc dropped the lower half of the completeness class
   // from a formula that assumes it is there - invisible on a catalogue reported on
   // the dm grid, and several standard errors on a homogenised one.
+  out.sampleFloor = out.threshold - s.dm / 2;
   var above = post.filter(function (e) {
-    return atOrAbove(e.mw, out.threshold - s.dm / 2);
+    return atOrAbove(e.mw, out.sampleFloor);
   });
   out.nAbove = above.length;
   if (above.length <= CONST.MIN_FOR_B) {
@@ -2039,7 +2050,9 @@ function resultRows(result, s) {
   }
   rows.push(["threshold used", result.threshold == null ? "not set"
              : showMag(result.threshold, s.dm)]);
-  rows.push(["events at or above it", result.nAbove == null ? "\u2014" : result.nAbove.toLocaleString()]);
+  rows.push(["events in its completeness class", result.nAbove == null ? "\u2014"
+             : result.nAbove.toLocaleString() + " (at or above "
+               + showMag(result.sampleFloor, s.dm) + ")"]);
   if (result.b) {
     rows.push(["b-value", result.b.b.toFixed(3) + "  \u00B1 " + result.b.sigma.toFixed(3)]);
   }
@@ -2553,6 +2566,10 @@ function loadText(text, name) {
     buildMappingUi();
     $("loadedChip").textContent = name + " \u00B7 " + parsed.rows.length.toLocaleString() + " rows";
     recompute();
+    // After recompute, which clears the banner. Rows dropped while reading the
+    // file are gone from every count on screen, so the reader has to be told -
+    // and told after the call that would otherwise wipe the message.
+    if (parsed.warning) showError(parsed.warning, true);
     // Only when nothing more urgent is already on screen.
     if (STATE.cols.magGuessed && $("loadError").hidden) {
       showError("No column was recognised as the magnitude, so \"" + STATE.cols.mag +
@@ -2614,10 +2631,30 @@ function recompute() {
      that the estimates already on screen are not waiting on them. */
   function say(what, done, total) {
     label.hidden = false;
-    label.textContent = what + "... " + Math.round(100 * done / total) + "%" +
-      (total > 300 ? " (up to a minute; the numbers above are already final)" : "");
+    var pct = Math.round(100 * done / total);
+    var tail = " -- the numbers above are already final";
+    // A browser clamps setTimeout to about a second in a tab that is not on
+    // screen, so this work all but stops when the reader looks away. Saying
+    // "up to a minute" and then stalling indefinitely is worse than saying
+    // nothing, because the reader is invited to go elsewhere and the readout
+    // sits on an uncalibrated p-value with no verdict.
+    if (document.hidden) {
+      tail = " -- paused while this tab is in the background; come back to it" +
+             " and it will finish" + tail;
+    }
+    label.textContent = what + "... " + pct + "%" + tail;
+    lastSaid = { what: what, done: done, total: total };
   }
-  function stopProgress() { bar.hidden = true; label.hidden = true; }
+  function stopProgress() {
+    bar.hidden = true;
+    label.hidden = true;
+    document.removeEventListener("visibilitychange", onVisibility);
+  }
+  function onVisibility() {
+    if (!label.hidden && lastSaid) say(lastSaid.what, lastSaid.done, lastSaid.total);
+  }
+  document.addEventListener("visibilitychange", onVisibility);
+  var lastSaid = null;
 
   if (result.omori && s.nBoot >= 2) {
     bar.hidden = false;

@@ -107,6 +107,7 @@ def analyze_case(
     # and it is usually far larger than the b-value's own standard error.
     mc_methods = {"maximum_curvature": mc}
     stability = None
+    note = None
     if dense_enough:
         mc_methods["goodness_of_fit"] = mc_goodness_of_fit(mags, dm=dm).mc
         try:
@@ -119,8 +120,11 @@ def analyze_case(
             # browser page has always reported the rest, and the two disagreed
             # about whether such a run is possible at all.
             mc_methods["b_stability"] = None
-            mc_methods["b_stability_note"] = str(reason)
-        stability = b_stability(mags, dm=dm)
+            # Not into mc_methods: that dict holds magnitudes, and the report
+            # takes a min and a max across it. A sentence among the numbers
+            # ended the run with "'>' not supported between str and float".
+            note = str(reason)
+        stability = _stability_or_none(mags, dm)
     threshold = mc if mc_threshold is None else mc_threshold
     bin_width = constants.DM if dm is None else dm
     # At or above the LOWER EDGE of the threshold's bin, not the threshold itself.
@@ -154,6 +158,7 @@ def analyze_case(
         "bath_mag": float(bath_mag(mainshock["mw"])),
         "fmd": fmd(mags, dm=dm) if len(post) else None,
         "mc_methods": mc_methods,
+        "b_stability_note": note,
         "b_stability": stability,
         "omori_fit_test": None,
         "n_unusable": n_unusable,
@@ -184,6 +189,19 @@ def analyze_case(
     if n_boot:
         result["omori_bootstrap"] = bootstrap_omori(times, n_boot=n_boot, seed=seed)
     return result
+
+
+
+def _stability_or_none(mags, dm):
+    """The b-against-threshold curve, or None where none can be built.
+
+    The curve is a diagnostic, not a published value. A bin width that leaves
+    nothing to average over is a reason to report no curve, not to end the run.
+    """
+    try:
+        return b_stability(mags, dm=dm)
+    except ValueError:
+        return None
 
 
 def _omori_caution(fit) -> str | None:

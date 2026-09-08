@@ -149,3 +149,54 @@ def test_the_readme_names_exactly_the_settings_the_page_lets_a_reader_change():
     assert len(named) == len(ids)
     for element_id in ids:
         assert f'id="{element_id}"' in PAGE, f"{element_id} is no longer on the page"
+
+
+# ---------------------------------------------- the design record's own figures
+# The README's counts are guarded above. The design record - the canonical handover
+# the methods paper is drafted from - had no guard at all, and drifted twice: it
+# quoted a test count two behind, source and page sizes a hundred lines out, and
+# for a while it described the event-selection rule as the inverse of the one the
+# code implements.
+
+RECORD = (ROOT / "docs" / "PROVENANCE_AND_VALIDATION.md").read_text(encoding="utf-8")
+
+
+def test_the_design_record_states_the_true_test_count():
+    claimed = re.findall(r"\*\*(\d+) tests\*\*", RECORD)
+    assert claimed, "the design record no longer states a test count"
+    counted = len(list((ROOT / "tests").glob("test_*.py")))
+    assert counted > 0
+    # Collected rather than guessed: ask pytest itself.
+    import subprocess
+    import sys
+
+    out = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "--collect-only", str(ROOT / "tests")],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+    ).stdout
+    actual = len(re.findall(r"::", out))
+    for stated in claimed:
+        assert int(stated) == actual, (
+            f"the design record says {stated} tests; the suite collects {actual}"
+        )
+
+
+def test_the_design_record_describes_the_selection_rule_the_code_implements():
+    """It once said the opposite, and a methods section drafted from it would
+    have described a sample the archived code does not take."""
+    import inspect
+
+    from tremor_lab import analysis
+
+    source = inspect.getsource(analysis.analyze_case)
+    selects_at_lower_edge = "threshold - bin_width / 2" in source
+    assert selects_at_lower_edge, "analyze_case no longer selects at the bin's edge"
+    # The record has to say so too, in the section that discusses it.
+    assert "both now select" in RECORD and "threshold - dM/2" in RECORD, (
+        "the design record does not state the selection rule the code implements"
+    )
+    assert "with the half-bin correction applied later" not in RECORD, (
+        "the design record still describes the rule the code was changed away from"
+    )

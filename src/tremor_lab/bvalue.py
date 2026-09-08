@@ -167,7 +167,14 @@ def b_stability(
     for threshold in thresholds:
         if int(at_or_above(m, threshold - dm / 2).sum()) < min_events:
             continue
-        estimate = b_value_aki(m, threshold, dm=dm)
+        try:
+            estimate = b_value_aki(m, threshold, dm=dm)
+        except ValueError:
+            # No b exists at this threshold - every magnitude in the sample sits
+            # on the completeness bin's lower edge, so the mean does not exceed
+            # it. That is a point to leave out of the curve, not a reason to
+            # abandon the curve; the browser page has always skipped it.
+            continue
         kept.append(threshold)
         bs.append(estimate.b)
         sigmas.append(estimate.sigma)

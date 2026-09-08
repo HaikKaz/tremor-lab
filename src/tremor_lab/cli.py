@@ -393,6 +393,13 @@ def _report(result: dict[str, Any], source: Path) -> str:
                 if name != "maximum_curvature"
             )
         )
+        if result.get("b_stability_note"):
+            # Say why a method declined rather than leaving "not estimated" to be
+            # read as "this catalogue has no stable b", which is a finding, where
+            # this is a setting.
+            lines.append(
+                f"                     b stability: {result['b_stability_note']}"
+            )
         spread = [v for v in methods.values() if v is not None]
         if len(spread) > 1 and max(spread) - min(spread) > 1e-9:
             lines.append(

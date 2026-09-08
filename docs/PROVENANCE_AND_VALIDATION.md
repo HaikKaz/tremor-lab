@@ -185,13 +185,33 @@ bug report.
 
 An adversarial audit found that the browser page and the Python package were selecting
 **different sets of events** above the threshold. The page took every event at or above
-`threshold - dM/2`; the package, the spreadsheet and the thesis script all take events
-at or above `threshold` itself, with the half-bin correction applied later, inside the
-Aki estimator where it belongs.
+`threshold - dM/2`; the package, the spreadsheet and the thesis script took events at or
+above `threshold` itself, while still putting `threshold - dM/2` in the estimator's
+denominator.
 
-The two agree **only when the magnitudes and the threshold both sit on the same 0.1
+A later audit showed the second of those is the one that is wrong, so **both now select
+at `threshold - dM/2`**, and this section has been corrected accordingly. The reason is
+worth stating, because it is not obvious. The Aki estimator with Utsu's correction
+models magnitudes as an exponential whose lower bound is `Mc - dM/2`; selecting the
+sample at `Mc` while telling the estimator the bound is `Mc - dM/2` is a mismatch
+between the data and the model. On magnitudes reported on the dM grid the mismatch is
+invisible, because no reported value lies between the two bounds. Off the grid it is
+not. Simulated with 2,000,000 events drawn from a b = 1.0 law, complete from M 3.0, at
+a threshold of 3.5:
+
+| rule | on a 0.1 grid | off the grid |
+|---|---|---|
+| select at `Mc`, bound `Mc - dM/2` | 0.9952 | **0.8966** |
+| select at `Mc - dM/2`, bound `Mc - dM/2` | 0.9952 | **0.9996** |
+| select at `Mc`, bound `Mc` (unbinned form) | 1.1240 | 0.9998 |
+
+The two rules are identical on gridded data and the self-consistent one is unbiased on
+both, so it is the one to describe in the paper. The third line is the reminder that the
+half-bin term is not optional on binned data: dropping it puts b 12 per cent high.
+
+The two agreed **only when the magnitudes and the threshold both sat on the same 0.1
 grid** — which is exactly the condition of the locked reference case. Off that grid the
-divergence is large: at a threshold of 4.05 on the same catalogue, one implementation
+divergence was large: at a threshold of 4.05 on the same catalogue, one implementation
 reported 625 events and b = 1.167, the other 498 events and b = 0.929. A 26% difference
 in b, invisible to the reference test.
 
@@ -200,7 +220,15 @@ operating point can certify agreement that does not exist elsewhere. Cross-valid
 has to be run across the parameter space, not at the published values.
 
 The bug is fixed; the two now agree on off-grid thresholds, non-default bin widths, and
-homogenised (therefore off-grid) magnitudes from USGS exports.
+homogenised (therefore off-grid) magnitudes from USGS exports. The command-line report
+states the bound it sampled at — "1529 events in its completeness class, at or above
+3.45" — so the rule never has to be inferred from a threshold alone.
+
+A second lesson sits underneath the first. This section described the resolution
+backwards for a while: the code was corrected and the record was not, so the canonical
+handover endorsed the rule the code had been changed away from. A design record is only
+as good as the last time somebody checked it against the code, and nothing in the test
+suite can check prose.
 
 ## 8. The second publishable finding: a converged fit that means nothing
 
@@ -403,7 +431,9 @@ simulated null distribution behind its p-value.
 Because the p-value is an estimate, the tool reports its binomial standard error
 beside it and refuses a verdict when the two are within two standard errors of
 0.05. It also refuses a verdict outright on the uncalibrated asymptotic p-value,
-which on this catalogue reads 0.508 where the calibrated one reads 0.036: the
+which on this catalogue reads 0.506 in the package and 0.508 in the browser (they
+use different optimisers, so the fitted curve differs in the fourth decimal) where
+the calibrated one reads 0.036: the
 number is shown, since hiding it would be worse, but nothing may be concluded
 from it.
 
@@ -477,10 +507,10 @@ Tinti and Mulargia, which converge as the magnitude bin narrows."*
 - Package: `tremor-lab` 1.1.0, MIT licence, Python 3.11+, released as `v1.1.0` and
   archived at doi.org/10.5281/zenodo.22653580.
 - Runtime dependencies: NumPy (>=2.0,<3), SciPy (>=1.13,<2), pandas (>=2.2,<3). Nothing else.
-- Source: 2,609 lines across 10 modules. **284 tests**, green in continuous
+- Source: about 2,700 lines across 10 modules. **287 tests**, green in continuous
   integration on Python 3.11, 3.12 and 3.13.
-- Browser page: one file, 2,694 lines, 197 KB, pure ASCII, no external requests except
-  the Google Fonts stylesheet, which is the one thing it fetches; with no network it
+- Browser page: one file, about 2,800 lines, 205 KB, pure ASCII. The only things it
+  fetches are the Google Fonts stylesheet and the font files it points at; with no network it
   falls back to system fonts and every number is still computed. Runs from a
   double-click, with nothing installed. Eight settings are editable on it:
   the window, the threshold, the bin width, the Mc correction, the Bath deficit, the
@@ -548,7 +578,7 @@ Read this before drafting. Each of these is a real trap.
 10. **Do not let the self-test stand for validation of a reader's own analysis.** It
    checks the estimators against known values on a bundled catalogue. It says nothing
    about whether the reader chose a sensible window, threshold or mainshock.
-11. **Do not present "284 tests" as coverage.** It is a count, not a measure. What can
+11. **Do not present "287 tests" as coverage.** It is a count, not a measure. What can
     honestly be said is stronger and more specific: ten deliberate breakages of the
     estimators were each caught by at least one test (section 10).
 12. **Do not describe the bundled fixture as raw data.** `kahramanmaras_180d.csv` is a
