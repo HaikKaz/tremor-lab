@@ -11,7 +11,7 @@ type: software
 version: 1.0.0
 license: MIT
 authors:
-  - given-names: Haik
+  - given-names: Aik
     family-names: Kazarian
     orcid: "https://orcid.org/0009-0007-1842-1590"
     affiliation: "National Academy of Sciences of Armenia"

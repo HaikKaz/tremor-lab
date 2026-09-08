@@ -16,7 +16,7 @@ For whoever writes the software/methods article. Everything below is fact, check
 against the code and the test suite on 7 September 2026. Section 12 lists the things
 that must **not** be claimed; read it before drafting.
 
-Author: Haik Kazarian. Single-author methods paper. Companion to the PhD thesis
+Author: Aik Kazarian. Single-author methods paper. Companion to the PhD thesis
 "Triggers: The Effect and Interaction of Earthquakes on the Example of Strong Events in
 the Trans-Caucasus and Anatolian Region".
 
@@ -566,10 +566,15 @@ Outstanding before the paper can cite the software:
 - **A public repository.** Done: github.com/HaikKaz/tremor-lab, 38 commits.
 - **A Zenodo DOI.** None yet. Required for the software availability statement.
 - **ORCID and affiliation** are filled in: ORCID 0009-0007-1842-1590, National
-  Academy of Sciences of Armenia. Note that the ORCID record gives the name as
-  "Aik Kazarian" while `CITATION.cff` and the thesis give "Haik Kazarian"; the
-  identifier is what indexers match on, so this is not an error, but the paper
-  and the record should agree on the spelling before submission.
+  Academy of Sciences of Armenia.
+
+**Name.** The author's name is **Aik Kazarian**, as on the passport and on the
+ORCID record, and that is what `CITATION.cff` and the Zenodo metadata carry. Earlier
+drafts of the thesis and of this handover used "Haik"; use "Aik" in the paper, the
+author list and the availability statement, so the byline, the ORCID record and the
+software archive all match. A single author whose name is spelled two ways across a
+paper and its cited software is exactly the sort of thing that splits a citation
+record in two.
 - **Continuous integration** runs and passes. `.github/workflows/tests.yml` lints,
   runs the suite on Python 3.11, 3.12 and 3.13, reproduces the reference values both
   directly and through the full catalogue pipeline, and runs the `seismostats`
