@@ -284,3 +284,18 @@ def test_the_observation_interval_is_held_fixed_across_every_refit():
     # A longer observation interval over the same events means the decay is less
     # constrained, so the spread has to grow with it.
     assert spreads[0] < spreads[1] < spreads[2]
+
+
+def test_a_single_resample_is_refused_rather_than_reported_as_nan():
+    """A spread over one number has no denominator.
+
+    ddof=1 on a single value is a division by zero, and the report printed
+    "+/- nan" beside p and c as though it were a published uncertainty. Zero
+    means "do not estimate the spread" and is allowed; one cannot be.
+    """
+    times = np.linspace(0.01, 180.0, 500)
+    with pytest.raises(ValueError, match="cannot give a spread"):
+        bootstrap_omori(times, n_boot=1)
+    # Zero is a legitimate way to skip it, and two is the smallest real estimate.
+    assert bootstrap_omori(times, n_boot=0).n_boot == 0
+    assert np.isfinite(bootstrap_omori(times, n_boot=2, seed=0).p_std)

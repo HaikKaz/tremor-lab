@@ -515,3 +515,18 @@ def test_an_analysis_setting_that_is_not_a_number_is_refused_by_name(
     assert "[analysis]" in message
     assert entry.split(" =")[0] in message
     assert "casting rule" not in message
+
+
+def test_the_report_names_the_bound_the_sample_was_actually_taken_at(capsys):
+    """Not the threshold: the sample starts half a bin below it.
+
+    The report used to say "1529 events at or above it" under a threshold of
+    3.5, while the sample was taken at 3.45. On magnitudes reported on the grid
+    the two select the same events, so the sentence was wrong without being
+    misleading; off the grid it is both.
+    """
+    assert main(["run", str(EXAMPLE)]) == 0
+    out = capsys.readouterr().out
+    assert "threshold used       3.5" in out
+    assert "at or above 3.45" in out
+    assert "in its completeness class" in out

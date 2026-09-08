@@ -225,3 +225,39 @@ def test_the_sample_is_taken_at_the_same_bound_the_b_value_formula_assumes():
     assert result["b_value"].b == pytest.approx(direct.b, rel=1e-12)
     # And the report can say where the sample actually starts.
     assert result["sample_floor"] == pytest.approx(3.25)
+
+
+def test_a_method_that_cannot_answer_reports_why_and_the_rest_of_the_run_survives(
+    kahramanmaras,
+):
+    """One optional diagnostic declining is not a reason to abandon the analysis.
+
+    A bin width wider than twice the averaging window leaves b-stability nothing
+    to average over. That used to raise out of analyze_case and end the whole
+    run - and, for a while, crashed the report by putting the refusal sentence
+    among the completeness magnitudes, where a min and a max are taken.
+    """
+    result = analyze_case(kahramanmaras, MAINSHOCK, window_days=180, dm=1.5, n_boot=0)
+    assert result["mc_methods"]["b_stability"] is None
+    assert "nothing to average over" in result["b_stability_note"]
+    # Every value in that dict is still a magnitude or None, never a sentence.
+    for value in result["mc_methods"].values():
+        assert value is None or isinstance(value, float)
+    # And the analysis itself completed.
+    assert result["mc"] is not None
+    assert result["b_value"] is not None
+
+
+def test_one_resample_costs_the_error_bars_and_nothing_else(kahramanmaras):
+    """The guard belongs in the bootstrap; the report belongs to the reader.
+
+    A bootstrap of one used to replace the entire report with its own error
+    message: no Mc, no b, no decay parameters, exit 2.
+    """
+    result = analyze_case(
+        kahramanmaras, MAINSHOCK, mc_threshold=3.5, window_days=180, n_boot=1
+    )
+    assert result["omori_bootstrap"] is None
+    assert "at least two resamples" in result["bootstrap_note"]
+    assert result["b_value"].b == pytest.approx(0.844, abs=0.0005)
+    assert result["omori"].p == pytest.approx(1.161, abs=0.001)

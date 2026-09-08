@@ -135,19 +135,25 @@ def test_the_readme_names_exactly_the_settings_the_page_lets_a_reader_change():
     named = [
         part.strip() for part in re.split(r",| and ", claimed.group(2)) if part.strip()
     ]
-    ids = [
-        "windowDays",
-        "threshold",
-        "dm",
-        "mcCorr",
-        "deltaMb",
-        "nBoot",
-        "nFitSim",
-        "seed",
-    ]
+    # Each control, as the README names it and as the page identifies it. The
+    # names are read, not just counted: replacing all eight with eight unrelated
+    # settings used to leave this test green.
+    controls = {
+        "window": "windowDays",
+        "threshold": "threshold",
+        "bin width": "dm",
+        "Mc correction": "mcCorr",
+        "Bath deficit": "deltaMb",
+        "bootstrap count": "nBoot",
+        "fit-test replicate count": "nFitSim",
+        "seed": "seed",
+    }
     assert claimed.group(1) == "Eight"
-    assert len(named) == len(ids)
-    for element_id in ids:
+    assert len(named) == len(controls)
+    # Whitespace-normalised: the README wraps, so "bin width" spans a newline.
+    prose = " ".join(claimed.group(2).split())
+    for phrase, element_id in controls.items():
+        assert phrase in prose, f"the README no longer names the {phrase}"
         assert f'id="{element_id}"' in PAGE, f"{element_id} is no longer on the page"
 
 
@@ -162,19 +168,37 @@ RECORD = (ROOT / "docs" / "PROVENANCE_AND_VALIDATION.md").read_text(encoding="ut
 
 
 def test_the_design_record_states_the_true_test_count():
-    claimed = re.findall(r"\*\*(\d+) tests\*\*", RECORD)
-    assert claimed, "the design record no longer states a test count"
+    # Both forms the record uses: the bolded figure in section 11 and the quoted
+    # one in section 12. Only the first was guarded, so the two could disagree.
+    claimed = re.findall(r"\*\*(\d+) tests\*\*", RECORD) + re.findall(
+        r'"(\d+) tests" as coverage', RECORD
+    )
+    assert len(claimed) >= 2, "the design record no longer states a test count twice"
     counted = len(list((ROOT / "tests").glob("test_*.py")))
     assert counted > 0
-    # Collected rather than guessed: ask pytest itself.
+    # Collected rather than guessed: ask pytest itself. The environment is
+    # cleaned first, because PYTEST_ADDOPTS from a developer filtering the suite
+    # is inherited by this child and would make a correct record look wrong.
+    import os
     import subprocess
     import sys
 
+    env = {k: v for k, v in os.environ.items() if k != "PYTEST_ADDOPTS"}
     out = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "--collect-only", str(ROOT / "tests")],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "--collect-only",
+            "-p",
+            "no:cacheprovider",
+            str(ROOT / "tests"),
+        ],
         capture_output=True,
         text=True,
         cwd=ROOT,
+        env=env,
     ).stdout
     actual = len(re.findall(r"::", out))
     for stated in claimed:
@@ -186,13 +210,34 @@ def test_the_design_record_states_the_true_test_count():
 def test_the_design_record_describes_the_selection_rule_the_code_implements():
     """It once said the opposite, and a methods section drafted from it would
     have described a sample the archived code does not take."""
-    import inspect
+    import numpy as np
+    import pandas as pd
 
-    from tremor_lab import analysis
+    from tremor_lab import analyze_case
 
-    source = inspect.getsource(analysis.analyze_case)
-    selects_at_lower_edge = "threshold - bin_width / 2" in source
-    assert selects_at_lower_edge, "analyze_case no longer selects at the bin's edge"
+    # Behaviour, not a substring: an off-grid catalogue where the half-bin below
+    # the threshold genuinely holds events, so the two rules cannot coincide.
+    rng = np.random.default_rng(0)
+    mw = 3.25 + rng.exponential(1 / np.log(10), 3000)
+    catalog = pd.DataFrame(
+        {
+            "dt_days": np.sort(rng.uniform(0.01, 180.0, mw.size)),
+            "mw": mw,
+            "lat": 37.0,
+            "lon": 37.0,
+        }
+    )
+    result = analyze_case(
+        catalog,
+        {"t": "2023-02-06 01:17:32", "lat": 37.0, "lon": 37.0, "mw": 7.8},
+        mc_threshold=3.3,
+        window_days=180,
+        n_boot=0,
+    )
+    assert ((mw >= 3.25) & (mw < 3.3)).sum() > 0, "the two rules would coincide here"
+    assert result["n_above"] == int((mw >= 3.25 - 1e-9).sum()), (
+        "analyze_case no longer selects at the completeness bin's lower edge"
+    )
     # The record has to say so too, in the section that discusses it.
     assert "both now select" in RECORD and "threshold - dM/2" in RECORD, (
         "the design record does not state the selection rule the code implements"

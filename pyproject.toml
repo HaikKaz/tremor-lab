@@ -24,9 +24,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# ruff below 0.8 cannot parse the PEP 639 license metadata in this file and
-# exits 1 on unmodified source, which would fail CI before any test ran.
-dev = ["pytest>=8,<9", "ruff>=0.8"]
+# ruff is pinned to an exact version, which is unusual for a dependency and
+# right for a formatter. Continuous integration installed 0.16.6 the day after a
+# local 0.16.5 formatted this package, the two disagreed about one construct in
+# analysis.py, and the build went red on source nobody had touched. A formatter
+# whose output can change under you is a build that fails for reasons unrelated
+# to the code. Raise this deliberately, and reformat in the same commit.
+dev = ["pytest>=8,<9", "ruff==0.16.6"]
 
 [project.scripts]
 tremor-lab = "tremor_lab.cli:main"

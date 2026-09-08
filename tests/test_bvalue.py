@@ -196,3 +196,54 @@ def test_a_threshold_is_judged_usable_by_the_events_the_estimator_will_use():
         # Every threshold that survived the gate reports the count the estimator
         # actually used, which is the half-bin one.
         assert n == int((mags >= threshold - 0.1 / 2 - 1e-9).sum())
+
+
+# ------------------------------------------------ guards added after audit five
+# Each of these was live in the code and invisible to the suite: deleting the
+# guard left every test green. A guard nothing tests is a guard that will be
+# "simplified" away by the next person who reads the function.
+
+
+def test_b_is_refused_where_the_mean_does_not_exceed_the_threshold():
+    """Every magnitude on the completeness bin's lower edge gives no b at all.
+
+    The denominator is mean(M) - (Mc - dm/2), which is then zero. Before the
+    guard this returned an infinity; with a threshold above the data it returned
+    a negative b, which asserts that large earthquakes outnumber small ones.
+    """
+    flat = np.full(100, 4.0)
+    with pytest.raises(ValueError, match="does not exceed"):
+        b_value_aki(flat, 4.0, dm=0.0)
+    # A threshold above the data never reaches that guard: the sample is empty and
+    # the count check refuses first. Both are refusals, and neither returns a
+    # number, which is the property being pinned here.
+    with pytest.raises(ValueError, match="at least two events"):
+        b_value_aki(flat, 9.0, dm=0.0)
+    # A real spread at the same threshold is fine.
+    assert b_value_aki(np.array([4.0, 4.1, 4.2, 4.5]), 4.0, dm=0.0).b > 0
+
+
+def test_a_threshold_with_no_b_is_left_out_of_the_curve_rather_than_ending_it():
+    """b_stability walks every candidate threshold and must survive one refusing.
+
+    A catalogue whose top bin is saturated - many events at the largest reported
+    magnitude and nothing above - has a threshold where the mean sits exactly on
+    the bound. That point has no b; the curve carries on without it.
+    """
+    rng = np.random.default_rng(0)
+    # A spread below, and sixty events piled on exactly M 4.0 with nothing above.
+    spread = np.round(3.0 + rng.exponential(1 / np.log(10), 2000), 1)
+    mags = np.concatenate([spread[spread < 4.0], np.full(60, 4.0)])
+
+    # The thresholds are given explicitly, because on a 0.1 grid the automatic
+    # grid never lands a bound exactly on a magnitude: 4.05 - dm/2 is 4.0, so the
+    # sample there is the sixty events at 4.0 and its mean sits on the bound.
+    with pytest.raises(ValueError, match="does not exceed"):
+        b_value_aki(mags, 4.05, dm=0.1)
+
+    curve = b_stability(mags, thresholds=[3.3, 3.5, 3.7, 4.05], dm=0.1, min_events=50)
+    assert np.all(np.isfinite(curve.b)), "an undefined point reached the curve"
+    assert not np.any(np.isclose(curve.thresholds, 4.05)), (
+        "the threshold with no b should have been left out, not carried"
+    )
+    assert len(curve.thresholds) == 3
