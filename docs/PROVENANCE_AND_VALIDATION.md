@@ -1283,12 +1283,19 @@ the software is correct; section 12 lists what may not be claimed.
 
 ## 14. Limitations to state in the paper
 
-The estimators inherit their known behaviour. Maximum-curvature Mc is sensitive to
-binning and to short-term aftershock incompleteness in the hours after a mainshock -
-section 9c measures that on Ridgecrest, where completeness moves from M 3.7 in the
-first half hour to M 1.3 after a month, and a single-Mc b-value comes out 43 standard
-errors below the time-resolved one. The
-Aki b-value assumes completeness above the chosen threshold. The Omori fit needs a dense
+The estimators inherit their known behaviour. **Maximum-curvature Mc is biased low**,
+and sections 9e and 10c measure how much that costs: on Hector Mine it returns 1.7 where
+b only stabilises at 2.1, and the b estimated at its answer is 0.15 below the stable
+value. The +0.2 correction this package applies does not close the gap. Mc is also
+sensitive to binning and to short-term aftershock incompleteness in the hours after a
+mainshock - section 9c measures that on Ridgecrest, where completeness moves from M 3.7
+in the first half hour to M 1.3 after a month.
+
+The Aki b-value assumes completeness above the chosen threshold, and **b is
+threshold-dependent in every catalogue tested** - by about 0.2 between Mc and Mc + 1,
+which is an order of magnitude larger than the Shi and Bolt error at either end. The
+same is true of Omori p, by up to 0.19. Neither should be reported without its
+threshold. The Omori fit needs a dense
 catalogue: where the catalogue above threshold is too thin the tool reports the absence
 rather than producing a fit, and two of the four case-study catalogues (Spitak, Racha)
 fall in that category — which is itself a finding, already reported in the thesis.
