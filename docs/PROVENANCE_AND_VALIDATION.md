@@ -310,10 +310,12 @@ caution at that precision, not a different answer. For the paper, run it at 5,00
 on the command line put `n_fit_simulations = 5000` under `[analysis]`, and in the
 browser raise the "fit test replicates" box.
 
-This is the physically expected answer and should be presented as a result, not
-an embarrassment. The window contains the M 7.6 Elbistan event nine hours after
-the mainshock, with an aftershock sequence of its own. One decay curve is not
-the right model for two overlapping sequences, and the residual test says so.
+**Read section 9d before using this.** The obvious reading - that the rejection is
+caused by the M 7.6 Elbistan event nine hours after the mainshock, giving two
+overlapping sequences where one curve is fitted - was tested against a control and
+is not supported. A single mainshock with no comparable second event is rejected
+just as hard. The rejection is real; the doublet explanation for it is not
+established, and the paper must not assert it.
 
 Three consequences for the paper.
 
@@ -488,6 +490,70 @@ literature, which is extensive. Doing that is the obvious next step and would be
 genuine external check on the estimators; until it is done, do not present these as
 agreeing with anyone.
 
+## 9d. The control that corrects section 9a, and what the test actually measures
+
+Sections 9a and 9c report that a single modified Omori-Utsu decay is rejected for
+two doublets, Kahramanmaras and Ridgecrest, and read that as evidence that one
+curve cannot describe two overlapping sequences. That reading needed a control:
+short-term aftershock incompleteness and secondary aftershocks would produce the
+same rejection in *any* sequence, doublet or not.
+
+The control is the 1999 Hector Mine earthquake, M 7.1 in California - a clean
+single mainshock with no M 6 or larger event anywhere in the following fortnight.
+Landers 1992 was considered first and rejected as a control, because the M 6.3 Big
+Bear event three hours later makes it a doublet too.
+
+USGS ComCat, 13,525 events at M >= 1.0 within 100 km over 180 days, Mc 1.7:
+
+| sequence | structure | n | KS | 95th pct of the null | p | verdict |
+|---|---|---|---|---|---|---|
+| Kahramanmaras 2023 | doublet | 1,529 | 0.0210 | 0.0194 | 0.033 | rejected |
+| Ridgecrest 2019 | doublet | 20,644 | 0.0240 | 0.0054 | 0.003 | rejected |
+| **Hector Mine 1999** | **single** | 8,466 | **0.0136** | 0.0084 | **0.003** | **rejected** |
+
+**The single mainshock is rejected as decisively as the doublets.** The doublet
+explanation in section 9a is therefore not supported, and the paper must not make it.
+
+The table also shows what the test is really responding to. The critical value falls
+from 0.0194 to 0.0054 as the catalogue grows from 1,529 events to 20,644, roughly as
+one over the square root of n. Hector Mine has the **smallest** departure from the
+model of the three - KS 0.0136 against Kahramanmaras's 0.0210 - and is rejected far
+more decisively, because its sample is five times larger. Kahramanmaras's departure
+would be overwhelmingly rejected at Ridgecrest's sample size; Hector Mine's would
+pass at Kahramanmaras's.
+
+That is the ordinary large-sample behaviour of a goodness-of-fit test, and it has a
+straightforward reading here. The modified Omori-Utsu law describes one generation of
+aftershocks. Real sequences contain aftershocks of aftershocks, which is the entire
+reason ETAS exists, so the law is known to be an approximation. With a few thousand
+events that approximation is detectable, and the test detects it. Rejection at n =
+20,000 is not evidence that a sequence is unusual; it is evidence that the catalogue
+is large.
+
+### What to write instead
+
+1. **Report the effect size, not only the verdict.** KS 0.0136 to 0.0240 across three
+   sequences means the fitted curve tracks the data closely in all of them. A table
+   of KS, n and p says something; "rejected" on its own does not.
+2. **Do not attribute the rejection to the doublet structure.** The control rules
+   that out as a sufficient explanation. If the paper wants that claim it needs a
+   different test - fitting the two sequences separately and showing the residuals
+   improve, which this tool does not do.
+3. **The honest general statement** is that the modified Omori-Utsu law is a good but
+   imperfect description of all three sequences, and that a residual test on a modern
+   catalogue of thousands of events will detect the imperfection. That is a useful
+   methodological point about the test, and it is defensible.
+4. **The large c values point at incompleteness.** Ridgecrest returns c = 1.415 days
+   and Hector Mine c = 4.814 days, where below half a day is usual. Section 9c shows
+   completeness moving by 2.4 magnitude units over the first month at Ridgecrest. A
+   missing early population flattens the start of the decay and c absorbs it. That is
+   a more likely explanation for the misfit than sequence structure, and it is
+   testable: refit above the early-time completeness magnitude and see whether c falls.
+
+This control cost twenty minutes and changed a headline finding from something a
+referee could have dismantled into something defensible. It is worth saying in the
+paper that it was done.
+
 ## 10. How correctness is demonstrated
 
 **Layer 1, analytic.** Expected values are exact arithmetic on a published relation: the
@@ -658,7 +724,11 @@ Read this before drafting. Each of these is a real trap.
    are the same, but 1.1.0 mis-reads a European CSV export and takes the b-value
    sample at a bound its own estimator does not assume. Do not cite the
    GitHub URL in place of the DOI: a repository can be renamed or deleted.
-7. **Do not describe the probabilistic anomaly method** (spatial rarity, the simulation).
+7. **Do not claim the decay-fit rejection is caused by the doublet structure.** It
+   was tested: a single mainshock is rejected just as hard (section 9d). Report the
+   rejection with its KS statistic and sample size, and say that the modified
+   Omori-Utsu law is an approximation which a large catalogue detects.
+8. **Do not describe the probabilistic anomaly method** (spatial rarity, the simulation).
    It is deliberately outside this tool and is a separate layer to be added once its
    specification is frozen.
 8. **Do not say the estimators are novel.** See section 2.

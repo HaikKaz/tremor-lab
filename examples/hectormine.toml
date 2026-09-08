@@ -1,0 +1,40 @@
+# The 1999 Hector Mine sequence: the CONTROL for the decay-fit finding. A clean
+# single mainshock, M 7.1, with no M 6 or larger event in the following fortnight,
+# so a rejection here cannot be blamed on a doublet. See section 9d of
+# docs/PROVENANCE_AND_VALIDATION.md - it is rejected as hard as the doublets are,
+# which is why the doublet explanation is no longer claimed.
+#
+# The catalogue is not committed. Fetch it in two parts, because the service caps
+# a query at 20,000 events:
+#
+#   BASE="https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv"
+#   BASE="$BASE&latitude=34.6033&longitude=-116.265&maxradiuskm=100"
+#   BASE="$BASE&minmagnitude=1.0&orderby=time-asc"
+#   curl -o h1.csv "$BASE&starttime=1999-10-16T09:46:44&endtime=1999-11-16T00:00:00"
+#   curl -o h2.csv "$BASE&starttime=1999-11-16T00:00:00&endtime=2000-04-13T09:46:44"
+#   head -1 h1.csv > hectormine.csv
+#   for f in h1 h2; do tail -n +2 $f.csv >> hectormine.csv; done
+#
+# Downloaded this way on 8 September 2026: 13,526 events.
+
+# 1999 Hector Mine, California: M 7.1, a SINGLE mainshock with no comparable
+# second event - the control for the doublet finding.
+[catalog]
+path = "hectormine.csv"
+radius_km = 100
+[catalog.columns]
+datetime = "time"
+lat = "latitude"
+lon = "longitude"
+mag = "mag"
+mag_type = "magType"
+[mainshock]
+t = "1999-10-16 09:46:44"
+lat = 34.6033
+lon = -116.265
+mw = 7.1
+[analysis]
+window_days = 180
+n_boot = 200
+n_fit_simulations = 600
+seed = 0
