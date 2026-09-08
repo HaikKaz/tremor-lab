@@ -448,6 +448,15 @@ does not know about it, because it describes sampling scatter at one threshold a
 nothing else - the same point section 9 makes about the choice of Mc, here in a much
 sharper form.
 
+**Read sections 9e and 10c before using the per-band b values in the table above.** The
+claim that a single Mc biases b low survives - it is confirmed independently, and the
+size of the bias is published. What does not survive is the *trend across the bands*.
+Estimating b in each band at that band's own maximum-curvature Mc gives b rising with
+time, and the published time-resolved estimates for both sequences run the other way,
+because the early bands carry the largest downward bias from exactly the effect this
+section is describing. Quote the whole-window figure and the diagnosis; do not present
+the band-by-band b column as a measurement of how b evolved.
+
 It also explains the offset. The fit returns **c = 1.415 +/- 0.075 days**, where
 values below half a day are usual. A missing early population flattens the start of
 the decay, and c absorbs it.
@@ -555,6 +564,188 @@ is large.
 This control cost twenty minutes and changed a headline finding from something a
 referee could have dismantled into something defensible. It is worth saying in the
 paper that it was done.
+
+## 9e. Kahramanmaras: completeness moves, and the thesis's b-value is measured below the stable range
+
+Section 9c found on Ridgecrest that completeness moves sharply after a mainshock. The
+same measurement on the thesis's own catalogue confirms it, and then leads somewhere
+more consequential: **the b-value the thesis reports is estimated at a threshold where
+b has not stabilised.** A control settles which of the two possible explanations holds.
+
+### Completeness collapses twice, once per mainshock
+
+Bundled KOERI catalogue, 3,469 events, M 3.0 to 7.6, maximum curvature in each band:
+
+| time after the M 7.8 | events | Mc |
+|---|---|---|
+| 0 to 0.20 days | 155 | 3.8 |
+| 0.20 to 0.38 days | 106 | 3.7 |
+| **0.38 to 0.60 days** (spans the M 7.6 at 0.380 d) | 120 | **4.4** |
+| 0.60 to 1.0 days | 214 | 3.6 |
+| 1 to 2 days | 347 | 3.4 |
+| 2 to 5 days | 497 | 3.2 |
+| 30 to 180 days | 968 | 3.3 |
+
+**The doublet produces two degradations, and the second is worse than the first.**
+Completeness falls to M 3.8 after the M 7.8, is recovering by nine hours, then collapses
+again to M 4.4 when the M 7.6 Elbistan event arrives - worse, because the network is
+already saturated. This is a clean, specific observation about this sequence, and it is
+something a doublet does that a single mainshock cannot. It is worth reporting on its
+own.
+
+The published analysis uses a fixed **M 3.5** threshold for all 180 days, so for roughly
+the first day it is analysing below completeness, and 425 events enter the sample from a
+period the catalogue could not support.
+
+### But the first day is not the explanation
+
+The obvious move is to drop the incomplete head of the sequence and re-estimate. Doing
+that does shift b, from 0.844 to 0.947, which is 5.5 standard errors. It is tempting to
+stop there and report the higher number.
+
+**That would be wrong.** If the first day were the problem, then after removing it b
+would no longer depend on where the magnitude threshold is put. It still does:
+
+| start | thr 3.5 | thr 3.8 | thr 4.0 | thr 4.4 |
+|---|---|---|---|---|
+| 0 (as published) | 0.844 +/- 0.019 (1529) | 0.985 (954) | 1.028 (625) | 1.124 (258) |
+| 1 day | 0.947 +/- 0.024 (1104) | 1.140 (652) | 1.178 (393) | 1.211 (139) |
+| 2 days | 0.944 (937) | 1.156 (560) | 1.213 (339) | 1.275 (117) |
+| 7 days | 0.923 (641) | 1.120 (385) | 1.166 (236) | 1.249 (88) |
+
+The climb with threshold is present at every start time, and is if anything steeper
+after the time cut. Cutting time and raising the threshold remove overlapping sets of
+events, so both shift b for the same underlying reason. Presenting 0.947 as the
+corrected value would just be reporting a second arbitrary point on the same slope.
+
+### b does not stabilise until about M 4.1
+
+The b-stability method of Cao and Gao (2002) and Woessner and Wiemer (2005) exists for
+exactly this, and the package implements it. Over the whole window:
+
+| Mc | 3.2 | 3.4 | **3.5** | 3.8 | 4.0 | **4.1** | 4.3 | 4.5 |
+|---|---|---|---|---|---|---|---|---|
+| b | 0.829 | 0.851 | **0.844** | 0.985 | 1.028 | **1.041** | 1.048 | 1.137 |
+| +/- | 0.014 | 0.018 | **0.019** | 0.030 | 0.040 | **0.046** | 0.058 | 0.087 |
+
+b rises monotonically by about 0.2 and only flattens near the top. `mc_b_stability`
+returns **Mc 4.1**. Hainzl, Kumazawa and Ogata (2024) report exactly this for the same
+region from independent data - b stable only above a cut-off of 3.5, scattering around
+1.07 - see section 10c. The published M 3.5 sits in the middle of the steep part - the
+threshold is 0.6 magnitude units below where b stops moving.
+
+The three estimators disagree accordingly, and now it is clear which is which: maximum
+curvature **3.4**, goodness-of-fit **3.0**, b-stability **4.1**. Section 9 already
+reported that spread; this says the top of it is the one to believe.
+
+### The control: this is the estimator, not the sequence
+
+Two readings are available. Either maximum curvature is underestimating completeness, or
+b genuinely varies with magnitude in this sequence. Hector Mine settles it - a single
+mainshock, a different network, a different decade, 13,525 events:
+
+| Mc | 1.5 | **1.7 (maxcurv)** | 1.9 | **2.1 (b-stab)** | 2.2 | 2.4 | 2.6 | 2.8 | 3.0 |
+|---|---|---|---|---|---|---|---|---|---|
+| b | 0.764 | **0.839** | 0.879 | **0.985** | 1.003 | 0.990 | 0.968 | 0.980 | 0.989 |
+| n | 11,163 | 8,466 | 5,965 | 4,345 | 3,526 | 2,217 | 1,384 | 900 | 585 |
+
+**The same climb, and then an unambiguous plateau** - b sits at 0.98 +/- 0.02 across nine
+consecutive thresholds spanning 0.9 magnitude units, on thousands of events. That plateau
+is what a correctly-thresholded catalogue looks like, and it proves the shape is not an
+artefact of running out of data.
+
+Maximum curvature returns 1.7 there, where b is 0.839. The stable value is 0.985. **The
+estimator underestimates completeness by about 0.4 magnitude units and biases b low by
+about 0.15, in a sequence with no doublet and no unusual feature at all.** Kahramanmaras
+shows the same thing, at the same size, for the same reason. This is known behaviour -
+maximum curvature is documented as biased low, and the +0.2 correction this package
+applies is an attempt to patch it that evidently does not go far enough here.
+
+Note also where both sequences land: 0.98 and about 1.04, either side of the canonical
+Gutenberg-Richter value of 1.0, reached independently from two unrelated catalogues.
+
+### What to write
+
+1. **Report the two-stage completeness collapse.** It is measured, specific to this
+   doublet, and nothing else in this work is as clean.
+2. **Do not report a single b without saying what threshold it is at.** b = 0.844 is the
+   value at M 3.5. It is real, correctly computed and reproducible - and it is measured
+   0.6 units below where b stops changing.
+3. **Give the stability curve, not one number.** The honest statement is that b rises
+   from 0.83 to about 1.04 as the threshold rises to M 4.1 and is flat above it, and that
+   the Shi and Bolt error - 0.019 at M 3.5 - describes sampling scatter at a fixed
+   threshold and is silent about a 0.2 shift driven by threshold choice. This is the same
+   point section 9 makes, in its sharpest available form.
+4. **Cite the control.** A referee will ask whether the effect is peculiar to a doublet.
+   It is not, and Hector Mine shows so on 13,525 events.
+5. **Do not claim b is "really" 1.04.** What is shown is that the estimate depends on the
+   threshold and stabilises near 1.0. Whether the true b is that value depends on whether
+   the catalogue is complete at M 4.1, which this data cannot establish.
+
+### Three catalogues, three different failure modes
+
+Running the same stability curve on all three sequences separates two effects that had
+been conflated, and shows the method failing in three distinguishable ways.
+
+| | events | maxcurv Mc | b-stability Mc | b at maxcurv | b where stable |
+|---|---|---|---|---|---|
+| Hector Mine (single) | 13,525 | 1.7 | **2.1** | 0.839 | 0.985, flat over 0.9 units |
+| Kahramanmaras (doublet) | 3,469 | 3.4 | **4.1** | 0.851 | 1.041, flattening at the data edge |
+| Ridgecrest (doublet) | 28,963 | 1.3 | **None** | 0.733 | never stabilises |
+
+**Ridgecrest never stabilises at all.** b climbs continuously from 0.695 at Mc 1.1 to
+1.341 at Mc 3.5 without a plateau anywhere, and `mc_b_stability` correctly returns None
+rather than inventing a threshold. That is the right behaviour and worth saying: the
+estimator refuses when its own premise fails.
+
+### This confirms section 9c rather than replacing it
+
+Section 9c attributed Ridgecrest's low single-Mc b of 0.733 to averaging over a window
+in which completeness moved by 2.4 magnitude units. Section 9e's threshold effect is a
+different mechanism, so the two had to be separated. Varying both:
+
+| start | thr 1.3 | thr 1.8 | thr 2.2 | thr 2.6 |
+|---|---|---|---|---|
+| 0 | 0.733 | 0.794 | 0.820 | 0.865 |
+| 1 day | 0.886 | 0.988 | 1.016 | 1.066 |
+| 7 days | 0.950 | 1.003 | 1.050 | 1.129 |
+
+Dropping the first day raises b by about 0.15 **at every threshold**, and raising the
+threshold raises it by about 0.15 **at every start time**. The two effects are roughly
+additive and roughly equal here, so **both sections are right and neither subsumes the
+other**: Ridgecrest suffers from time-averaging and from an under-set threshold at once,
+which is why it never reaches a plateau.
+
+Kahramanmaras is the opposite case - there the time cut and the threshold cut remove
+overlapping sets of events, so they are not separable, and the threshold effect is the
+one that survives. The practical rule for the paper is that **b needs both its threshold
+and its time window stated**, and that the stability curve should be shown for each.
+
+### The decay fit: the prediction half-holds
+
+Section 9d predicted that the large fitted c comes from a missing early population, and
+that refitting above the early-time completeness would bring c down. Tested on both:
+
+| | thr | p | c | KS | p-value |
+|---|---|---|---|---|---|
+| Kahramanmaras | 3.5 | 1.161 | **0.497** | 0.0210 | 0.042 |
+| | 3.8 | 1.147 | 0.364 | 0.0336 | 0.002 |
+| | 4.0 | 1.143 | 0.255 | 0.0497 | 0.002 |
+| | 4.4 | 1.195 | **0.195** | 0.0742 | 0.002 |
+| Hector Mine | 1.7 | 1.086 | **4.814** | 0.0136 | 0.002 |
+| | 2.0 | 1.204 | 2.808 | 0.0109 | 0.080 |
+| | 2.2 | 1.276 | 2.093 | 0.0181 | 0.002 |
+| | 2.6 | 1.276 | **0.710** | 0.0235 | 0.032 |
+
+**c falls monotonically in both, by a factor of 2.5 and of 6.8.** The prediction about c
+is confirmed, and confirmed on a control as well as on the doublet - c is absorbing
+missing early events, exactly as section 9d argued.
+
+**The fit is not rescued.** The KS departure grows as the threshold rises and the
+rejection mostly stands. Say the incompleteness explanation accounts for the offset
+parameter and not for the misfit, and leave it there. Note too that p drifts upward with
+threshold in both - by 0.03 and 0.19 - so p is threshold-dependent as well, and any
+reported p needs its threshold stated for the same reason b does.
 
 ## 10. How correctness is demonstrated
 
@@ -780,6 +971,171 @@ single-Omori fit on a comparable window and threshold, and none was found. Say t
 comparison covers completeness and the b-value, as with `seismostats` in section 10a,
 and that the decay parameters remain unchecked against anyone.
 
+## 10c. The published Kahramanmaras literature: three confirmations and one correction
+
+Section 10b did this for Ridgecrest. This does it for the thesis's own sequence. Fifty-one
+candidate published values were found; **ten were verified first-hand** - the source
+located, the paper read, the number and its conditions quoted verbatim. The remaining
+forty-one were still being checked when the run hit a usage limit, so **they are
+unverified, not rejected, and must not be cited from this document.**
+
+Three of the ten bear directly on section 9e. One contradicts a result in section 9c.
+
+### 1. A like-for-like match at the same threshold, from an independent catalogue
+
+**Ali, S. M. and Abdelrahman, K. (2024),** *Analysis of the Fractal Dimension, b-value,
+Slip Ratio, and Decay Rate of Aftershock Seismicity Following the 6 February 2023
+(Mw 7.8 and 7.5) Turkiye Earthquakes*, Fractal and Fractional 8(5), 252,
+doi:10.3390/fractalfract8050252. IRIS catalogue, 471 events M 3.3 to 7.8, 6 Feb 2023 to
+10 Jan 2024, 35-39 N / 34-41 E. Maximum-likelihood fits in ZMAP 6.0. Their maximum
+curvature returns **Mc 4.4** for the whole sequence.
+
+That is the same threshold section 9e reaches by a different route, so the two are
+directly comparable:
+
+| at Mc 4.4 | Ali and Abdelrahman (2024) | this tool |
+|---|---|---|
+| b | 1.21 +/- 0.03 | 1.124 +/- 0.073 |
+| p | 1.1 +/- 0.04 | 1.195 |
+| **c** | **0.204 +/- 0.058** | **0.195** |
+| k | 76.75 +/- 8.84 | 49.9 |
+
+**c agrees to 0.009 days**, and b and p agree within about one standard error. Different
+catalogue, different agency, different software, same threshold, same estimators. This is
+the strongest external check in this document - stronger than the `seismostats`
+cross-check in section 10a, which used the same input data.
+
+Three caveats. **k is not comparable** and must not be tabulated: it scales with the
+number of events above threshold, and their 471-event catalogue is not ours. The paper's
+b uncertainty is internally inconsistent - the abstract says +/- 0.1, the body +/- 0.03;
+prefer the body figure or note the conflict. And the paper misreads its own k as a time
+in days ("the decrease in aftershock activity began between approximately 68 to 86 days
+after"); k is a productivity constant, so quote their numbers but not that sentence.
+
+### 2. The b-stability threshold is independently confirmed, in this same region
+
+This is the citation section 9e most needs.
+
+**Hainzl, S., Kumazawa, T. and Ogata, Y. (2024),** *Aftershock forecasts based on
+incomplete earthquake catalogues: ETASI model application to the 2023 SE Turkiye
+earthquake sequence*, Geophysical Journal International 236(3), 1609-1620,
+doi:10.1093/gji/ggae006. On AFAD background seismicity for the same region from 2000 to
+2022, using the Aki (1965) maximum-likelihood estimator - the same estimator this package
+implements - they plot b against cut-off magnitude and report, verbatim:
+
+> "The b estimate becomes stable within its uncertainties for M c > 3.5 and scatters
+> around 1.07."
+
+Section 9e, measured independently on the aftershock catalogue, finds b stabilising at
+**Mc 4.1** at a value of **1.04**. An independent group, on different data spanning
+twenty-three years, reaches the same two conclusions: b in this region only stabilises
+above a high cut-off, and it stabilises near 1.05. **Cite this rather than presenting
+section 9e as a new observation.** What is new in 9e is the Hector Mine control showing
+the effect is a property of the estimator rather than of this region.
+
+### 3. The size of the incompleteness bias is published, on identical data
+
+The same paper fits a standard ETAS model and an incompleteness-corrected ETASI model to
+one catalogue (9,438 events, m >= 2, Mc 1.95, estimated network blind time 162 s):
+
+| | b |
+|---|---|
+| ETAS, uncorrected | 0.56 |
+| ETASI, corrected for short-term incompleteness | **0.87** |
+
+**A downward bias of 0.31 on identical data, attributable entirely to unhandled
+incompleteness.** Section 9e measures 0.15 to 0.20 from threshold choice alone on two
+catalogues. Same direction, same order of magnitude, arrived at by a completely different
+method. This is the strongest published support for the paper's central methodological
+claim.
+
+### 4. Time-varying completeness is confirmed, but the absolute numbers are not comparable
+
+**Tan, O. (2025),** *Long-term Aftershock Properties of the Catastrophic 6 February 2023
+Kahramanmaras (Turkiye) Earthquake Sequence*, Acta Geophysica 73, 1023-1040,
+doi:10.1007/s11600-024-01419-y. AFAD national catalogue, ML, 50,085 events, 6 Feb to 31
+Oct 2023:
+
+> "decreases gradually from ~ 3.0 on the first day to ~ 2.0 two weeks later ... The Mc
+> converges to the constant value of ~ 1.5 after mid-March and is 1.6 for the nine-month
+> catalog data."
+
+The same shape as section 9e - high on the first day, recovering over weeks to a
+constant - from an independent group on an independent catalogue. **The absolute values
+are not comparable and must not be tabulated side by side.** Their first-day Mc is 3.0
+against our 3.8, and their long-window Mc is 1.6 against our 3.4, because the AFAD
+catalogue is complete far below M 3.0 while the bundled KOERI extract is truncated at
+M 3.0. For our catalogue the truncation floor, not the network, sets the long-window
+figure. Cite Tan for the phenomenon and the recovery timescale, not for the numbers.
+
+### 5. The correction: our band-by-band b trend has the wrong sign
+
+This is the finding that costs something, and it must go in the paper.
+
+The same Hainzl, Kumazawa and Ogata (2024) paper applies the Ogata-Katsura (1993)
+estimator, which fits a time-varying b jointly with a time-varying detection function
+instead of assuming a fixed threshold. It reports **b about 1.2 for the early aftershocks,
+decaying to about 0.85 for the later ones** - a 50 per cent coseismic increase in b, which
+is also the premise of the Gulia and Wiemer Foreshock Traffic Light System cited in
+section 10b.
+
+Sections 9c and 9e report the opposite. Estimated band by band at each band's own maximum
+curvature Mc, this tool gives:
+
+| | early | late |
+|---|---|---|
+| Kahramanmaras | 0.737 +/- 0.080 (29 min - 2.4 h) | 1.018 +/- 0.040 (30-180 d) |
+| Ridgecrest | 0.881 +/- 0.104 (first 29 min) | 1.004 +/- 0.013 (30-180 d) |
+
+**b rising with time, where the literature has it falling.** The explanation is the one
+section 9e establishes, applied to our own numbers: an Aki estimate at a threshold below
+true completeness is biased *low*, and completeness is *worst* in the early bands - so the
+early bands carry the largest downward bias. The Kahramanmaras early figure rests on 72
+events with an Mc itself estimated from those 72 events. Hainzl et al. avoid this by
+modelling detection probability explicitly rather than thresholding.
+
+**Do not present the band-by-band b trend as a result.** State that estimating b in each
+band at that band's maximum-curvature Mc produces a trend of the wrong sign, that the
+published time-resolved estimates run the other way, and that this is a demonstration of
+the very bias the paper is about rather than a competing measurement. It is a better
+illustration of the point than a clean agreement would have been - the tool reproduces the
+artefact, and the diagnosis explains it.
+
+### 6. The two ruptures do decay differently, which section 9d should acknowledge
+
+Section 9d showed that rejection of a single Omori-Utsu decay is not by itself evidence of
+doublet structure, since the single-mainshock Hector Mine control is rejected as hard. That
+stands. But two groups fit the two ruptures separately and find they differ:
+
+| | EAFZ (Pazarcik, Mw 7.8) | Cardak (Elbistan, Mw 7.6) |
+|---|---|---|
+| Tan (2025), Mc 2.0 | p = 1, c = 5 d, k = 2600 | p = 0.7, c = 5 d, k = 930 |
+| Rodriguez-Perez and Zuniga (2025) | p = 1.25 +/- 0.08 | p = 1.14 +/- 0.09 |
+
+Tan additionally reports that the single-Omori model fits the Cardak sequence poorly after
+mid-June. Our combined p = 1.161 sits between both published pairs, which is what a fit to
+the union of two sequences should give.
+
+So the honest position is narrower than either extreme: **the doublet structure is real and
+published fits resolve it, but the KS rejection is not the evidence for it** - a control
+without a doublet rejects too. If the paper wants the doublet claim, cite Tan and
+Rodriguez-Perez for it rather than the residual test.
+
+**Rodriguez-Perez, Q. and Zuniga, F. R. (2025),** *Statistical and source characterization
+of the 2023 Kahramanmaras Turkiye earthquake sequence*, Acta Geophysica 73, 1241-1260,
+doi:10.1007/s11600-024-01428-x. Note for comparison purposes that this paper states no
+numeric Mc anywhere, which limits what can be done with its b-values.
+
+### What is still not compared
+
+Forty-one of the fifty-one candidate values were never verified. Two further papers were
+read and are usable but bear less directly: **Convertito, V., Tramelli, A. and Godano, C.
+(2024),** Scientific Reports 14, 1596, doi:10.1038/s41598-023-50837-3 (on-fault b of 0.7
+to 0.8 at the Mw 7.8 nucleation segment; most grid cells mc 1.5 to 2.2), and Tan's
+whole-catalogue b of about 0.8 at Mc about 1.6 - which is *not* comparable to our 0.844 at
+M 3.5 despite the numerical coincidence, because section 9e shows b at those two thresholds
+should not be equal.
+
 ## 11. Facts and figures
 
 - Package: `tremor-lab` 1.1.1, MIT licence, Python 3.11+, released as `v1.1.1` and
@@ -827,9 +1183,11 @@ Read this before drafting. Each of these is a real trap.
    implementation. The Python package is the authority for published values. The two
    agree on the reference catalogue and on the real exports tested; say that, not more.
 4. **Do not quote b = 0.844 +/- 0.019 as though that error bar were the
-   uncertainty in b.** It is the sampling scatter at one threshold. The
-   completeness magnitude is uncertain from M 3.0 to M 4.1 by method, and b
-   varies from 0.74 to 1.04 across that range. See section 9.
+   uncertainty in b.** It is the sampling scatter at one threshold. The completeness
+   magnitude is uncertain from M 3.0 to M 4.1 by method, and b climbs from 0.83 to
+   1.04 across that range without stabilising until the top of it. Sections 9, 9e and
+   10c; Hainzl, Kumazawa and Ogata (2024) report the same threshold dependence for
+   this region independently.
 5. **Do not quote k without a caveat, and do not quote a 43,000-event figure** — no such
    case exists in the repository. Of the three decay parameters k is much the weakest: it
    is derived from the fitted c and p rather than searched for. The only k-recovery test
@@ -851,25 +1209,34 @@ Read this before drafting. Each of these is a real trap.
 8. **Do not describe the probabilistic anomaly method** (spatial rarity, the simulation).
    It is deliberately outside this tool and is a separate layer to be added once its
    specification is frozen.
-8. **Do not say the estimators are novel.** See section 2.
-9. **Do state the third-party comparison, and state its limits.** The estimators
+9. **Do not say the estimators are novel.** See section 2.
+10. **Do state the third-party comparison, and state its limits.** The estimators
    have now been checked against `seismostats` (Swiss Seismological Service, ETH
    Zurich): see section 10a. What has been compared is the completeness magnitude,
    the b-value and the b-stability criterion. The Omori-Utsu decay, the energy
    relations and the Bath screen have **not** been compared with anything
    third-party, because `seismostats` does not implement them. Do not let the
    b-value comparison imply the decay fit was independently checked.
-10. **Do not let the self-test stand for validation of a reader's own analysis.** It
+11. **Do not let the self-test stand for validation of a reader's own analysis.** It
    checks the estimators against known values on a bundled catalogue. It says nothing
    about whether the reader chose a sensible window, threshold or mainshock.
-11. **Do not present "294 tests" as coverage.** It is a count, not a measure. What can
+12. **Do not present "294 tests" as coverage.** It is a count, not a measure. What can
     honestly be said is stronger and more specific: ten deliberate breakages of the
     estimators were each caught by at least one test (section 10).
-12. **Do not describe the bundled fixture as raw data.** `kahramanmaras_180d.csv` is a
+13. **Do not describe the bundled fixture as raw data.** `kahramanmaras_180d.csv` is a
     derived file: it carries elapsed days and magnitudes only, already windowed to 180
     days, with no timestamps. Its provenance from the original KOERI export should be
     stated in the paper, and the export itself archived with the release.
-13. **Do not claim the Scordilis relations are range-checked.** They are applied without
+14. **Never report a b-value, or an Omori p, without the threshold it was measured
+   at.** Both are threshold-dependent in every catalogue tested: b by about 0.2 and p
+   by up to 0.19 between Mc and Mc + 1. A bare "b = 0.844" is not a reproducible
+   statement about the sequence, it is a statement about a choice. Section 9e.
+15. **Do not present the band-by-band b values as a measurement of how b evolved.**
+   Estimated at each band's own maximum-curvature Mc they trend the wrong way against
+   the published time-resolved estimates, because the early bands carry the largest
+   downward bias. Report them as a demonstration of the bias, with the published
+   result cited, or not at all. Sections 9c and 10c.
+16. **Do not claim the Scordilis relations are range-checked.** They are applied without
    bounds, matching the spreadsheet implementation, and the two Ms branches are mildly
    discontinuous across the uncalibrated 6.1-6.2 gap (6.157 against 6.119 at Ms 6.1).
    This is a deliberate fidelity choice and is documented.
