@@ -443,6 +443,7 @@ table.readout tr:last-child th, table.readout tr:last-child td { border-bottom: 
 
 .progress { height: 3px; background: var(--rule); border-radius: 2px; overflow: hidden; }
 .progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .12s linear; }
+#bootLabel { margin: .4rem 0 0; font-variant-numeric: tabular-nums; }
 
 footer.colophon {
   color: var(--ink-muted);
@@ -593,6 +594,7 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
       </div>
     </div>
     <div class="progress" id="bootProgress" hidden><i></i></div>
+    <p class="note tight" id="bootLabel" hidden aria-live="polite"></p>
   </section>
 
   <!-- =========================================================== results -->
@@ -978,6 +980,13 @@ function omoriFitTest(times, fit, T, t0) {
   };
 }
 
+/* How many refits to run before handing the main thread back. One refit of a
+   1,500-event sequence costs about 22 ms, so this is the size of the longest
+   block during which the page cannot repaint or answer a click. Browsers call
+   anything past 50 ms a long task; two keeps it under that. Raising it makes the
+   total finish sooner and the page feel worse. */
+var SLICE = 2;
+
 /* The parameters were fitted to the very times being tested, so the fitted curve
    hugs the data and the textbook Kolmogorov p-value is far too generous: on
    sequences drawn from the model it essentially never rejects. The null
@@ -1003,7 +1012,7 @@ function calibrateFitTest(times, fit, T, t0, nSim, seed, onProgress, done, cance
   var n = times.filter(function (x) { return x > t0; }).length;
   function step() {
     if (cancelled && cancelled()) return;
-    var until = Math.min(i + 5, nSim);
+    var until = Math.min(i + SLICE, nSim);
     for (; i < until; i++) {
       var drawn = omoriSample(n, fit.p, fit.c, T, t0, rand);
       var refit = fitOmori(drawn, T);
@@ -1117,7 +1126,7 @@ function bootstrapOmoriChunk(times, nBoot, T, seed, onProgress, done, cancelled)
   var rand = mulberry32(seed >>> 0), ps = [], cs = [], b = 0;
   function step() {
     if (cancelled && cancelled()) return;   // a newer run has superseded this one
-    var until = Math.min(b + 10, nBoot);
+    var until = Math.min(b + SLICE, nBoot);
     for (; b < until; b++) {
       var s = new Array(t.length);
       for (var i = 0; i < t.length; i++) s[i] = t[(rand() * t.length) | 0];
@@ -2457,6 +2466,7 @@ function clearResults() {
   // of the error that replaced them.
   bootToken++;
   document.getElementById("bootProgress").hidden = true;
+  document.getElementById("bootLabel").hidden = true;
   LAST.result = null;
   LAST.settings = null;
   ["resultsCard", "seqCard", "fmdCard", "stabCard", "omoriCard"].forEach(function (id) {
@@ -2573,14 +2583,28 @@ function recompute() {
   }
 
   // Bootstrap in slices so the page stays responsive.
-  var bar = $("bootProgress");
+  var bar = $("bootProgress"), label = $("bootLabel");
+
+  /* A bare progress strip with no words is indistinguishable from a page that has
+     frozen. At the published counts these two stages are 800 decay refits and take
+     the better part of a minute in a browser, so they say what they are doing - and
+     that the estimates already on screen are not waiting on them. */
+  function say(what, done, total) {
+    label.hidden = false;
+    label.textContent = what + "... " + Math.round(100 * done / total) + "%" +
+      (total > 300 ? " (up to a minute; the numbers above are already final)" : "");
+  }
+  function stopProgress() { bar.hidden = true; label.hidden = true; }
+
   if (result.omori && s.nBoot >= 2) {
     bar.hidden = false;
     bar.firstElementChild.style.width = "0%";
+    say("estimating the uncertainty on p and c", 0, s.nBoot);
     bootstrapOmoriChunk(result.times, s.nBoot, maxOf(result.times), s.seed,
       function (frac) {
         if (token !== bootToken) return;
         bar.firstElementChild.style.width = (frac * 100).toFixed(0) + "%";
+        say("estimating the uncertainty on p and c", frac * s.nBoot, s.nBoot);
       },
       function (boot) {
         if (token !== bootToken) return;
@@ -2596,19 +2620,22 @@ function recompute() {
   // The fit test's p-value needs a simulated null; it is the slowest thing the
   // page does, so it runs last and in slices.
   function calibrate() {
-    if (!result.omori || !result.times) { bar.hidden = true; return; }
+    if (!result.omori || !result.times) { stopProgress(); return; }
     bar.hidden = false;
     bar.firstElementChild.style.width = "0%";
+    say("simulating the null distribution for the decay fit test", 0, s.nFitSim);
     calibrateFitTest(
       result.times, result.omori, maxOf(result.times), 0,
       s.nFitSim, s.seed,
       function (frac) {
         if (token !== bootToken) return;
         bar.firstElementChild.style.width = (frac * 100).toFixed(0) + "%";
+        say("simulating the null distribution for the decay fit test",
+            frac * s.nFitSim, s.nFitSim);
       },
       function (test) {
         if (token !== bootToken) return;
-        bar.hidden = true;
+        stopProgress();
         result.fitTest = test;
         renderResults(result, s);
       },
