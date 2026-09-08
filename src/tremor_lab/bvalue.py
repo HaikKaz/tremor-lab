@@ -37,6 +37,13 @@ def b_value_aki(
     completeness bin: a magnitude reported as Mc stands for the interval Mc +/- dm/2,
     so the smallest complete magnitude is Mc - dm/2 rather than Mc.
 
+    That offset is NOT in Aki (1965), whose estimator is b = 1/(ln10 (mean(M) - Mc)).
+    It is the correction for binned magnitudes usually attributed to Utsu (1965), and
+    it is not cosmetic: on the reference catalogue at Mc 3.5 it moves b from 0.935 to
+    0.844, about five standard errors. A referee checking this estimator against Aki
+    alone will not find the term, so both papers are cited. **Verify the Utsu (1965)
+    attribution against the primary source before citing it in print.**
+
     Parameters
     ----------
     mags : array_like
@@ -63,7 +70,9 @@ def b_value_aki(
 
     References
     ----------
-    Aki, K. (1965). Shi, Y. and Bolt, B. A. (1982).
+    Aki, K. (1965), for the maximum-likelihood estimator. Utsu, T. (1965), for the
+    half-bin correction applied to binned magnitudes. Shi, Y. and Bolt, B. A.
+    (1982), for the standard error.
     """
     dm = constants.DM if dm is None else dm
     shi_bolt_k = constants.SHI_BOLT_K if shi_bolt_k is None else shi_bolt_k
@@ -76,6 +85,16 @@ def b_value_aki(
             f"b-value needs at least two events at or above {threshold}; got {n}"
         )
     mean_m = m.mean()
+    # b_value_tinti refuses this and b_value_aki did not: with every magnitude on
+    # the threshold the denominator is zero and b came back as an infinity, or,
+    # if a caller passes a threshold above the data, negative - a b-value that
+    # says event numbers rise with magnitude.
+    if mean_m <= threshold:
+        raise ValueError(
+            f"the mean magnitude {mean_m:.4f} does not exceed the completeness "
+            f"threshold {threshold:.4f}, so b is not defined here; the sample is "
+            f"either a single magnitude bin or was taken above the data"
+        )
     b = 1.0 / (np.log(10) * (mean_m - threshold))
     sigma = shi_bolt_k * b**2 * np.sqrt(((m - mean_m) ** 2).sum() / (n * (n - 1)))
     return BValue(float(b), float(sigma), n)

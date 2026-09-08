@@ -177,6 +177,15 @@ def bootstrap_omori(
     n_boot = constants.N_BOOT if n_boot is None else n_boot
     if n_boot < 0:
         raise ValueError(f"n_boot cannot be negative; got {n_boot}")
+    if n_boot == 1:
+        # A standard deviation over one resample has no denominator, and the
+        # report printed "+/- nan" beside p and c as though it were a published
+        # uncertainty. Zero means "do not estimate the spread" and is allowed;
+        # one means "estimate it from a single number", which cannot be done.
+        raise ValueError(
+            "n_boot of 1 cannot give a spread: a standard error needs at least "
+            "two resamples. Use 0 to skip the bootstrap, or 2 or more to run it"
+        )
     t = np.asarray(times_days, float)
     t = t[t > 0]
     if t_end is None:

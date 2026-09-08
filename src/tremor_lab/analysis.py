@@ -9,6 +9,7 @@ import pandas as pd
 from tremor_lab import constants
 from tremor_lab.bvalue import b_stability, b_value_aki, mc_b_stability
 from tremor_lab.completeness import fmd, mc_goodness_of_fit, mc_maxcurvature
+from tremor_lab.grid import at_or_above
 from tremor_lab.magnitude import bath_mag, energy_joules
 from tremor_lab.omori import bootstrap_omori, fit_omori, omori_fit_test
 
@@ -111,13 +112,31 @@ def analyze_case(
         mc_methods["b_stability"] = mc_b_stability(mags, dm=dm)
         stability = b_stability(mags, dm=dm)
     threshold = mc if mc_threshold is None else mc_threshold
-    above = post if threshold is None else post[post["mw"] >= threshold]
+    bin_width = constants.DM if dm is None else dm
+    # At or above the LOWER EDGE of the threshold's bin, not the threshold itself.
+    # A magnitude reported as Mc stands for the interval Mc +/- dm/2, which is the
+    # whole premise of the half-bin offset that b_value_aki then puts in its
+    # denominator. Selecting at Mc while computing with Mc - dm/2 drops the lower
+    # half of the completeness class from a sample the formula assumes contains it.
+    # On a catalogue reported on the dm grid the two select the same events, which
+    # is why this went unseen; on a homogenised one they do not, because Ms -> Mw
+    # maps a 0.1 grid onto a 0.067 grid, and b came out several standard errors low.
+    above = (
+        post
+        if threshold is None
+        else post[at_or_above(post["mw"].to_numpy(), threshold - bin_width / 2)]
+    )
 
     result: dict[str, Any] = {
         "n_events": len(post),
         "mc": mc,
         "threshold": threshold,
         "n_above": len(above) if threshold is not None else None,
+        # The bound the sample was actually taken at, so the report can say it
+        # rather than leave a reader to infer it from the threshold.
+        "sample_floor": (
+            None if threshold is None else round(threshold - bin_width / 2, 10)
+        ),
         "b_value": None,
         "omori": None,
         "omori_bootstrap": None,

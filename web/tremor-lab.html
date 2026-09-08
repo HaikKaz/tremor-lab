@@ -1201,7 +1201,10 @@ function parseCsv(text) {
   // two entries that did the same thing and the provenance line naming a column
   // whose values were never read. Two magnitude columns side by side is the
   // ordinary result of merging two agencies' exports in a spreadsheet.
-  var seen = {}, repeated = [];
+  // Object.create(null), not {}: a bare object inherits toString, constructor and
+  // the rest, so a column legitimately named any of those looked like a duplicate
+  // of itself and the whole file was refused.
+  var seen = Object.create(null), repeated = [];
   for (var h = 0; h < header.length; h++) {
     var name = header[h];
     if (seen[name]) { if (repeated.indexOf(name) < 0) repeated.push(name); }
@@ -1213,21 +1216,43 @@ function parseCsv(text) {
       ". Every column has to have its own name, or there is no way to say which " +
       "of them a setting refers to. Rename the duplicates and load the file again.");
   }
-  var rows = [];
+  var rows = [], ragged = 0, raggedExample = 0;
   for (var i = 1; i < lines.length; i++) {
     var cells = splitLine(lines[i], sep);
     if (cells.length < 2) continue;
+    // A row with a different number of fields than the header is malformed, and
+    // reading its leftmost cells silently shifts every column to the right of the
+    // extra separator - an unquoted "Kahramanmaras, Turkiye" or a European 4,5
+    // written without quotes would move the magnitude into the scale column and
+    // report a magnitude of 4 with nothing counted as unreadable.
+    if (cells.length !== header.length) {
+      if (!ragged) raggedExample = i + 1;
+      ragged++;
+      continue;
+    }
     var row = {};
     for (var j = 0; j < header.length; j++) {
       var cell = cells[j] === undefined ? "" : cells[j];
-      // A semicolon- or tab-separated export is normally European and writes
-      // 7,5 for 7.5. parseFloat would read that as 7 and say nothing.
-      if (sep !== "," && /^[+-]?\d+,\d+$/.test(cell)) cell = cell.replace(",", ".");
+      // A European export writes 7,5 for 7.5. In a semicolon- or tab-separated
+      // file the cell arrives bare; in a comma-separated one it can only reach
+      // here inside quotes, because an unquoted 7,5 would have been split into
+      // two fields and the row refused above as ragged. Either way the reading
+      // is unambiguous, and this repair used to be skipped for comma-separated
+      // files - where parseFloat then read "4,5" as 4, silently, and moved the
+      // b-value by twenty-two standard errors.
+      if (/^[+-]?\d+,\d+$/.test(cell)) cell = cell.replace(",", ".");
       row[header[j]] = cell;
     }
     rows.push(row);
   }
-  if (!rows.length) throw new Error("That file has a header but no data rows.");
+  if (!rows.length) {
+    throw new Error(ragged
+      ? "Every one of the " + ragged + " data rows has a different number of " +
+        "columns than the header, starting at line " + raggedExample +
+        ". The separator was read as \"" + sep + "\"; if that is wrong, the file " +
+        "cannot be read as it stands."
+      : "That file has a header but no data rows.");
+  }
   return { header: header, rows: rows, sep: sep };
 }
 
@@ -1450,10 +1475,18 @@ function analyse(events, s) {
     return out;
   }
 
-  var above = post.filter(function (e) { return e.mw >= out.threshold; });
+  // At or above the LOWER EDGE of the threshold's bin, matching the package and
+  // matching bValueAki's own denominator: a magnitude reported as Mc stands for
+  // Mc +/- dm/2. Selecting at Mc dropped the lower half of the completeness class
+  // from a formula that assumes it is there - invisible on a catalogue reported on
+  // the dm grid, and several standard errors on a homogenised one.
+  var above = post.filter(function (e) {
+    return atOrAbove(e.mw, out.threshold - s.dm / 2);
+  });
   out.nAbove = above.length;
   if (above.length <= CONST.MIN_FOR_B) {
-    out.note = "Only " + above.length + " events at or above M " + out.threshold +
+    out.note = "Only " + above.length + " events in the completeness class at M " +
+      out.threshold +
                ". A stable fit needs more than " + CONST.MIN_FOR_B +
                ", so the b-value and the decay are not reported.";
     return out;

@@ -380,7 +380,8 @@ def _report(result: dict[str, Any], source: Path) -> str:
         f"events in window     {result['n_events']}",
         f"completeness Mc      {_show(result['mc'])}  (maximum curvature)",
         f"threshold used       {_show(result['threshold'])}"
-        f"  ({_show(result['n_above'])} events at or above it)",
+        f"  ({_show(result['n_above'])} events in its completeness class, "
+        f"at or above {_show(result.get('sample_floor'))})",
     ]
     methods = result.get("mc_methods") or {}
     if len(methods) > 1:

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tremor_lab import constants
+from tremor_lab import b_value_aki, constants
 from tremor_lab.analysis import analyze_case
 from tremor_lab.catalog import CATALOG_COLUMNS, read_catalog
 
@@ -185,3 +185,43 @@ def test_an_event_landing_exactly_on_the_window_edge_is_inside_it():
     assert (
         analyze_case(catalog, MAINSHOCK, window_days=180.0, n_boot=0)["n_events"] == 2
     )
+
+
+def test_the_sample_is_taken_at_the_same_bound_the_b_value_formula_assumes():
+    """Select at Mc - dm/2, because that is what the estimator's denominator uses.
+
+    A magnitude reported as Mc stands for the interval Mc +/- dm/2. The b-value
+    puts Mc - dm/2 in its denominator for exactly that reason, so a sample taken
+    at Mc instead drops the lower half of the completeness class from a formula
+    that assumes it is there.
+
+    On a catalogue reported on the dm grid the two bounds select the same events,
+    which is why every test here passed while this was wrong. They differ on a
+    homogenised catalogue: Ms -> Mw is 0.67 Ms + 2.07, which maps a 0.1 grid onto
+    a 0.067 one, and events then land between the bin edges.
+    """
+    rng = np.random.default_rng(0)
+    n = 4000
+    # Off-grid, as homogenisation leaves them, and complete from the lower edge of
+    # the Mc bin, which is where a real catalogue's completeness starts.
+    mw = 3.25 + rng.exponential(1 / (1.0 * np.log(10)), n)
+    catalog = pd.DataFrame(
+        {
+            "dt_days": np.sort(rng.uniform(0.01, 180.0, n)),
+            "mw": mw,
+            "lat": 37.0,
+            "lon": 37.0,
+        }
+    )
+    result = analyze_case(
+        catalog, MAINSHOCK, mc_threshold=3.3, window_days=180, n_boot=0
+    )
+    direct = b_value_aki(mw, 3.3)
+
+    # Some events really do lie in the half-bin below the threshold, or this
+    # test would pass on the broken code too.
+    assert ((mw >= 3.25) & (mw < 3.3)).sum() > 0
+    assert result["b_value"].n == direct.n
+    assert result["b_value"].b == pytest.approx(direct.b, rel=1e-12)
+    # And the report can say where the sample actually starts.
+    assert result["sample_floor"] == pytest.approx(3.25)

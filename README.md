@@ -360,9 +360,12 @@ MIT, see `LICENSE`. Citation metadata is in `CITATION.cff`.
 
 ## References
 
-Aki, K. (1965). Bath, M. (1965). Efron, B. (1979). Gutenberg, B. and Richter, C. F.
-(1944, 1956). Kanamori, H. (1977). Nelder, J. A. and Mead, R. (1965). Ogata, Y. (1983).
-Scordilis, E. M. (2006). Shi, Y. and Bolt, B. A. (1982). Utsu, T., Ogata, Y. and
-Matsuura, R. S. (1995). Wiemer, S. and Wyss, M. (2000).
+Aki, K. (1965). Bath, M. (1965). Cao, A. and Gao, S. S. (2002). Efron, B. (1979).
+Gutenberg, B. and Richter, C. F. (1944, 1956). Kanamori, H. (1977). Nelder, J. A. and
+Mead, R. (1965). Ogata, Y. (1983). Scordilis, E. M. (2006). Shi, Y. and Bolt, B. A.
+(1982). Tinti, S. and Mulargia, F. (1987). Utsu, T. (1965), for the half-bin
+correction to the b-value, which is not in Aki (1965). Utsu, T., Ogata, Y. and
+Matsuura, R. S. (1995). Wiemer, S. and Wyss, M. (2000). Woessner, J. and Wiemer, S.
+(2005).
 
 Verify each primary source before final citation.
