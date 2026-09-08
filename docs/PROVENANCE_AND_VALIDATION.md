@@ -398,6 +398,96 @@ widths where a completeness threshold coincides with a reported magnitude, the
 naive comparison excludes that magnitude class entirely and biases b by several
 times its standard error."*
 
+## 9c. A second catalogue: Ridgecrest 2019, and what it changes
+
+Everything above was measured on one sequence. On 8 September 2026 the tool was run
+on a second, independent one: the 2019 Ridgecrest sequence in California, from the
+USGS ComCat catalogue - 28,964 events at M >= 1.0 within 100 km of the M 7.1
+mainshock over 180 days. Ridgecrest is also a doublet, an M 6.4 followed 33.8 hours
+later by the M 7.1, so it tests the same structure as Kahramanmaras with a different
+network, a different agency's export format and a completeness magnitude two
+magnitude units lower.
+
+Three results, in order of what they are worth to the paper.
+
+### The single-decay rejection generalises
+
+The transformed-time residual test gives **KS 0.0240 at p = 0.002 +/- 0.002 on 600
+replicates: a single modified Omori-Utsu decay is rejected**, more decisively than on
+Kahramanmaras (p = 0.036). Two independent doublets, two rejections. Section 9a
+argued from one catalogue that one decay curve is the wrong model for two overlapping
+sequences; this is the second case, and it turns an observation about one sequence
+into a claim that can be made generally.
+
+### A single completeness magnitude is the wrong model for a dense catalogue
+
+This is the more important finding, and it is a limitation of the method rather than
+of the software. Maximum curvature over the whole 180 days gives Mc 1.3. Estimated
+band by band, the completeness magnitude is nothing like constant:
+
+| time since mainshock | events | Mc | b at that Mc |
+|---|---|---|---|
+| 0 to 29 minutes | 122 | 3.7 | 0.881 +/- 0.104 |
+| 29 minutes to 2.4 hours | 384 | 3.2 | 1.098 |
+| 2.4 hours to 1 day | 3,101 | 2.2 | 0.894 |
+| 1 to 7 days | 8,123 | 1.6 | 0.909 +/- 0.014 |
+| 7 to 30 days | 8,171 | 1.3 | 0.901 +/- 0.011 |
+| 30 to 180 days | 9,062 | 1.3 | 1.004 +/- 0.013 |
+
+The network cannot detect small events while the ground is still shaking, so the
+first hours are missing exactly the events the decay fit needs. Mc falls from 3.7 to
+1.3 - a factor of about 250 in the rate of detectable events.
+
+The consequence for b is large and easy to state. Analysed the ordinary way, at one
+Mc for the whole window, **b = 0.733 +/- 0.005**. Estimated in each later band at
+that band's own completeness, b is close to **0.94**. The single-Mc figure is low by
+0.205, which is **43 times its own quoted standard error**. The Shi and Bolt error
+does not know about it, because it describes sampling scatter at one threshold and
+nothing else - the same point section 9 makes about the choice of Mc, here in a much
+sharper form.
+
+It also explains the offset. The fit returns **c = 1.415 +/- 0.075 days**, where
+values below half a day are usual. A missing early population flattens the start of
+the decay, and c absorbs it.
+
+**For the paper:** Kahramanmaras never showed this because the published analysis
+used a threshold of M 3.5, far above completeness at every time. A catalogue recorded
+to M 1.3 exposes it immediately. Either state the limitation, or restrict the decay
+fit to a threshold above the worst-case early completeness - which for Ridgecrest
+would be about M 3.7, and would cost most of the data.
+
+### Cross-implementation agreement, on data neither had seen
+
+The package and the browser page were run on the same 28,964 events, both at their
+defaults. Not the catalogue either was built against:
+
+| | package | browser page |
+|---|---|---|
+| events in window | 28,964 | 28,964 |
+| Mc | 1.3 | 1.3 |
+| events in the completeness class | 20,645 | 20,645 |
+| b | 0.733108 +/- 0.004719 | 0.733108 +/- 0.004719 |
+| Omori p | 1.172065 | 1.172067 |
+| Omori c | 1.414299 | 1.414303 |
+| Omori k | 6,659.3 | 6,659.3 |
+
+b and its standard error agree to six decimals; p and c differ in the sixth
+significant figure, which is the two optimisers, SciPy's Nelder-Mead against a
+hand-written simplex. This is a stronger statement than the reference-catalogue
+agreement in section 5, because the reference values were what both implementations
+were built and tuned against, and these were not.
+
+One difference is a capability gap rather than a disagreement: the package applied a
+100 km distance limit and the browser page has no control for one, so the page
+analysed one more event. Say so if the page's numbers are quoted.
+
+### What is not claimed
+
+The b and p values above have not been compared with the published Ridgecrest
+literature, which is extensive. Doing that is the obvious next step and would be a
+genuine external check on the estimators; until it is done, do not present these as
+agreeing with anyone.
+
 ## 10. How correctness is demonstrated
 
 **Layer 1, analytic.** Expected values are exact arithmetic on a published relation: the
@@ -637,7 +727,10 @@ the software is correct; section 12 lists what may not be claimed.
 ## 14. Limitations to state in the paper
 
 The estimators inherit their known behaviour. Maximum-curvature Mc is sensitive to
-binning and to short-term aftershock incompleteness in the hours after a mainshock. The
+binning and to short-term aftershock incompleteness in the hours after a mainshock -
+section 9c measures that on Ridgecrest, where completeness moves from M 3.7 in the
+first half hour to M 1.3 after a month, and a single-Mc b-value comes out 43 standard
+errors below the time-resolved one. The
 Aki b-value assumes completeness above the chosen threshold. The Omori fit needs a dense
 catalogue: where the catalogue above threshold is too thin the tool reports the absence
 rather than producing a fit, and two of the four case-study catalogues (Spitak, Racha)

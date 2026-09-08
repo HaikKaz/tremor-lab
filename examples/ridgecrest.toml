@@ -1,0 +1,45 @@
+# The 2019 Ridgecrest sequence, California: a second real catalogue, used to test
+# the tool on data it was not built against. See section 9c of
+# docs/PROVENANCE_AND_VALIDATION.md for what it found.
+#
+# The catalogue is not in this repository: it is 5.5 MB and belongs to the USGS,
+# not here. Fetch it first, in four parts because the service caps a query at
+# 20,000 events:
+#
+#   BASE="https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv"
+#   BASE="$BASE&latitude=35.7695&longitude=-117.5993&maxradiuskm=100"
+#   BASE="$BASE&minmagnitude=1.0&orderby=time-asc"
+#   curl -o p1.csv "$BASE&starttime=2019-07-06T03:19:53&endtime=2019-07-16T00:00:00"
+#   curl -o p2.csv "$BASE&starttime=2019-07-16T00:00:00&endtime=2019-08-15T00:00:00"
+#   curl -o p3.csv "$BASE&starttime=2019-08-15T00:00:00&endtime=2019-10-15T00:00:00"
+#   curl -o p4.csv "$BASE&starttime=2019-10-15T00:00:00&endtime=2020-01-02T03:19:53"
+#   head -1 p1.csv > ridgecrest.csv
+#   for f in p1 p2 p3 p4; do tail -n +2 $f.csv >> ridgecrest.csv; done
+#
+# Downloaded this way on 8 September 2026: 28,964 events.
+
+# 2019 Ridgecrest, California. M 7.1 on 6 July 2019, preceded by an M 6.4
+# thirty-four hours earlier - a doublet, like Kahramanmaras.
+# Catalogue: USGS ComCat, 100 km radius, M >= 1.0, downloaded 8 September 2026.
+[catalog]
+path = "ridgecrest.csv"
+radius_km = 100
+
+[catalog.columns]
+datetime = "time"
+lat = "latitude"
+lon = "longitude"
+mag = "mag"
+mag_type = "magType"
+
+[mainshock]
+t = "2019-07-06 03:19:53"
+lat = 35.7695
+lon = -117.5993
+mw = 7.1
+
+[analysis]
+window_days = 180
+n_boot = 200
+n_fit_simulations = 600
+seed = 0

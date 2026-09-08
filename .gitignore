@@ -11,3 +11,4 @@ web/_testdata/
 
 # build artefacts
 *.tar.gz
+work/
