@@ -212,10 +212,17 @@ grows and the rejection mostly stands. Report this as a half-confirmed predictio
 is what it is. Note also that p drifts upward with threshold, by 0.03 and 0.19
 respectively, so p needs its threshold stated for the same reason b does.
 
-### 0.5 The independent confirmations, which are strong
+### 0.5 What the published literature does and does not confirm
 
-These are verified first-hand, with the source located and the text quoted. Full detail,
-conditions and verbatim quotations are in section 10c.
+Fifty-one published values across nine papers, each verified first-hand: DOI resolved,
+full text fetched, value and conditions read in the source. Full detail and verbatim
+quotations are in section 10c, which also carries the caveats.
+
+**Read 10c's opening before using any of this.** No published aftershock-window Mc or
+b-value on a KOERI catalogue exists for this sequence, so every comparison is
+cross-catalogue and cross-agency with an unquantified magnitude-scale offset. The
+literature can support the **shape** of what this work measures. It cannot confirm a
+**value**.
 
 **The threshold finding is independently confirmed for this same region.** Hainzl,
 Kumazawa and Ogata (2024), on AFAD background seismicity from 2000 to 2022, using the
@@ -229,13 +236,29 @@ the control.
 model and an incompleteness-corrected ETASI model to one catalogue and gets b = 0.56
 against b = 0.87. A bias of 0.31 on identical data, from a completely different method.
 
-**A like-for-like agreement at the same threshold.** Ali and Abdelrahman (2024) reach
-Mc 4.4 for this sequence on an independent IRIS catalogue of 471 events using ZMAP. At
-that threshold their c = 0.204 plus or minus 0.058 against our 0.195, with b and p within
-about one standard error. This is a stronger external check than the `seismostats`
-comparison in section 10a, because that one shared our input data and this one does not.
-Do not tabulate k: it scales with the number of events above threshold and their
-catalogue is not ours.
+**But concede where they go further.** Hainzl et al. argue that a time-varying threshold
+is itself insufficient and that a detection-probability function is required; their 90
+per cent detection curve sits a full magnitude above their 50 per cent curve throughout.
+Our band-by-band Mc is a coarser instrument than what they recommend. Saying so
+strengthens the paper rather than weakening it.
+
+**Omori c is published as strongly threshold-dependent, on two catalogues.** Nanjo et al.
+(2025) fit the modified Omori law at M >= 2, 3 and 4 on both the AFAD and the Lomax
+catalogues. On AFAD, c falls 12.604 to 1.303 to 0.331 days; on Lomax, 14.887 to 1.613 to
+0.415. **A factor of about 38 across two magnitude units, on both, while p stays within
+about 0.1.** That is the pattern section 0.4 measures on Kahramanmaras and Hector Mine,
+reported independently. They never discuss the sensitivity and never attribute it to
+incompleteness, so that reading stays in our voice, and their values were read from a
+figure and need checking at full resolution before quoting.
+
+**A striking agreement that is NOT a like-for-like check.** Ali and Abdelrahman (2024)
+reach Mc 4.4 and report c = 0.204 +/- 0.058 against our 0.195, with b and p within about
+one standard error. The agreement is real and worth reporting. It is **not** an external
+validation: their catalogue provenance is never stated in the paper, so this is two
+different catalogues agreeing at the same nominal threshold. An earlier draft called it
+"like-for-like" and "the strongest external check in this document"; both are withdrawn,
+and 10c says why. Do not tabulate k, which scales with the number of events above
+threshold.
 
 **Time-varying completeness is confirmed but the numbers are not comparable.** Tan (2025)
 reports Mc falling from about 3.0 on the first day to about 1.5 by mid-March on an AFAD
@@ -343,10 +366,11 @@ doi:10.1785/0120050067; Lippiello et al. (2019) doi:10.3390/geosciences9080355. 
 Helmstetter relation mc(t) = M - 4.5 - 0.75 log10(t) is widely attributed but its
 constants were not verified against the paper; read Figure 6 before using it.
 
-**Forty-one further candidate values were never verified**, because the verification run
-was cut short. They are listed nowhere in this document precisely so they cannot be cited
-by accident. Do not add citations from memory. If a claim needs support that is not in
-the verified list, mark it "[citation needed]" and say what kind of source would carry it.
+**All fifty-one candidate values have now been verified first-hand** across nine papers;
+section 10c carries them with their conditions. Nineteen carry a caveat recorded there,
+and seven specific things still need reading by hand before submission, listed at the end
+of 10c. Do not add citations from memory. If a claim needs support that is not in the
+verified list, mark it "[citation needed]" and say what kind of source would carry it.
 
 ### 0.10 Data and Resources, draft text
 
@@ -1349,170 +1373,219 @@ single-Omori fit on a comparable window and threshold, and none was found. Say t
 comparison covers completeness and the b-value, as with `seismostats` in section 10a,
 and that the decay parameters remain unchecked against anyone.
 
-## 10c. The published Kahramanmaras literature: three confirmations and one correction
+## 10c. The published Kahramanmaras literature
 
-Section 10b did this for Ridgecrest. This does it for the thesis's own sequence. Fifty-one
-candidate published values were found; **ten were verified first-hand** - the source
-located, the paper read, the number and its conditions quoted verbatim. The remaining
-forty-one were still being checked when the run hit a usage limit, so **they are
-unverified, not rejected, and must not be cited from this document.**
+Section 10b did this for Ridgecrest. This is the thesis's own sequence. **Fifty-one
+published values across nine papers were verified first-hand**: DOI resolved against
+Crossref, full text fetched, the value and its conditions read in the source and quoted.
+An earlier pass verified ten of these and was cut short; the completed run added the
+rest and revised two conclusions drawn from that partial set. Where a verifier could not
+reach a source it says so, and nothing is reported from it.
 
-Three of the ten bear directly on section 9e. One contradicts a result in section 9c.
+### First, the structural limitation, because it governs everything below
 
-### 1. A like-for-like match at the same threshold, from an independent catalogue
+**No published aftershock-window completeness magnitude or b-value computed on a KOERI
+catalogue exists for this sequence.** The search did not find one. Every comparison
+available is on a different catalogue: AFAD's national catalogue (Tan; Hainzl, Kumazawa
+and Ogata; Kwiatek et al.; Nanjo et al.), the Lomax (2023) relocated catalogue
+(Rodriguez-Perez and Zuniga; Nanjo et al. as a cross-check), a GFZ machine-learning
+catalogue (Becker et al.), and one paper whose catalogue provenance is never stated at
+all (Ali and Abdelrahman).
 
-**Ali, S. M. and Abdelrahman, K. (2024),** *Analysis of the Fractal Dimension, b-value,
-Slip Ratio, and Decay Rate of Aftershock Seismicity Following the 6 February 2023
-(Mw 7.8 and 7.5) Turkiye Earthquakes*, Fractal and Fractional 8(5), 252,
-doi:10.3390/fractalfract8050252. IRIS catalogue, 471 events M 3.3 to 7.8, 6 Feb 2023 to
-10 Jan 2024, 35-39 N / 34-41 E. Maximum-likelihood fits in ZMAP 6.0. Their maximum
-curvature returns **Mc 4.4** for the whole sequence.
+There is one KOERI-derived study, Senkaya et al. (2025), doi:10.1007/s11600-025-01622-5,
+but it splices KOERI ML events onto Tan's (2021) homogenised Mw catalogue and reports
+Mc 2.1 for a 118.5-year regional window in the Malatya area. Different agency mix,
+different region, different magnitude scale, and not an aftershock window. **It is not
+comparable and must not be presented as if it were.**
 
-That is the same threshold section 9e reaches by a different route, so the two are
-directly comparable:
+Worse, nothing verified establishes how KOERI ML for this sequence relates to AFAD ML or
+to Mw. **Every cross-agency comparison below therefore carries an unquantified
+magnitude-scale offset**, and the paper should say that once, plainly, rather than
+letting each comparison imply a precision it does not have.
 
-| at Mc 4.4 | Ali and Abdelrahman (2024) | this tool |
+**The consequence, and this is the sentence to internalise: the published literature can
+support or fail to support the *shape* of what this work measures. It cannot confirm or
+contradict a *value*.**
+
+### Correction 1: the Ali and Abdelrahman agreement is weaker than section 9e implies
+
+An earlier draft of this section called the agreement with Ali and Abdelrahman (2024),
+doi:10.3390/fractalfract8050252, a "like-for-like match" and "the strongest external
+check in this document". **Both claims were too strong and are withdrawn.**
+
+The numbers are real. At their maximum-curvature Mc of 4.4 they report b = 1.21,
+p = 1.1 +/- 0.04, c = 0.204 +/- 0.058 days, against our 1.124, 1.195 and 0.195 at
+threshold 4.4. The c agreement to 0.009 days is genuine and striking. But:
+
+- **Their catalogue provenance is never stated in the paper.** The earlier pass recorded
+  it as an IRIS catalogue of 471 events; the completed check found IRIS is implied by
+  adjacency in the text and never asserted. Describe it as **unattributed**.
+- Two different catalogues agreeing at the same nominal threshold is a **coincidence
+  worth reporting, not a like-for-like check**. A like-for-like check requires the same
+  events.
+- The paper is **internally inconsistent on the b uncertainty**: +/- 0.1 in the abstract
+  and conclusions, +/- 0.03 in the results. Cite one and state the discrepancy.
+- The paper **misreads its own k as a number of days** ("the decrease in aftershock
+  activity began between approximately 68 to 86 days"). k is a productivity constant.
+  Quote its fitted numbers if you wish; do not lean on its Omori discussion.
+- It reports **three further parameter sets** from the same data: MLE p = 1.25, c = 0.25,
+  k = 88.2; RMS p = 1.08, c = 0.19, k = 75.2; power-law pm = 1.09, cm = 0.163, km = 72.5.
+  That spread is itself a caution against quoting any single one as *the* published value.
+
+The `seismostats` cross-check in section 10a remains the strongest *implementation*
+check. There is no strong external *value* check, and the paper should not claim one.
+
+### Correction 2: Hainzl et al. reach a stronger conclusion than ours, not the same one
+
+Section 9e treats a time-varying completeness magnitude as the fix. Hainzl, Kumazawa and
+Ogata (2024), doi:10.1093/gji/ggae006, argue that **a time-varying threshold is itself
+insufficient** and that a detection-probability function is required. They report that
+"the 90 per cent probability curve is always about one magnitude larger than the 50 per
+cent curve, indicating that many earthquakes are still missed between the two curves",
+and that their catalogue, complete for m >= 2 before the mainshock, "is incomplete for
+the first few days after".
+
+**Our band-by-band Mc is a coarser instrument than what they recommend.** Concede that in
+the text rather than glossing it. It strengthens the paper: it shows the author knows
+where the method sits in the literature.
+
+### The confirmations that hold, and get stronger
+
+**The b-stability threshold, confirmed for this region.** On AFAD background seismicity
+from 2000 to 2022, using the Aki estimator this package implements, Hainzl et al. report
+verbatim: *"The b estimate becomes stable within its uncertainties for M c > 3.5 and
+scatters around 1.07."* Section 9e finds stability at Mc 4.1 at a value of 1.04. Same two
+conclusions, independent data, twenty-three years. This is the single most important
+citation for the paper's primary claim.
+
+**The size of the incompleteness bias, measured on identical data.** The same paper fits
+standard ETAS and incompleteness-corrected ETASI to one catalogue:
+
+| | b | alpha | c | p |
+|---|---|---|---|---|
+| ETAS, uncorrected | **0.56** | 0.30 | 98.9 min | 1.12 |
+| ETASI, corrected | **0.87** | 1.24 | 12.2 min | 0.99 |
+
+A downward bias of **0.31 in b on identical data**, attributable entirely to unhandled
+incompleteness, with a fitted network blind time of 2.7 minutes. Section 9e measures 0.15
+to 0.20 from threshold choice on two catalogues. Same direction, same order, different
+method.
+
+**Time-varying completeness, three independent ways.** Tan (2025),
+doi:10.1007/s11600-024-01419-y, AFAD, 50,085 events: Mc *"decreases gradually from ~ 3.0
+on the first day to ~ 2.0 two weeks later"*, converging to ~1.5 after mid-March and 1.6
+for the nine-month catalogue. Hainzl et al. report Mc jumping at the largest aftershock
+and then decaying *faster* than the Helmstetter relation predicts. Becker et al. (2024),
+doi:10.5880/GFZ.4.2.2024.001, describe their machine-learning catalogue as having a
+"time-variable magnitude of completeness" but give **no numeric Mc(t)**, so nothing
+numeric may be taken from it.
+
+The shape matches ours. **The values do not and cannot**: Tan's first-day 3.0 against our
+3.8, and his 1.6 against our 3.4, because AFAD reaches far below M 3.0 while our extract
+is truncated at it. Cite Tan for the phenomenon and the recovery timescale only.
+
+### The new result: Omori c is threshold-dependent, published, on two catalogues
+
+This is the most valuable thing the completed run found, and it did not appear in the
+partial pass. Nanjo et al. (2025), *Geosciences* 15(4), 113,
+doi:10.3390/geosciences15040113, fit the modified Omori law at **three thresholds on two
+independent catalogues** over 618 days:
+
+| threshold | AFAD: p, c (days) | Lomax (2023): p, c (days) |
 |---|---|---|
-| b | 1.21 +/- 0.03 | 1.124 +/- 0.073 |
-| p | 1.1 +/- 0.04 | 1.195 |
-| **c** | **0.204 +/- 0.058** | **0.195** |
-| k | 76.75 +/- 8.84 | 49.9 |
+| M >= 2 | 1.18 +/- 0.01, **12.604 +/- 0.6** | 1.25 +/- 0.05, **14.887 +/- 1.416** |
+| M >= 3 | 1.11 +/- 0.01, **1.303 +/- 0.12** | 1.18 +/- 0.03, **1.613 +/- 0.189** |
+| M >= 4 | 1.20 +/- 0.03, **0.331 +/- 0.064** | 1.27 +/- 0.05, **0.415 +/- 0.091** |
 
-**c agrees to 0.009 days**, and b and p agree within about one standard error. Different
-catalogue, different agency, different software, same threshold, same estimators. This is
-the strongest external check in this document - stronger than the `seismostats`
-cross-check in section 10a, which used the same input data.
+**c moves by a factor of about 38 across two magnitude units, on both catalogues, while p
+stays within about 0.1.** That is exactly the pattern section 9e measures (c falling
+0.497 to 0.195 on Kahramanmaras and 4.814 to 0.710 on Hector Mine, with p drifting only
+slightly), reported independently by another group who fitted a different agency's
+catalogue over a different window.
 
-Three caveats. **k is not comparable** and must not be tabulated: it scales with the
-number of events above threshold, and their 471-event catalogue is not ours. The paper's
-b uncertainty is internally inconsistent - the abstract says +/- 0.1, the body +/- 0.03;
-prefer the body figure or note the conflict. And the paper misreads its own k as a time
-in days ("the decrease in aftershock activity began between approximately 68 to 86 days
-after"); k is a productivity constant, so quote their numbers but not that sentence.
+Two things to be careful about. **Nanjo et al. never discuss this sensitivity and never
+attribute it to early incompleteness** - that reading is ours and must be in our voice.
+And their p, c, k were read off Figure 13 rather than from text, so **verify them at full
+resolution before quoting**. They also label the doublet M7.7/M7.5 rather than M7.8/M7.6;
+quote their labels or a reader will not find the numbers.
 
-### 2. The b-stability threshold is independently confirmed, in this same region
+Our c = 0.497 at M 3.5 falls between their M >= 3 and M >= 4 values, which is suggestive
+and is not a comparison: different agency, 618 days against our 180.
 
-This is the citation section 9e most needs.
+### Precedent for dropping the first day
 
-**Hainzl, S., Kumazawa, T. and Ogata, Y. (2024),** *Aftershock forecasts based on
-incomplete earthquake catalogues: ETASI model application to the 2023 SE Turkiye
-earthquake sequence*, Geophysical Journal International 236(3), 1609-1620,
-doi:10.1093/gji/ggae006. On AFAD background seismicity for the same region from 2000 to
-2022, using the Aki (1965) maximum-likelihood estimator - the same estimator this package
-implements - they plot b against cut-off magnitude and report, verbatim:
+Nanjo et al. fit ETAS to M >= 3.0 AFAD events *"in the target interval from 1.5 days after
+the M7.7 quake"*, using the first 1.5 days only as a precursory interval. So a
+peer-reviewed study of this exact sequence does exclude the opening of it from the fit.
 
-> "The b estimate becomes stable within its uncertainties for M c > 3.5 and scatters
-> around 1.07."
+Two qualifications, both of which matter. The paper **gives no reason** for the 1.5-day
+choice, and the full text discusses neither completeness nor detection in connection with
+it, so it corroborates the *practice* and not the *rationale*. And in ETAS a precursory
+interval is **not discarded**: those events still act as triggering history in the
+likelihood. Our procedure removes them. **These are not the same operation** and must not
+be described as matching.
 
-Section 9e, measured independently on the aftershock catalogue, finds b stabilising at
-**Mc 4.1** at a value of **1.04**. An independent group, on different data spanning
-twenty-three years, reaches the same two conclusions: b in this region only stabilises
-above a high cut-off, and it stabilises near 1.05. **Cite this rather than presenting
-section 9e as a new observation.** What is new in 9e is the Hector Mine control showing
-the effect is a property of the estimator rather than of this region.
+### One decay curve or two: the literature is genuinely split
 
-### 3. The size of the incompleteness bias is published, on identical data
+Section 9d's control showed the rejection of a single decay is not by itself evidence of
+doublet structure. The published position is divided, and the paper should say so:
 
-The same paper fits a standard ETAS model and an incompleteness-corrected ETASI model to
-one catalogue (9,438 events, m >= 2, Mc 1.95, estimated network blind time 162 s):
+- **For a single curve.** Nanjo et al.: *"the standard (single) ETAS model (red curve)
+  fits the data after the M7.7 quake well"*, verified at M >= 4 and against Lomax.
+- **Against.** Tan: *"although a simple decay model explains the aftershock activity on
+  the EAFZ, it cannot be enough for the Elbistan mainshock"*, with the best Elbistan fit
+  showing discrepancies in both halves of the observation period.
+- **Neither, despite appearances.** Rodriguez-Perez and Zuniga (2025),
+  doi:10.1007/s11600-024-01428-x, treat the two faults separately by design but never
+  argue a single curve fails. **They are weaker support for the sceptical position than
+  Tan is; do not present the two papers as making the same argument.**
 
-| | b |
-|---|---|
-| ETAS, uncorrected | 0.56 |
-| ETASI, corrected for short-term incompleteness | **0.87** |
+Per-rupture fits, for the record: Tan gives EAFZ p = 1, c = 5 d, k = 2600 and Cardak
+p = 0.7, c = 5 d, k = 930, with **no uncertainties** and fitted to daily count histograms
+at M 2.0. Rodriguez-Perez and Zuniga give p = 1.25 +/- 0.08 and 1.14 +/- 0.09 from the
+Lomax catalogue **at an unstated completeness** - that paper states no numeric Mc
+anywhere, which sharply limits what can be done with it. Our combined p = 1.161 sits
+between both pairs.
 
-**A downward bias of 0.31 on identical data, attributable entirely to unhandled
-incompleteness.** Section 9e measures 0.15 to 0.20 from threshold choice alone on two
-catalogues. Same direction, same order of magnitude, arrived at by a completely different
-method. This is the strongest published support for the paper's central methodological
-claim.
+### A caution on extrapolating a 180-day fit
 
-### 4. Time-varying completeness is confirmed, but the absolute numbers are not comparable
+Nanjo et al. estimate the sequence duration at *"2.7-5.5 years, which is longer than
+previously proposed (1-2.5 years)"*, attributing the difference to fitting-window length,
+618 days against about 100. **A 180-day window is closer to the shorter of those.** Do not
+read long-term behaviour out of this fit. (The 1-2.5 year figure is Nanjo et al.'s report
+of Toda and Stein; cite it that way or check it at source.)
 
-**Tan, O. (2025),** *Long-term Aftershock Properties of the Catastrophic 6 February 2023
-Kahramanmaras (Turkiye) Earthquake Sequence*, Acta Geophysica 73, 1023-1040,
-doi:10.1007/s11600-024-01419-y. AFAD national catalogue, ML, 50,085 events, 6 Feb to 31
-Oct 2023:
+### Four things that must stay in our own voice
 
-> "decreases gradually from ~ 3.0 on the first day to ~ 2.0 two weeks later ... The Mc
-> converges to the constant value of ~ 1.5 after mid-March and is 1.6 for the nine-month
-> catalog data."
+Each is defensible reasoning. **None is something the cited author says**, and a methods
+examiner will press on exactly this:
 
-The same shape as section 9e - high on the first day, recovering over weeks to a
-constant - from an independent group on an independent catalogue. **The absolute values
-are not comparable and must not be tabulated side by side.** Their first-day Mc is 3.0
-against our 3.8, and their long-window Mc is 1.6 against our 3.4, because the AFAD
-catalogue is complete far below M 3.0 while the bundled KOERI extract is truncated at
-M 3.0. For our catalogue the truncation floor, not the network, sets the long-window
-figure. Cite Tan for the phenomenon and the recovery timescale, not for the numbers.
+1. That Tan's time-varying Mc is the analogue of our band-by-band result.
+2. That the offset between our Mc and Tan's is caused by our M 3.0 truncation.
+3. That our reversed band-by-band b trend against Hainzl et al. is a completeness
+   artefact (section 0.6).
+4. That Nanjo et al.'s 1.5-day exclusion is motivated by early incompleteness.
 
-### 5. The correction: our band-by-band b trend has the wrong sign
+### Read these by hand before submission
 
-This is the finding that costs something, and it must go in the paper.
-
-The same Hainzl, Kumazawa and Ogata (2024) paper applies the Ogata-Katsura (1993)
-estimator, which fits a time-varying b jointly with a time-varying detection function
-instead of assuming a fixed threshold. It reports **b about 1.2 for the early aftershocks,
-decaying to about 0.85 for the later ones** - a 50 per cent coseismic increase in b, which
-is also the premise of the Gulia and Wiemer Foreshock Traffic Light System cited in
-section 10b.
-
-Sections 9c and 9e report the opposite. Estimated band by band at each band's own maximum
-curvature Mc, this tool gives:
-
-| | early | late |
-|---|---|---|
-| Kahramanmaras | 0.737 +/- 0.080 (29 min - 2.4 h) | 1.018 +/- 0.040 (30-180 d) |
-| Ridgecrest | 0.881 +/- 0.104 (first 29 min) | 1.004 +/- 0.013 (30-180 d) |
-
-**b rising with time, where the literature has it falling.** The explanation is the one
-section 9e establishes, applied to our own numbers: an Aki estimate at a threshold below
-true completeness is biased *low*, and completeness is *worst* in the early bands - so the
-early bands carry the largest downward bias. The Kahramanmaras early figure rests on 72
-events with an Mc itself estimated from those 72 events. Hainzl et al. avoid this by
-modelling detection probability explicitly rather than thresholding.
-
-**Do not present the band-by-band b trend as a result.** State that estimating b in each
-band at that band's maximum-curvature Mc produces a trend of the wrong sign, that the
-published time-resolved estimates run the other way, and that this is a demonstration of
-the very bias the paper is about rather than a competing measurement. It is a better
-illustration of the point than a clean agreement would have been - the tool reproduces the
-artefact, and the diagnosis explains it.
-
-### 6. The two ruptures do decay differently, which section 9d should acknowledge
-
-Section 9d showed that rejection of a single Omori-Utsu decay is not by itself evidence of
-doublet structure, since the single-mainshock Hector Mine control is rejected as hard. That
-stands. But two groups fit the two ruptures separately and find they differ:
-
-| | EAFZ (Pazarcik, Mw 7.8) | Cardak (Elbistan, Mw 7.6) |
-|---|---|---|
-| Tan (2025), Mc 2.0 | p = 1, c = 5 d, k = 2600 | p = 0.7, c = 5 d, k = 930 |
-| Rodriguez-Perez and Zuniga (2025) | p = 1.25 +/- 0.08 | p = 1.14 +/- 0.09 |
-
-Tan additionally reports that the single-Omori model fits the Cardak sequence poorly after
-mid-June. Our combined p = 1.161 sits between both published pairs, which is what a fit to
-the union of two sequences should give.
-
-So the honest position is narrower than either extreme: **the doublet structure is real and
-published fits resolve it, but the KS rejection is not the evidence for it** - a control
-without a doublet rejects too. If the paper wants the doublet claim, cite Tan and
-Rodriguez-Perez for it rather than the residual test.
-
-**Rodriguez-Perez, Q. and Zuniga, F. R. (2025),** *Statistical and source characterization
-of the 2023 Kahramanmaras Turkiye earthquake sequence*, Acta Geophysica 73, 1241-1260,
-doi:10.1007/s11600-024-01428-x. Note for comparison purposes that this paper states no
-numeric Mc anywhere, which limits what can be done with its b-values.
-
-### What is still not compared
-
-Forty-one of the fifty-one candidate values were never verified. Two further papers were
-read and are usable but bear less directly: **Convertito, V., Tramelli, A. and Godano, C.
-(2024),** Scientific Reports 14, 1596, doi:10.1038/s41598-023-50837-3 (on-fault b of 0.7
-to 0.8 at the Mw 7.8 nucleation segment; most grid cells mc 1.5 to 2.2), and Tan's
-whole-catalogue b of about 0.8 at Mc about 1.6 - which is *not* comparable to our 0.844 at
-M 3.5 despite the numerical coincidence, because section 9e shows b at those two thresholds
-should not be equal.
+1. **Hainzl et al., Figure 2(b).** The most valuable missing number: their 50 and 90 per
+   cent detection curves against time. Reading the 90 per cent curve at day 1 gives a
+   measured published first-day completeness on AFAD, which is what the argument lacks.
+   **No value has been read off it and none may be quoted until you do.**
+2. **Tan, Figure 12.** The ~3.0 and ~2.0 endpoints are verified from text; the curve
+   between them is only in the figure.
+3. **Nanjo et al., Figure 13.** The p, c, k above were read from an image.
+4. **Becker et al.'s companion BSSA paper**, doi:10.1785/0120240017, was not fetched. Any
+   numeric Mc(t) for the first five days is there. Cite nothing from it until read.
+5. **Helmstetter et al. (2006)** was not read at source; the relation
+   mc(t) = M - 4.5 - 0.75 log10(t) is known here only through Hainzl et al.
+6. **Tan's year.** Online-first 2024, print issue 2025. Both appear in the wild. Pick one.
+7. **Not found, worth one more manual search:** any published aftershock-window Mc or b on
+   a KOERI catalogue for this sequence. A *J. Earth Syst. Sci.* paper (Akar 2024,
+   doi:10.1007/s12040-024-02398-w) was fetched and names neither catalogue nor numeric Mc,
+   so nothing from it is usable. Search summaries floated a pre-mainshock Mc of 1.8 and a
+   pre-mainshock b of 0.71 +/- 0.04 from a paper that was **not fetched**; those must not
+   enter the manuscript on that basis.
 
 ## 11. Facts and figures
 
