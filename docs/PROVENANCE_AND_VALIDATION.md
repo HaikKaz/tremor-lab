@@ -13,8 +13,10 @@ that will be lost.
 ---
 
 For whoever writes the software/methods article. Everything below is fact, checked
-against the code and the test suite on 7 September 2026. Section 12 lists the things
-that must **not** be claimed; read it before drafting.
+against the code and the test suite, last on 9 September 2026. Section 12 lists the
+seventeen things that must **not** be claimed; read it before drafting. Several claims
+made in earlier drafts were withdrawn on 9 September after being computed rather than
+argued, and section 0 states the position that survived.
 
 **Drafting the paper? Read section 0 first.** It states the settled position in one
 place. The sections after it are chronological and a few of them correct each other,
