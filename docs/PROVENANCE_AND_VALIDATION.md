@@ -138,17 +138,41 @@ with no M 6 or larger event in the following fortnight. Landers 1992 was conside
 rejected as a control because its M 6.3 Big Bear event three hours later makes it a
 doublet as well.
 
-| threshold | 1.5 | 1.7 | 1.9 | 2.1 | 2.2 | 2.4 | 2.6 | 2.8 | 3.0 |
-|---|---|---|---|---|---|---|---|---|---|
-| b | 0.764 | **0.839** | 0.879 | **0.985** | 1.003 | 0.990 | 0.968 | 0.980 | 0.989 |
-| n | 11163 | 8466 | 5965 | 4345 | 3526 | 2217 | 1384 | 900 | 585 |
+Every threshold, not a selection, because the division between the climb and the
+plateau is the whole point and a subsampled table hides it:
 
-Maximum curvature returns **1.7**; b-stability returns **2.1**. **The plateau is the
-single most important result in the paper**: b sits at 0.98 plus or minus 0.02 across
-nine consecutive thresholds spanning 0.9 magnitude units on thousands of events, which
-proves the climb below it is a real bias and not an artefact of shrinking samples. The
-estimator underestimates the threshold by 0.4 magnitude units, and b at its answer is
-0.146 low against a quoted standard error of 0.008, a factor of eighteen.
+| Mc | b | sigma | n | |
+|---|---|---|---|---|
+| 1.5 | 0.764 | 0.006 | 11,163 | climb |
+| 1.6 | 0.804 | 0.007 | 9,807 | climb |
+| **1.7** | **0.839** | **0.008** | **8,466** | **climb; maximum curvature returns this** |
+| 1.8 | 0.865 | 0.009 | 7,179 | climb |
+| 1.9 | 0.879 | 0.010 | 5,965 | climb |
+| 2.0 | 0.943 | 0.013 | 5,193 | climb |
+| **2.1** | **0.985** | **0.015** | **4,345** | **b-stability returns this** |
+| 2.2 | 1.003 | 0.018 | 3,526 | plateau |
+| 2.3 | 0.987 | 0.019 | 2,765 | plateau |
+| 2.4 | 0.990 | 0.022 | 2,217 | plateau |
+| 2.5 | 0.987 | 0.024 | 1,764 | plateau |
+| 2.6 | 0.968 | 0.027 | 1,384 | plateau |
+| 2.7 | 0.977 | 0.030 | 1,120 | plateau |
+| 2.8 | 0.980 | 0.034 | 900 | plateau |
+| 2.9 | 0.960 | 0.037 | 709 | plateau |
+| 3.0 | 0.989 | 0.043 | 585 | plateau |
+
+**The plateau is the single most important result in the paper.** Stated exactly: across
+the **nine consecutive thresholds from M 2.2 to M 3.0**, a span of 0.8 magnitude units,
+b ranges from **0.960 to 1.003** with a mean of 0.982 and no trend, on samples from 3,526
+down to 585 events. Below M 2.2 b climbs monotonically from 0.764. The flat stretch is
+what a correctly-thresholded catalogue looks like, and it is what proves the climb below
+it is a real bias rather than an artefact of shrinking samples.
+
+Maximum curvature returns **1.7**, which is 0.4 to 0.5 magnitude units below the plateau.
+b at its answer is 0.839 against a plateau value near 0.985: **0.146 low, against a quoted
+standard error of 0.008, a factor of eighteen.**
+
+Do not write "0.98 plus or minus 0.02" for the plateau. It reads well and it is wrong at
+one end: b = 1.003 at M 2.2 falls outside that band. Quote the range.
 
 **Catalogue C, Ridgecrest 2019.** USGS ComCat, 28,963 events M >= 1.0 within 100 km, 180
 days from the M 7.1 of 6 July 2019. A doublet, the M 7.1 preceded by an M 6.4 about
@@ -245,14 +269,43 @@ who sees it reported and explained will trust everything else.
   curvature returns 3.4 from four bins sitting immediately above a truncation floor. The
   estimate is poorly constrained and the paper should say so. If the original KOERI export
   extends below M 3.0, rerunning on it would settle the question rather than bound it.
+
 - **Three catalogues is three catalogues.** Two doublets and one single mainshock, all
   M 7.1 to 7.8, two of them Californian. The claim generalises to the extent that a
   reviewer believes three cases generalise. Say so, and resist the urge to write "in
   general".
-- **b stabilising near 1.0 in two catalogues does not mean b is 1.0.** It means the
-  estimate stops depending on the threshold there. Whether the catalogue is complete at
-  that threshold is a separate question this data cannot answer.
+- **Only one of the three catalogues shows a clean plateau.** Hector Mine plateaus over
+  0.8 magnitude units. Kahramanmaras merely inflects, flat at 1.04 to 1.05 over M 4.1 to
+  4.3 and then climbing again on samples of 258 and 201 events. Ridgecrest never
+  stabilises. Say this precisely; do not write as though two catalogues plateaued.
+- **b stabilising near 1.0 does not mean b is 1.0.** It means the estimate stops
+  depending on the threshold there. Whether the catalogue is complete at that threshold
+  is a separate question this data cannot answer.
 - Everything in section 14, which lists the estimators' inherited behaviour.
+
+#### Obtaining the untruncated KOERI window
+
+**One attempt has already failed, so record how, to avoid repeating it.** On 9 September
+2026 a KOERI export was obtained covering 2020-09-09 to 2026-09-09 at minimum magnitude 0
+(`20200909_20260909_0_9.0_53_379.txt`, 50,000 records). The magnitude floor was right: it
+reaches M 0.2. **The window was not.** KOERI caps a query at 50,000 records and returns
+them newest first, so the file spans only 2025-07-08 to 2026-06-30 and contains **zero
+events from 2023**. A six-year query at M 0 over the whole country cannot reach February
+2023 within the cap; the file name's date range is what was asked for, not what came back.
+
+The fix is to query in short slices so no single request approaches the cap, exactly as
+the USGS downloads in `examples/ridgecrest.toml` are split. Suggested slicing, checking
+the returned count each time and narrowing further if any comes back at 50,000:
+
+- 2023-02-06 to 2023-02-13 (the first week, much the densest; may itself need splitting
+  by day for the first two or three days)
+- then week by week to 2023-03-06
+- then month by month to 2023-08-05, which closes the 180-day window
+
+Constraining the region in the query as well, rather than exporting the whole country,
+will cut the counts sharply and is worth doing if the interface allows it. Verify any
+export by checking it reproduces **3,469 events at M >= 3.0** under the thesis's selection
+before trusting what it says below M 3.0.
 
 ### 0.8 What must not be claimed
 
@@ -971,10 +1024,13 @@ mainshock, a different network, a different decade, 13,525 events:
 | b | 0.764 | **0.839** | 0.879 | **0.985** | 1.003 | 0.990 | 0.968 | 0.980 | 0.989 |
 | n | 11,163 | 8,466 | 5,965 | 4,345 | 3,526 | 2,217 | 1,384 | 900 | 585 |
 
-**The same climb, and then an unambiguous plateau** - b sits at 0.98 +/- 0.02 across nine
-consecutive thresholds spanning 0.9 magnitude units, on thousands of events. That plateau
-is what a correctly-thresholded catalogue looks like, and it proves the shape is not an
-artefact of running out of data.
+**The same climb, and then an unambiguous plateau** - across the nine consecutive
+thresholds from M 2.2 to M 3.0, a span of 0.8 magnitude units, b ranges from 0.960 to
+1.003 with a mean of 0.982 and no trend, on samples from 3,526 down to 585 events. That
+plateau is what a correctly-thresholded catalogue looks like, and it proves the shape is
+not an artefact of running out of data. (An earlier draft of this section wrote the
+plateau as "0.98 +/- 0.02 spanning 0.9 magnitude units". Both were slightly wrong: the
+span is 0.8, and b = 1.003 at M 2.2 sits outside that band. Quote the range.)
 
 Maximum curvature returns 1.7 there, where b is 0.839. The stable value is 0.985. **The
 estimator underestimates completeness by about 0.4 magnitude units and biases b low by
