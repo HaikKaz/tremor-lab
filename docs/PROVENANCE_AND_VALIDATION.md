@@ -276,14 +276,39 @@ jointly with a time-varying detection function, report b of about 1.2 for early
 aftershocks decaying to about 0.85 later, a 50 per cent coseismic increase. That is also
 the premise of the Gulia and Wiemer Foreshock Traffic Light System.
 
-Our trend has the wrong sign, and the reason is the paper's own thesis: the early bands
-have the worst completeness, so they carry the largest downward bias. The Kahramanmaras
-early figure rests on 72 events with an Mc estimated from those same 72 events.
+An earlier draft of this section explained the discrepancy: the early bands have the
+worst completeness, so they carry the largest downward bias from a threshold set below
+it. **That explanation was tested on 9 September 2026 and it does not hold.** It is
+withdrawn, and nothing should be built on it.
 
-**Report this.** It is better evidence for the primary claim than agreement would have
-been, because the tool reproduces the artefact and the diagnosis predicts it. A reviewer
-who finds this independently and sees it unacknowledged will reject the paper. A reviewer
-who sees it reported and explained will trust everything else.
+Two things were computed. First, the reported band values were **already estimated at
+each band's own maximum-curvature Mc**, not at a fixed M 3.5 - they reproduce exactly
+(0.723 +/- 0.034, 0.893 +/- 0.027, 1.018 +/- 0.040). So the bands were never being
+estimated below their own completeness, and "threshold below completeness" cannot be the
+mechanism.
+
+Second, and worse for the explanation, **correcting for the threshold effect pushes the
+wrong way.** The early bands sit at *higher* Mc (3.9 and 3.6) than the late ones (3.3),
+and section 9e establishes that b rises with threshold. The early bands should therefore
+read *higher* than the late ones. They read lower. Estimating every band instead at a
+fixed M 3.5 gives 0.601, 0.688, 0.981, 0.894, 0.955: the same rising trend. The
+discrepancy with the published estimates survives both treatments.
+
+The corrected version of the argument - that maximum curvature is itself biased low, and
+more so early - **could not be tested**, because `mc_b_stability` returns None for both
+early bands: with 71 and 513 events they are too small for b to stabilise anywhere.
+
+**So the position to take is that the discrepancy is real and unexplained.** Our
+band-by-band b rises with time; Hainzl, Kumazawa and Ogata, using an estimator built for
+exactly this problem on a deeper catalogue, find it falling. We cannot currently account
+for the difference, and the three explanations available - a threshold artefact, a
+small-sample artefact, and a genuine enrichment of large events in the hours after a
+mainshock - point in directions this catalogue cannot separate.
+
+**Report it as an open discrepancy, not as a demonstration.** That is weaker than the
+earlier draft claimed and it is what the computation supports. A reviewer who finds the
+reversal unacknowledged will reject the paper; one who sees it reported honestly, with a
+failed explanation labelled as failed, has reason to trust the rest.
 
 ### 0.7 Limitations to state, not bury
 
@@ -992,9 +1017,16 @@ already saturated. This is a clean, specific observation about this sequence, an
 something a doublet does that a single mainshock cannot. It is worth reporting on its
 own.
 
-The published analysis uses a fixed **M 3.5** threshold for all 180 days, so for roughly
-the first day it is analysing below completeness, and 425 events enter the sample from a
-period the catalogue could not support.
+The published analysis uses a fixed **M 3.5** threshold for all 180 days, and 425 events
+in the first day enter the sample at it.
+
+**Do not claim those events are below completeness.** It was checked, and the first-day
+Mc is not robust enough to support the claim. Over the 595 events of the first day the
+modal bin is M 3.6, giving Mc 3.8, but the bins at M 3.3, 3.4 and 3.5 all sit **within
+one Poisson standard deviation of it** (47 and 42 against 51). Maximum curvature could
+legitimately return anything from **Mc 3.5 to 3.8** here, and the published threshold is
+3.5. The honest statement is that first-day completeness is poorly constrained and may
+be at or above M 3.5, not that it is demonstrably above it.
 
 ### But the first day is not the explanation
 
@@ -1682,12 +1714,19 @@ Read this before drafting. Each of these is a real trap.
    at.** Both are threshold-dependent in every catalogue tested: b by about 0.2 and p
    by up to 0.19 between Mc and Mc + 1. A bare "b = 0.844" is not a reproducible
    statement about the sequence, it is a statement about a choice. Section 9e.
-15. **Do not present the band-by-band b values as a measurement of how b evolved.**
-   Estimated at each band's own maximum-curvature Mc they trend the wrong way against
-   the published time-resolved estimates, because the early bands carry the largest
-   downward bias. Report them as a demonstration of the bias, with the published
-   result cited, or not at all. Sections 9c and 10c.
-16. **Do not claim the Scordilis relations are range-checked.** They are applied without
+15. **Do not present the band-by-band b values as a measurement of how b evolved, and
+   do not repeat the explanation that was offered for them.** Estimated at each band's
+   own maximum-curvature Mc they trend the wrong way against the published
+   time-resolved estimates. The explanation once given here, that the early bands carry
+   the largest downward bias from a threshold set below completeness, was computed on
+   9 September 2026 and fails: the bands were already at their own Mc, and the
+   threshold effect pushes the other way. Report the reversal as an open discrepancy.
+   Section 0.6.
+16. **Do not claim the first day is below the M 3.5 threshold.** The first-day Mc of 3.8
+   rests on a modal bin that three neighbouring bins sit within one Poisson standard
+   deviation of, so maximum curvature could return anything from 3.5 to 3.8 there. Say
+   first-day completeness is poorly constrained. Section 9e.
+17. **Do not claim the Scordilis relations are range-checked.** They are applied without
    bounds, matching the spreadsheet implementation, and the two Ms branches are mildly
    discontinuous across the uncalibrated 6.1-6.2 gap (6.157 against 6.119 at Ms 6.1).
    This is a deliberate fidelity choice and is documented.
