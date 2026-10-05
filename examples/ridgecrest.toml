@@ -2,9 +2,11 @@
 # the tool on data it was not built against. See section 9c of
 # docs/PROVENANCE_AND_VALIDATION.md for what it found.
 #
-# The catalogue is not in this repository: it is 5.5 MB and belongs to the USGS,
-# not here. Fetch it first, in four parts because the service caps a query at
-# 20,000 events:
+# The catalogue is committed beside this file as ridgecrest.csv, exactly as it was
+# downloaded (5.5 MB, USGS data in the public domain), so the run below needs no
+# network access. To fetch it again, which returns a slightly different file because
+# ComCat revises magnitudes and adds events, use four queries, because the service
+# caps a query at 20,000 events:
 #
 #   BASE="https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv"
 #   BASE="$BASE&latitude=35.7695&longitude=-117.5993&maxradiuskm=100"
@@ -16,7 +18,10 @@
 #   head -1 p1.csv > ridgecrest.csv
 #   for f in p1 p2 p3 p4; do tail -n +2 $f.csv >> ridgecrest.csv; done
 #
-# Downloaded this way on 8 September 2026: 28,964 events.
+# Downloaded this way on 8 September 2026: 28,964 events, the mainshock's own record
+# first. The window excludes events at or before the origin time given below, so that
+# time is the mainshock's ComCat timestamp with its fraction of a second. Rounded
+# down to 03:19:53 the mainshock would sit inside its own aftershock sample.
 
 # 2019 Ridgecrest, California. M 7.1 on 6 July 2019, preceded by an M 6.4
 # thirty-four hours earlier - a doublet, like Kahramanmaras.
@@ -33,7 +38,7 @@ mag = "mag"
 mag_type = "magType"
 
 [mainshock]
-t = "2019-07-06 03:19:53"
+t = "2019-07-06 03:19:53.04"
 lat = 35.7695
 lon = -117.5993
 mw = 7.1

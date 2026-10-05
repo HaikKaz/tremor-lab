@@ -12,3 +12,6 @@ web/_testdata/
 # build artefacts
 *.tar.gz
 work/
+
+# drawn by examples/make_paper_figures.py from the committed regeneration data
+figures/

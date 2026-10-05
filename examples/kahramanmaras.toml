@@ -7,8 +7,9 @@
 # single quotes ('C:\data\catalog.csv'). A backslash inside a double-quoted TOML
 # string is an escape character and will be rejected as invalid.
 # This file is already windowed: it carries elapsed days rather than timestamps, so
-# the columns below name that form. A raw export is configured differently; see the
-# README for the KOERI and USGS shapes.
+# the columns below name that form. A raw export is configured differently: see
+# hectormine.toml for a USGS export, and sections 3 and 7.1 of docs/USER_GUIDE.md for
+# that and for the KOERI shape.
 path = "../tests/data/kahramanmaras_180d.csv"
 
 [catalog.columns]

@@ -8,10 +8,15 @@ Gutenberg-Richter b-value, the modified Omori-Utsu decay, radiated energy and th
 energy screen, and magnitude homogenisation to Mw.
 
 Tremor Lab is the scripting counterpart of `SeismoSheet.gs`, a spreadsheet
-implementation of the same estimators. The two were written independently and use
-different optimisers, so their agreement on a real sequence is a cross-check of both.
-This package reproduces the values reported for the 2023 Kahramanmaras sequence with one
-command.
+implementation of the same estimators. The two were written independently, each with its
+own implementation of the Nelder-Mead simplex, so their agreement on a real sequence is a
+cross-check of both. This package reproduces the values reported for the 2023
+Kahramanmaras sequence with one command.
+
+The user guide, [docs/USER_GUIDE.md](docs/USER_GUIDE.md), is the reference for running it
+on a catalogue of your own: the inputs, the settings file, the report, the messages the
+tool gives when an input is awkward, and recipes for the common tasks. This page is the
+overview and carries the validation.
 
 ## Installation
 
@@ -23,7 +28,7 @@ py -m venv .venv
 ```
 
 Runtime dependencies are NumPy, SciPy and pandas. The development extra adds pytest and
-ruff.
+ruff. The commands for Linux and macOS are in the user guide.
 
 ## Reproducing the reference values
 
@@ -159,6 +164,17 @@ plot. If the table cannot be written, or the window holds no events and there is
 distribution to tabulate, the run says so and exits non-zero rather than leaving an
 older file at that path to be plotted as though it belonged to this sequence.
 
+Two further real catalogues are committed with their settings files, as examples of a
+USGS export: `examples\hectormine.toml`, the 1999 Hector Mine mainshock (13,524 events in
+the window), and `examples\ridgecrest.toml`, the 2019 Ridgecrest sequence (28,962
+events). Each runs offline in seconds. A USGS mainshock time must carry the fraction of a
+second that the catalogue prints for it; section 3.3 of the user guide says why.
+`examples\regenerate_paper_figures.py` recomputes from these files, and from the
+Kahramanmaras file in `tests\data`, every number in the application section of the
+accompanying methods paper and writes them to
+`docs\tremor_lab_regeneration_data.json`; `examples\make_paper_figures.py` draws the
+paper's figures from that file and needs matplotlib.
+
 ## Use from a browser
 
 `web/tremor-lab.html` is the whole tool in one file. Open it by double-clicking:
@@ -189,6 +205,16 @@ frequency-magnitude distribution plus a correction, +0.2 by default (Wiemer and 
 interval, because reported magnitudes sit on a decimal grid that binary floating point
 cannot represent exactly. On the reference catalogue this agrees with half-open binning.
 
+**Two other completeness estimates** are reported beside it, because the three do not
+always agree and the disagreement is informative. Goodness of fit (Wiemer and Wyss 2000)
+takes the lowest candidate magnitude above which a Gutenberg-Richter law with the fitted
+b explains at least 90 per cent of the observed cumulative counts. B-value stability
+(Cao and Gao 2002; Woessner and Wiemer 2005) takes the lowest threshold at which b
+differs from its mean over the next 0.5 magnitude units by no more than its own standard
+error. Either reports that it found nothing, and says so, where no candidate qualifies.
+`b_stability` returns the whole curve of b against threshold, which is the most direct
+way to see whether b depends on where the threshold is placed.
+
 **Gutenberg-Richter b-value**, Aki (1965) maximum-likelihood estimator with the Shi and
 Bolt (1982) standard error. The sample is every event at or above Mc - dm/2, the lower
 edge of the completeness bin, which is also the bound the estimator puts in its
@@ -203,16 +229,31 @@ The half-bin offset is the lower edge of the completeness bin: a magnitude repor
 Mc stands for the interval Mc +/- dm/2.
 
 **Modified Omori-Utsu decay**, n(t) = k / (c + t)^p, by maximum likelihood on unbinned
-post-mainshock times (Ogata 1983; Utsu, Ogata and Matsuura 1995), minimised with
-`scipy.optimize.minimize`. Only c and p are searched: at any (c, p) the likelihood is
+post-mainshock times (Ogata 1983; Utsu, Ogata and Matsu'ura 1995), minimised with the
+Nelder-Mead simplex (Nelder and Mead 1965) in `scipy.optimize.minimize`. Only c and p
+are searched: at any (c, p) the likelihood is
 maximised by k = n / integral, so k follows in closed form. This removes one dimension
 and any dependence on a starting value for k. The test suite asserts the result is at
 least as likely as a full three-parameter search, and independent of the starting point.
-Uncertainty on p and c comes from a bootstrap that holds the observation interval fixed.
+Uncertainty on p and c comes from a bootstrap (Efron 1979) that holds the observation
+interval fixed.
 
 By default the observation interval ends at the last event supplied, not at the nominal
 window length. On the reference catalogue those differ, 179.596 days against 180, and
 the choice moves p in the third decimal.
+
+**Decay fit test**, the Ogata (1988) residual analysis. Each time is transformed by the
+fitted cumulative rate, and the rescaled times are tested against a uniform distribution
+with the Kolmogorov-Smirnov statistic. Because c and p were estimated from the same
+times, the textbook p-value is far too generous, the effect Lilliefors (1967) described
+for the normal distribution: on 300 sequences simulated from the fitted model it
+rejected at the 5 per cent level in none of them. The null distribution is therefore
+simulated by parametric bootstrap, refitting the decay on every replicate. The report
+gives the p-value with its Monte Carlo standard error, and gives no verdict when the
+p-value lies within two standard errors of 0.05; the remedy is a larger
+`n_fit_simulations`, not a firmer verdict. A small p-value means the sequence is not a
+single Omori decay, most often because a large aftershock has started a sequence of its
+own inside the window.
 
 **Radiated energy**, log10 E = 1.5 M + 4.8 with E in joules (Gutenberg and Richter 1956;
 Kanamori 1977), and the Bath energy ratio 10^(1.5 (M_sec - (M_main - delta_mb))) with
@@ -317,9 +358,10 @@ Produced with Python 3.13.7, NumPy 2.5.2, SciPy 1.18.1, pandas 2.3.3 on Windows 
 
 These were produced by the validated Python/SciPy reference implementation and
 reproduced independently by the spreadsheet implementation, whose optimiser is a
-hand-written Nelder-Mead simplex rather than SciPy's. Two independent optimisers
-agreeing to three decimals on a real sequence is what makes them reference values. If a
-change makes `tests/test_regression.py` fail, the change is wrong, not the numbers.
+hand-written Nelder-Mead simplex rather than SciPy's. Two independent implementations of
+the simplex agreeing to three decimals on a real sequence is what makes them reference
+values. If a change makes `tests/test_regression.py` fail, the change is wrong, not the
+numbers.
 
 ## Limitations
 
@@ -353,10 +395,10 @@ makes it evidence rather than assertion.
 
 **Archive for a DOI.** Done. Every GitHub release is archived by Zenodo, which mints a
 DOI for it. Cite the concept DOI, [10.5281/zenodo.22653579](https://doi.org/10.5281/zenodo.22653579),
-which always resolves to the latest version; version 1.1.0 itself is
-[10.5281/zenodo.22653580](https://doi.org/10.5281/zenodo.22653580). Both are in
-`CITATION.cff`. To publish a new version, tag it and create a GitHub release - a bare
-tag is not enough, because Zenodo watches releases.
+which always resolves to the latest version, or the DOI of the release you used. The
+concept DOI and the release DOIs are listed in `CITATION.cff`. To publish a new version,
+tag it and create a GitHub release - a bare tag is not enough, because Zenodo watches
+releases.
 
 ## Licence and citation
 
@@ -364,12 +406,67 @@ MIT, see `LICENSE`. Citation metadata is in `CITATION.cff`.
 
 ## References
 
-Aki, K. (1965). Bath, M. (1965). Cao, A. and Gao, S. S. (2002). Efron, B. (1979).
-Gutenberg, B. and Richter, C. F. (1944, 1956). Kanamori, H. (1977). Nelder, J. A. and
-Mead, R. (1965). Ogata, Y. (1983). Scordilis, E. M. (2006). Shi, Y. and Bolt, B. A.
-(1982). Tinti, S. and Mulargia, F. (1987). Utsu, T. (1965), for the half-bin
-correction to the b-value, which is not in Aki (1965). Utsu, T., Ogata, Y. and
-Matsuura, R. S. (1995). Wiemer, S. and Wyss, M. (2000). Woessner, J. and Wiemer, S.
-(2005).
+Aki, K. (1965). Maximum likelihood estimate of b in the formula log N = a - bM and its
+confidence limits. Bulletin of the Earthquake Research Institute, University of Tokyo,
+43, 237-239.
 
-Verify each primary source before final citation.
+Bath, M. (1965). Lateral inhomogeneities of the upper mantle. Tectonophysics, 2(6),
+483-514. https://doi.org/10.1016/0040-1951(65)90003-X
+
+Cao, A. and Gao, S. S. (2002). Temporal variation of seismic b-values beneath
+northeastern Japan island arc. Geophysical Research Letters, 29(9).
+https://doi.org/10.1029/2001GL013775
+
+Efron, B. (1979). Bootstrap methods: another look at the jackknife. The Annals of
+Statistics, 7(1), 1-26. https://doi.org/10.1214/aos/1176344552
+
+Gutenberg, B. and Richter, C. F. (1944). Frequency of earthquakes in California.
+Bulletin of the Seismological Society of America, 34(4), 185-188.
+https://doi.org/10.1785/BSSA0340040185
+
+Gutenberg, B. and Richter, C. F. (1956). Earthquake magnitude, intensity, energy, and
+acceleration (second paper). Bulletin of the Seismological Society of America, 46(2),
+105-145.
+
+Kanamori, H. (1977). The energy release in great earthquakes. Journal of Geophysical
+Research, 82(20), 2981-2987.
+
+Lilliefors, H. W. (1967). On the Kolmogorov-Smirnov test for normality with mean and
+variance unknown. Journal of the American Statistical Association, 62(318), 399-402.
+
+Nelder, J. A. and Mead, R. (1965). A simplex method for function minimization. The
+Computer Journal, 7(4), 308-313. https://doi.org/10.1093/comjnl/7.4.308
+
+Ogata, Y. (1983). Estimation of the parameters in the modified Omori formula for
+aftershock frequencies by the maximum likelihood procedure. Journal of Physics of the
+Earth, 31(2), 115-124. https://doi.org/10.4294/jpe1952.31.115
+
+Ogata, Y. (1988). Statistical models for earthquake occurrences and residual analysis
+for point processes. Journal of the American Statistical Association, 83(401), 9-27.
+
+Scordilis, E. M. (2006). Empirical global relations converting Ms and mb to moment
+magnitude. Journal of Seismology, 10(2), 225-236.
+https://doi.org/10.1007/s10950-006-9012-4
+
+Shi, Y. and Bolt, B. A. (1982). The standard error of the magnitude-frequency b value.
+Bulletin of the Seismological Society of America, 72(5), 1677-1687.
+
+Tinti, S. and Mulargia, F. (1987). Confidence intervals of b values for grouped
+magnitudes. Bulletin of the Seismological Society of America, 77(6), 2125-2134.
+
+Utsu, T. (1965). A method for determining the value of b in a formula log n = a - bM
+showing the magnitude-frequency relation for earthquakes. Geophysical Bulletin of
+Hokkaido University, 13, 99-103. Cited for the half-bin correction to the b-value, which
+is not in Aki (1965).
+
+Utsu, T., Ogata, Y. and Matsu'ura, R. S. (1995). The centenary of the Omori formula for
+a decay law of aftershock activity. Journal of Physics of the Earth, 43(1), 1-33.
+https://doi.org/10.4294/jpe1952.43.1
+
+Wiemer, S. and Wyss, M. (2000). Minimum magnitude of completeness in earthquake
+catalogs: examples from Alaska, the western United States, and Japan. Bulletin of the
+Seismological Society of America, 90(4), 859-869. https://doi.org/10.1785/0119990114
+
+Woessner, J. and Wiemer, S. (2005). Assessing the quality of earthquake catalogues:
+estimating the magnitude of completeness and its uncertainty. Bulletin of the
+Seismological Society of America, 95(2), 684-698. https://doi.org/10.1785/0120040007

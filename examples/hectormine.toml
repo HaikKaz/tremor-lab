@@ -4,8 +4,10 @@
 # docs/PROVENANCE_AND_VALIDATION.md - it is rejected as hard as the doublets are,
 # which is why the doublet explanation is no longer claimed.
 #
-# The catalogue is not committed. Fetch it in two parts, because the service caps
-# a query at 20,000 events:
+# The catalogue is committed beside this file as hectormine.csv, exactly as it was
+# downloaded, so the run below needs no network access. To fetch it again, which
+# returns a slightly different file because ComCat revises magnitudes and adds
+# events, use two queries, because the service caps a query at 20,000 events:
 #
 #   BASE="https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv"
 #   BASE="$BASE&latitude=34.6033&longitude=-116.265&maxradiuskm=100"
@@ -15,7 +17,10 @@
 #   head -1 h1.csv > hectormine.csv
 #   for f in h1 h2; do tail -n +2 $f.csv >> hectormine.csv; done
 #
-# Downloaded this way on 8 September 2026: 13,526 events.
+# Downloaded this way on 8 September 2026: 13,526 events, the mainshock's own record
+# first. The window excludes events at or before the origin time given below, so that
+# time is the mainshock's ComCat timestamp with its fraction of a second. Rounded
+# down to 09:46:44 the mainshock would sit inside its own aftershock sample.
 
 # 1999 Hector Mine, California: M 7.1, a SINGLE mainshock with no comparable
 # second event - the control for the doublet finding.
@@ -29,7 +34,7 @@ lon = "longitude"
 mag = "mag"
 mag_type = "magType"
 [mainshock]
-t = "1999-10-16 09:46:44"
+t = "1999-10-16 09:46:44.46"
 lat = 34.6033
 lon = -116.265
 mw = 7.1

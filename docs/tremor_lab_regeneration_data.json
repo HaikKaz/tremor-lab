@@ -1,0 +1,1246 @@
+{
+  "meta": {
+    "tremor_lab_version": "1.1.2",
+    "dm": 0.1,
+    "window_days": 180,
+    "seed": 0,
+    "n_fit_simulations_default": 600
+  },
+  "kahramanmaras": {
+    "n_events": 3469,
+    "mc": {
+      "maxcurvature": 3.4,
+      "goodness_of_fit": 3.0,
+      "b_stability": 4.1
+    },
+    "b_at_mc": {
+      "maxcurvature": {
+        "threshold": 3.4,
+        "b": 0.851,
+        "sigma": 0.018,
+        "n": 1874
+      },
+      "goodness_of_fit": {
+        "threshold": 3.0,
+        "b": 0.743,
+        "sigma": 0.011,
+        "n": 3469
+      },
+      "b_stability": {
+        "threshold": 4.1,
+        "b": 1.041,
+        "sigma": 0.046,
+        "n": 498
+      }
+    },
+    "b_sweep": [
+      {
+        "threshold": 3.0,
+        "b": 0.743,
+        "sigma": 0.011,
+        "n": 3469
+      },
+      {
+        "threshold": 3.1,
+        "b": 0.785,
+        "sigma": 0.012,
+        "n": 3076
+      },
+      {
+        "threshold": 3.2,
+        "b": 0.829,
+        "sigma": 0.014,
+        "n": 2697
+      },
+      {
+        "threshold": 3.3,
+        "b": 0.847,
+        "sigma": 0.016,
+        "n": 2270
+      },
+      {
+        "threshold": 3.4,
+        "b": 0.851,
+        "sigma": 0.018,
+        "n": 1874
+      },
+      {
+        "threshold": 3.5,
+        "b": 0.844,
+        "sigma": 0.019,
+        "n": 1529
+      },
+      {
+        "threshold": 3.6,
+        "b": 0.878,
+        "sigma": 0.021,
+        "n": 1304
+      },
+      {
+        "threshold": 3.7,
+        "b": 0.924,
+        "sigma": 0.025,
+        "n": 1115
+      },
+      {
+        "threshold": 3.8,
+        "b": 0.985,
+        "sigma": 0.03,
+        "n": 954
+      },
+      {
+        "threshold": 3.9,
+        "b": 1.01,
+        "sigma": 0.035,
+        "n": 777
+      },
+      {
+        "threshold": 4.0,
+        "b": 1.028,
+        "sigma": 0.04,
+        "n": 625
+      },
+      {
+        "threshold": 4.1,
+        "b": 1.041,
+        "sigma": 0.046,
+        "n": 498
+      },
+      {
+        "threshold": 4.2,
+        "b": 1.048,
+        "sigma": 0.052,
+        "n": 394
+      },
+      {
+        "threshold": 4.3,
+        "b": 1.048,
+        "sigma": 0.058,
+        "n": 309
+      },
+      {
+        "threshold": 4.4,
+        "b": 1.124,
+        "sigma": 0.073,
+        "n": 258
+      },
+      {
+        "threshold": 4.5,
+        "b": 1.137,
+        "sigma": 0.087,
+        "n": 201
+      },
+      {
+        "threshold": 4.6,
+        "b": 1.109,
+        "sigma": 0.097,
+        "n": 151
+      },
+      {
+        "threshold": 4.7,
+        "b": 1.111,
+        "sigma": 0.113,
+        "n": 117
+      },
+      {
+        "threshold": 4.8,
+        "b": 1.09,
+        "sigma": 0.129,
+        "n": 89
+      },
+      {
+        "threshold": 4.9,
+        "b": 1.088,
+        "sigma": 0.15,
+        "n": 69
+      }
+    ],
+    "omori_sweep": [
+      {
+        "threshold": 3.5,
+        "p": 1.1609,
+        "c": 0.4968,
+        "k": 358.87,
+        "n": 1529
+      },
+      {
+        "threshold": 3.6,
+        "p": 1.1451,
+        "c": 0.4134,
+        "k": 284.1,
+        "n": 1304
+      },
+      {
+        "threshold": 3.7,
+        "p": 1.124,
+        "c": 0.3632,
+        "k": 227.18,
+        "n": 1115
+      },
+      {
+        "threshold": 3.8,
+        "p": 1.1469,
+        "c": 0.3639,
+        "k": 202.0,
+        "n": 954
+      },
+      {
+        "threshold": 3.9,
+        "p": 1.1456,
+        "c": 0.3052,
+        "k": 157.44,
+        "n": 777
+      },
+      {
+        "threshold": 4.0,
+        "p": 1.143,
+        "c": 0.2548,
+        "k": 120.87,
+        "n": 625
+      },
+      {
+        "threshold": 4.1,
+        "p": 1.1959,
+        "c": 0.2669,
+        "k": 104.55,
+        "n": 498
+      },
+      {
+        "threshold": 4.2,
+        "p": 1.1807,
+        "c": 0.2024,
+        "k": 75.52,
+        "n": 394
+      },
+      {
+        "threshold": 4.3,
+        "p": 1.1685,
+        "c": 0.1794,
+        "k": 56.7,
+        "n": 309
+      },
+      {
+        "threshold": 4.4,
+        "p": 1.1952,
+        "c": 0.1952,
+        "k": 49.94,
+        "n": 258
+      }
+    ],
+    "start_cut": [
+      {
+        "start_days": 0,
+        "cells": [
+          {
+            "threshold": 3.5,
+            "b": 0.844,
+            "sigma": 0.019,
+            "n": 1529
+          },
+          {
+            "threshold": 3.8,
+            "b": 0.985,
+            "sigma": 0.03,
+            "n": 954
+          },
+          {
+            "threshold": 4.0,
+            "b": 1.028,
+            "sigma": 0.04,
+            "n": 625
+          },
+          {
+            "threshold": 4.4,
+            "b": 1.124,
+            "sigma": 0.073,
+            "n": 258
+          }
+        ]
+      },
+      {
+        "start_days": 1,
+        "cells": [
+          {
+            "threshold": 3.5,
+            "b": 0.947,
+            "sigma": 0.024,
+            "n": 1104
+          },
+          {
+            "threshold": 3.8,
+            "b": 1.14,
+            "sigma": 0.042,
+            "n": 652
+          },
+          {
+            "threshold": 4.0,
+            "b": 1.178,
+            "sigma": 0.057,
+            "n": 393
+          },
+          {
+            "threshold": 4.4,
+            "b": 1.211,
+            "sigma": 0.092,
+            "n": 139
+          }
+        ]
+      },
+      {
+        "start_days": 2,
+        "cells": [
+          {
+            "threshold": 3.5,
+            "b": 0.944,
+            "sigma": 0.026,
+            "n": 937
+          },
+          {
+            "threshold": 3.8,
+            "b": 1.156,
+            "sigma": 0.046,
+            "n": 560
+          },
+          {
+            "threshold": 4.0,
+            "b": 1.213,
+            "sigma": 0.063,
+            "n": 339
+          },
+          {
+            "threshold": 4.4,
+            "b": 1.275,
+            "sigma": 0.108,
+            "n": 117
+          }
+        ]
+      },
+      {
+        "start_days": 7,
+        "cells": [
+          {
+            "threshold": 3.5,
+            "b": 0.923,
+            "sigma": 0.03,
+            "n": 641
+          },
+          {
+            "threshold": 3.8,
+            "b": 1.12,
+            "sigma": 0.054,
+            "n": 385
+          },
+          {
+            "threshold": 4.0,
+            "b": 1.166,
+            "sigma": 0.073,
+            "n": 236
+          },
+          {
+            "threshold": 4.4,
+            "b": 1.249,
+            "sigma": 0.121,
+            "n": 88
+          }
+        ]
+      }
+    ],
+    "band_b": [
+      {
+        "band_lo": 0.0,
+        "band_hi": 0.2,
+        "threshold": 3.8,
+        "b": 0.726,
+        "sigma": 0.06,
+        "n": 95
+      },
+      {
+        "band_lo": 0.2,
+        "band_hi": 0.38,
+        "threshold": 3.7,
+        "b": 0.948,
+        "sigma": 0.115,
+        "n": 37
+      },
+      {
+        "band_lo": 0.38,
+        "band_hi": 0.6,
+        "threshold": 4.4,
+        "b": 0.79,
+        "sigma": 0.144,
+        "n": 39
+      },
+      {
+        "band_lo": 0.6,
+        "band_hi": 1.0,
+        "threshold": 3.6,
+        "b": 0.82,
+        "sigma": 0.062,
+        "n": 114
+      },
+      {
+        "band_lo": 1.0,
+        "band_hi": 2.0,
+        "threshold": 3.4,
+        "b": 0.937,
+        "sigma": 0.062,
+        "n": 203
+      },
+      {
+        "band_lo": 2.0,
+        "band_hi": 5.0,
+        "threshold": 3.2,
+        "b": 0.922,
+        "sigma": 0.04,
+        "n": 377
+      },
+      {
+        "band_lo": 30.0,
+        "band_hi": 180.0,
+        "threshold": 3.3,
+        "b": 1.018,
+        "sigma": 0.04,
+        "n": 543
+      }
+    ],
+    "time_bands": [
+      {
+        "band_lo": 0.0,
+        "band_hi": 0.2,
+        "n": 155,
+        "mc": 3.8
+      },
+      {
+        "band_lo": 0.2,
+        "band_hi": 0.38,
+        "n": 106,
+        "mc": 3.7
+      },
+      {
+        "band_lo": 0.38,
+        "band_hi": 0.6,
+        "n": 120,
+        "mc": 4.4
+      },
+      {
+        "band_lo": 0.6,
+        "band_hi": 1.0,
+        "n": 214,
+        "mc": 3.6
+      },
+      {
+        "band_lo": 1.0,
+        "band_hi": 2.0,
+        "n": 347,
+        "mc": 3.4
+      },
+      {
+        "band_lo": 2.0,
+        "band_hi": 5.0,
+        "n": 497,
+        "mc": 3.2
+      },
+      {
+        "band_lo": 30.0,
+        "band_hi": 180.0,
+        "n": 968,
+        "mc": 3.3
+      }
+    ],
+    "band_b_fixed_3p5": [
+      {
+        "band_lo": 0.0,
+        "band_hi": 0.2,
+        "threshold": 3.5,
+        "b": 0.607,
+        "sigma": 0.04,
+        "n": 127
+      },
+      {
+        "band_lo": 0.2,
+        "band_hi": 0.38,
+        "threshold": 3.5,
+        "b": 0.965,
+        "sigma": 0.106,
+        "n": 59
+      },
+      {
+        "band_lo": 0.38,
+        "band_hi": 0.6,
+        "threshold": 3.5,
+        "b": 0.498,
+        "sigma": 0.035,
+        "n": 103
+      },
+      {
+        "band_lo": 0.6,
+        "band_hi": 1.0,
+        "threshold": 3.5,
+        "b": 0.81,
+        "sigma": 0.058,
+        "n": 136
+      },
+      {
+        "band_lo": 1.0,
+        "band_hi": 2.0,
+        "threshold": 3.5,
+        "b": 0.96,
+        "sigma": 0.07,
+        "n": 167
+      },
+      {
+        "band_lo": 2.0,
+        "band_hi": 5.0,
+        "threshold": 3.5,
+        "b": 1.013,
+        "sigma": 0.057,
+        "n": 210
+      },
+      {
+        "band_lo": 30.0,
+        "band_hi": 180.0,
+        "threshold": 3.5,
+        "b": 0.955,
+        "sigma": 0.043,
+        "n": 322
+      }
+    ],
+    "fit_test": {
+      "threshold": 3.5,
+      "n": 1529,
+      "ks": 0.021,
+      "null_95th_percentile": 0.0203,
+      "p": 0.0372,
+      "p_se": 0.0027,
+      "replicates": 5000,
+      "method": "parametric bootstrap, 5000 replicates"
+    },
+    "refit_tests": [
+      {
+        "threshold": 3.5,
+        "n": 1529,
+        "ks": 0.021,
+        "p": 0.0375,
+        "p_se": 0.0042,
+        "replicates": 2000
+      },
+      {
+        "threshold": 3.8,
+        "n": 954,
+        "ks": 0.0336,
+        "p": 0.0005,
+        "p_se": 0.0005,
+        "replicates": 2000
+      },
+      {
+        "threshold": 4.0,
+        "n": 625,
+        "ks": 0.0497,
+        "p": 0.0005,
+        "p_se": 0.0005,
+        "replicates": 2000
+      },
+      {
+        "threshold": 4.4,
+        "n": 258,
+        "ks": 0.0742,
+        "p": 0.0005,
+        "p_se": 0.0005,
+        "replicates": 2000
+      }
+    ]
+  },
+  "hectormine": {
+    "n_events": 13524,
+    "mc": {
+      "maxcurvature": 1.7,
+      "goodness_of_fit": 1.5,
+      "b_stability": 2.1
+    },
+    "b_at_mc": {
+      "maxcurvature": {
+        "threshold": 1.7,
+        "b": 0.84,
+        "sigma": 0.008,
+        "n": 8465
+      },
+      "goodness_of_fit": {
+        "threshold": 1.5,
+        "b": 0.765,
+        "sigma": 0.006,
+        "n": 11162
+      },
+      "b_stability": {
+        "threshold": 2.1,
+        "b": 0.987,
+        "sigma": 0.015,
+        "n": 4344
+      }
+    },
+    "b_sweep": [
+      {
+        "threshold": 1.5,
+        "b": 0.765,
+        "sigma": 0.006,
+        "n": 11162
+      },
+      {
+        "threshold": 1.6,
+        "b": 0.805,
+        "sigma": 0.007,
+        "n": 9806
+      },
+      {
+        "threshold": 1.7,
+        "b": 0.84,
+        "sigma": 0.008,
+        "n": 8465
+      },
+      {
+        "threshold": 1.8,
+        "b": 0.867,
+        "sigma": 0.009,
+        "n": 7178
+      },
+      {
+        "threshold": 1.9,
+        "b": 0.881,
+        "sigma": 0.01,
+        "n": 5964
+      },
+      {
+        "threshold": 2.0,
+        "b": 0.945,
+        "sigma": 0.013,
+        "n": 5192
+      },
+      {
+        "threshold": 2.1,
+        "b": 0.987,
+        "sigma": 0.015,
+        "n": 4344
+      },
+      {
+        "threshold": 2.2,
+        "b": 1.006,
+        "sigma": 0.017,
+        "n": 3525
+      },
+      {
+        "threshold": 2.3,
+        "b": 0.991,
+        "sigma": 0.019,
+        "n": 2764
+      },
+      {
+        "threshold": 2.4,
+        "b": 0.995,
+        "sigma": 0.021,
+        "n": 2216
+      },
+      {
+        "threshold": 2.5,
+        "b": 0.993,
+        "sigma": 0.024,
+        "n": 1763
+      },
+      {
+        "threshold": 2.6,
+        "b": 0.974,
+        "sigma": 0.026,
+        "n": 1383
+      },
+      {
+        "threshold": 2.7,
+        "b": 0.985,
+        "sigma": 0.03,
+        "n": 1119
+      },
+      {
+        "threshold": 2.8,
+        "b": 0.989,
+        "sigma": 0.033,
+        "n": 899
+      },
+      {
+        "threshold": 2.9,
+        "b": 0.972,
+        "sigma": 0.036,
+        "n": 708
+      },
+      {
+        "threshold": 3.0,
+        "b": 1.003,
+        "sigma": 0.042,
+        "n": 584
+      },
+      {
+        "threshold": 3.1,
+        "b": 0.979,
+        "sigma": 0.045,
+        "n": 455
+      },
+      {
+        "threshold": 3.2,
+        "b": 1.006,
+        "sigma": 0.053,
+        "n": 373
+      },
+      {
+        "threshold": 3.3,
+        "b": 0.987,
+        "sigma": 0.057,
+        "n": 292
+      },
+      {
+        "threshold": 3.4,
+        "b": 0.988,
+        "sigma": 0.064,
+        "n": 234
+      },
+      {
+        "threshold": 3.5,
+        "b": 0.988,
+        "sigma": 0.07,
+        "n": 187
+      },
+      {
+        "threshold": 3.6,
+        "b": 0.971,
+        "sigma": 0.076,
+        "n": 147
+      },
+      {
+        "threshold": 3.7,
+        "b": 0.97,
+        "sigma": 0.083,
+        "n": 118
+      },
+      {
+        "threshold": 3.8,
+        "b": 0.985,
+        "sigma": 0.093,
+        "n": 96
+      },
+      {
+        "threshold": 3.9,
+        "b": 0.991,
+        "sigma": 0.102,
+        "n": 77
+      },
+      {
+        "threshold": 4.0,
+        "b": 1.076,
+        "sigma": 0.129,
+        "n": 66
+      }
+    ],
+    "omori_sweep": [
+      {
+        "threshold": 1.7,
+        "p": 1.0868,
+        "c": 4.8305,
+        "k": 3106.77,
+        "n": 8465
+      },
+      {
+        "threshold": 1.8,
+        "p": 1.1169,
+        "c": 3.8813,
+        "k": 2709.08,
+        "n": 7178
+      },
+      {
+        "threshold": 1.9,
+        "p": 1.1554,
+        "c": 3.1288,
+        "k": 2361.5,
+        "n": 5964
+      },
+      {
+        "threshold": 2.0,
+        "p": 1.2042,
+        "c": 2.8178,
+        "k": 2284.96,
+        "n": 5192
+      },
+      {
+        "threshold": 2.1,
+        "p": 1.2518,
+        "c": 2.698,
+        "k": 2148.06,
+        "n": 4344
+      },
+      {
+        "threshold": 2.2,
+        "p": 1.2767,
+        "c": 2.1019,
+        "k": 1689.91,
+        "n": 3525
+      },
+      {
+        "threshold": 2.3,
+        "p": 1.2672,
+        "c": 1.4729,
+        "k": 1132.17,
+        "n": 2764
+      },
+      {
+        "threshold": 2.4,
+        "p": 1.296,
+        "c": 1.1782,
+        "k": 888.99,
+        "n": 2216
+      },
+      {
+        "threshold": 2.5,
+        "p": 1.2967,
+        "c": 0.8741,
+        "k": 632.99,
+        "n": 1763
+      },
+      {
+        "threshold": 2.6,
+        "p": 1.2774,
+        "c": 0.7171,
+        "k": 446.29,
+        "n": 1383
+      }
+    ],
+    "fit_test": {
+      "threshold": 1.7,
+      "n": 8465,
+      "ks": 0.0136,
+      "null_95th_percentile": 0.0085,
+      "p": 0.0017,
+      "p_se": 0.0017,
+      "replicates": 600,
+      "method": "parametric bootstrap, 600 replicates"
+    },
+    "refit_tests": [
+      {
+        "threshold": 1.7,
+        "n": 8465,
+        "ks": 0.0136,
+        "p": 0.0005,
+        "p_se": 0.0005,
+        "replicates": 2000
+      },
+      {
+        "threshold": 2.0,
+        "n": 5192,
+        "ks": 0.0109,
+        "p": 0.045,
+        "p_se": 0.0046,
+        "replicates": 2000
+      },
+      {
+        "threshold": 2.2,
+        "n": 3525,
+        "ks": 0.0181,
+        "p": 0.0005,
+        "p_se": 0.0005,
+        "replicates": 2000
+      },
+      {
+        "threshold": 2.6,
+        "n": 1383,
+        "ks": 0.0236,
+        "p": 0.0205,
+        "p_se": 0.0032,
+        "replicates": 2000
+      }
+    ]
+  },
+  "ridgecrest": {
+    "n_events": 28962,
+    "mc": {
+      "maxcurvature": 1.3,
+      "goodness_of_fit": 1.0,
+      "b_stability": null
+    },
+    "b_at_mc": {
+      "maxcurvature": {
+        "threshold": 1.3,
+        "b": 0.733,
+        "sigma": 0.005,
+        "n": 20643
+      },
+      "goodness_of_fit": {
+        "threshold": 1.0,
+        "b": 0.635,
+        "sigma": 0.003,
+        "n": 28962
+      },
+      "b_stability": null
+    },
+    "b_sweep": [
+      {
+        "threshold": 1.1,
+        "b": 0.695,
+        "sigma": 0.004,
+        "n": 27141
+      },
+      {
+        "threshold": 1.2,
+        "b": 0.714,
+        "sigma": 0.004,
+        "n": 23717
+      },
+      {
+        "threshold": 1.3,
+        "b": 0.733,
+        "sigma": 0.005,
+        "n": 20643
+      },
+      {
+        "threshold": 1.4,
+        "b": 0.752,
+        "sigma": 0.005,
+        "n": 17854
+      },
+      {
+        "threshold": 1.5,
+        "b": 0.764,
+        "sigma": 0.006,
+        "n": 15261
+      },
+      {
+        "threshold": 1.6,
+        "b": 0.774,
+        "sigma": 0.006,
+        "n": 12965
+      },
+      {
+        "threshold": 1.7,
+        "b": 0.788,
+        "sigma": 0.007,
+        "n": 11031
+      },
+      {
+        "threshold": 1.8,
+        "b": 0.795,
+        "sigma": 0.008,
+        "n": 9289
+      },
+      {
+        "threshold": 1.9,
+        "b": 0.806,
+        "sigma": 0.009,
+        "n": 7845
+      },
+      {
+        "threshold": 2.0,
+        "b": 0.81,
+        "sigma": 0.009,
+        "n": 6565
+      },
+      {
+        "threshold": 2.1,
+        "b": 0.814,
+        "sigma": 0.01,
+        "n": 5483
+      },
+      {
+        "threshold": 2.2,
+        "b": 0.822,
+        "sigma": 0.011,
+        "n": 4595
+      },
+      {
+        "threshold": 2.3,
+        "b": 0.835,
+        "sigma": 0.012,
+        "n": 3863
+      },
+      {
+        "threshold": 2.4,
+        "b": 0.844,
+        "sigma": 0.014,
+        "n": 3223
+      },
+      {
+        "threshold": 2.5,
+        "b": 0.858,
+        "sigma": 0.015,
+        "n": 2700
+      },
+      {
+        "threshold": 2.6,
+        "b": 0.868,
+        "sigma": 0.016,
+        "n": 2239
+      },
+      {
+        "threshold": 2.7,
+        "b": 0.879,
+        "sigma": 0.018,
+        "n": 1859
+      },
+      {
+        "threshold": 2.8,
+        "b": 0.87,
+        "sigma": 0.019,
+        "n": 1505
+      },
+      {
+        "threshold": 2.9,
+        "b": 0.891,
+        "sigma": 0.021,
+        "n": 1261
+      },
+      {
+        "threshold": 3.0,
+        "b": 0.931,
+        "sigma": 0.023,
+        "n": 1069
+      },
+      {
+        "threshold": 3.1,
+        "b": 1.013,
+        "sigma": 0.029,
+        "n": 932
+      },
+      {
+        "threshold": 3.2,
+        "b": 1.062,
+        "sigma": 0.034,
+        "n": 772
+      },
+      {
+        "threshold": 3.3,
+        "b": 1.126,
+        "sigma": 0.041,
+        "n": 637
+      },
+      {
+        "threshold": 3.4,
+        "b": 1.236,
+        "sigma": 0.053,
+        "n": 533
+      },
+      {
+        "threshold": 3.5,
+        "b": 1.373,
+        "sigma": 0.073,
+        "n": 440
+      },
+      {
+        "threshold": 3.6,
+        "b": 1.258,
+        "sigma": 0.076,
+        "n": 300
+      }
+    ],
+    "start_cut": [
+      {
+        "start_days": 0,
+        "cells": [
+          {
+            "threshold": 1.3,
+            "b": 0.733,
+            "sigma": 0.005,
+            "n": 20643
+          },
+          {
+            "threshold": 1.5,
+            "b": 0.764,
+            "sigma": 0.006,
+            "n": 15261
+          },
+          {
+            "threshold": 2.0,
+            "b": 0.81,
+            "sigma": 0.009,
+            "n": 6565
+          },
+          {
+            "threshold": 2.5,
+            "b": 0.858,
+            "sigma": 0.015,
+            "n": 2700
+          },
+          {
+            "threshold": 3.0,
+            "b": 0.931,
+            "sigma": 0.023,
+            "n": 1069
+          }
+        ]
+      },
+      {
+        "start_days": 1,
+        "cells": [
+          {
+            "threshold": 1.3,
+            "b": 0.886,
+            "sigma": 0.006,
+            "n": 17116
+          },
+          {
+            "threshold": 1.5,
+            "b": 0.937,
+            "sigma": 0.008,
+            "n": 11918
+          },
+          {
+            "threshold": 2.0,
+            "b": 1.01,
+            "sigma": 0.015,
+            "n": 4205
+          },
+          {
+            "threshold": 2.5,
+            "b": 1.047,
+            "sigma": 0.027,
+            "n": 1361
+          },
+          {
+            "threshold": 3.0,
+            "b": 1.068,
+            "sigma": 0.043,
+            "n": 418
+          }
+        ]
+      },
+      {
+        "start_days": 2,
+        "cells": [
+          {
+            "threshold": 1.3,
+            "b": 0.92,
+            "sigma": 0.007,
+            "n": 15847
+          },
+          {
+            "threshold": 1.5,
+            "b": 0.964,
+            "sigma": 0.009,
+            "n": 10789
+          },
+          {
+            "threshold": 2.0,
+            "b": 1.02,
+            "sigma": 0.016,
+            "n": 3682
+          },
+          {
+            "threshold": 2.5,
+            "b": 1.054,
+            "sigma": 0.029,
+            "n": 1181
+          },
+          {
+            "threshold": 3.0,
+            "b": 1.067,
+            "sigma": 0.047,
+            "n": 360
+          }
+        ]
+      },
+      {
+        "start_days": 7,
+        "cells": [
+          {
+            "threshold": 1.3,
+            "b": 0.95,
+            "sigma": 0.009,
+            "n": 10879
+          },
+          {
+            "threshold": 1.5,
+            "b": 0.983,
+            "sigma": 0.011,
+            "n": 7231
+          },
+          {
+            "threshold": 2.0,
+            "b": 1.04,
+            "sigma": 0.02,
+            "n": 2434
+          },
+          {
+            "threshold": 2.5,
+            "b": 1.118,
+            "sigma": 0.039,
+            "n": 783
+          },
+          {
+            "threshold": 3.0,
+            "b": 1.134,
+            "sigma": 0.065,
+            "n": 225
+          }
+        ]
+      }
+    ],
+    "band_b": [
+      {
+        "band_lo": 0.0,
+        "band_hi": 0.2,
+        "threshold": 3.1,
+        "b": 0.846,
+        "sigma": 0.033,
+        "n": 413
+      },
+      {
+        "band_lo": 0.2,
+        "band_hi": 0.38,
+        "threshold": 2.7,
+        "b": 0.943,
+        "sigma": 0.066,
+        "n": 162
+      },
+      {
+        "band_lo": 0.38,
+        "band_hi": 0.6,
+        "threshold": 2.1,
+        "b": 0.99,
+        "sigma": 0.044,
+        "n": 393
+      },
+      {
+        "band_lo": 0.6,
+        "band_hi": 1.0,
+        "threshold": 2.0,
+        "b": 1.026,
+        "sigma": 0.043,
+        "n": 498
+      },
+      {
+        "band_lo": 1.0,
+        "band_hi": 2.0,
+        "threshold": 2.0,
+        "b": 0.944,
+        "sigma": 0.038,
+        "n": 523
+      },
+      {
+        "band_lo": 2.0,
+        "band_hi": 5.0,
+        "threshold": 1.6,
+        "b": 0.94,
+        "sigma": 0.02,
+        "n": 2009
+      },
+      {
+        "band_lo": 30.0,
+        "band_hi": 180.0,
+        "threshold": 1.3,
+        "b": 1.004,
+        "sigma": 0.013,
+        "n": 5476
+      }
+    ],
+    "fit_test": {
+      "threshold": 1.3,
+      "n": 20643,
+      "ks": 0.0239,
+      "null_95th_percentile": 0.0053,
+      "p": 0.0017,
+      "p_se": 0.0017,
+      "replicates": 600,
+      "method": "parametric bootstrap, 600 replicates"
+    }
+  }
+}

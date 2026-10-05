@@ -13,14 +13,63 @@ that will be lost.
 ---
 
 For whoever writes the software/methods article. Everything below is fact, checked
-against the code and the test suite, last on 9 September 2026. Section 12 lists the
-seventeen things that must **not** be claimed; read it before drafting. Several claims
-made in earlier drafts were withdrawn on 9 September after being computed rather than
-argued, and section 0 states the position that survived.
+against the code and the test suite, last on 9 September 2026, except that the Hector
+Mine and Ridgecrest figures were recomputed on 5 October 2026 (see the correction below).
+Section 12 lists the seventeen things that must **not** be claimed; read it before
+drafting. Several claims made in earlier drafts were withdrawn on 9 September after being
+computed rather than argued, and section 0 states the position that survived.
 
 **Drafting the paper? Read section 0 first.** It states the settled position in one
 place. The sections after it are chronological and a few of them correct each other,
 so reading straight through will hand you superseded conclusions.
+
+**Correction of 5 October 2026, version 1.1.2.** Every Hector Mine and Ridgecrest figure
+in this record that was computed before that date carries a small error, and the values
+in the table below replace them. Both catalogues were windowed from a mainshock origin
+time given to the whole second, and USGS ComCat stamps carry fractions of a second
+(16 October 1999 09:46:44.46 and 6 July 2019 03:19:53.04). The window drops events at or
+before the origin time, so the mainshock's own record, an M 7.1 event, stayed inside each
+aftershock sample as its first event. One event in thousands barely moves b at a low
+threshold. It matters at a high one, where it is the largest event in a sample that has
+shrunk to a few dozen. The Kahramanmaras catalogue is unaffected: KOERI stamps are whole
+seconds.
+
+Version 1.1.2 gives both settings files the full timestamp, makes
+`examples/regenerate_paper_figures.py` refuse any sample that still contains the
+mainshock, commits the two USGS catalogues beside their settings files, and regenerates
+`docs/tremor_lab_regeneration_data.json`, which is now the authority for every number
+below. No conclusion changed. What changed:
+
+| quantity | before | after |
+|---|---|---|
+| Hector Mine, events in the window | 13,525 | 13,524 |
+| Hector Mine, b at M 1.7 (maximum curvature) | 0.839 +/- 0.008 on 8,466 | 0.840 +/- 0.008 on 8,465 |
+| Hector Mine, b at M 2.1 (b-stability) | 0.985 +/- 0.015 on 4,345 | 0.987 +/- 0.015 on 4,344 |
+| Hector Mine, b over M 2.2 to 3.0 | 0.960 to 1.003, mean 0.982 | 0.972 to 1.006, mean 0.990 |
+| Hector Mine, b over M 3.1 to 3.9 | 0.916 to 0.985, drifting down | 0.970 to 1.006, no drift |
+| Hector Mine, b at M 4.0 | 0.977 +/- 0.138 on 67 | 1.076 +/- 0.129 on 66 |
+| Hector Mine, b at M 2.1 minus b at M 1.7 | 0.146 | 0.147 |
+| Hector Mine, Omori at M 1.7 | p 1.086, c 4.814, k 3,097 | p 1.087, c 4.830, k 3,107 |
+| Hector Mine, c from M 1.7 to 2.6 | 4.814 to 0.710 | 4.830 to 0.717 |
+| Hector Mine, refitted decay test at M 2.0 | p 0.055 +/- 0.005 | p 0.045 +/- 0.005 |
+| Ridgecrest, events in the window | 28,963 | 28,962 |
+| Ridgecrest, b at M 1.3 (maximum curvature) | 0.733 +/- 0.005 on 20,644 | 0.733 +/- 0.005 on 20,643 |
+| Ridgecrest, goodness-of-fit completeness | M 1.1 | M 1.0 |
+| Ridgecrest, b at M 3.0 and at M 3.5 | 0.924 and 1.341 | 0.931 and 1.373 |
+| Ridgecrest, b in the first time band | 0.832 +/- 0.035 on 414 | 0.846 +/- 0.033 on 413 |
+| Ridgecrest, Omori at M 1.3 | c 1.415, k 6,662 | c 1.416, k 6,667 |
+| Ridgecrest, decay-fit KS statistic | 0.0240 | 0.0239 |
+
+The Ridgecrest goodness-of-fit estimate is a knife edge: R is 90.03 per cent at M 1.0
+against a 90 per cent level, so one event decides between M 1.0 and M 1.1. It is not
+quoted in the paper. The decay refit at Hector Mine M 2.0 now sits within two Monte Carlo
+standard errors of 0.05, so all eight refits are below 0.05 and one of them cannot be
+told from it.
+
+Where a Hector Mine or Ridgecrest value in sections 9c to 10c differs from this table or
+from section 0.4, the table and section 0.4 win. Those sections are kept as the working
+record they were, apart from the tables in 9d and 9e that repeat these numbers, which
+were updated.
 
 Author: Aik Kazarian. Single-author methods paper. Companion to the PhD thesis
 "Triggers: The Effect and Interaction of Earthquakes on the Example of Strong Events in
@@ -134,8 +183,9 @@ which matters (0.7).
 Mc by three methods: goodness-of-fit **3.0**, maximum curvature **3.4**, b-stability
 **4.1**. The thesis analyses at M 3.5, where b is 0.844 and still climbing.
 
-**Catalogue B, Hector Mine 1999. This is the control.** USGS ComCat, 13,525 events
-M >= 1.0 within 100 km, 180 days from the M 7.1 of 16 October 1999. A single mainshock
+**Catalogue B, Hector Mine 1999. This is the control.** USGS ComCat, 13,524 events
+M >= 1.0 within 100 km, 180 days from the M 7.1 of 16 October 1999, the mainshock's own
+record excluded. A single mainshock
 with no M 6 or larger event in the following fortnight. Landers 1992 was considered and
 rejected as a control because its M 6.3 Big Bear event three hours later makes it a
 doublet as well.
@@ -145,44 +195,48 @@ plateau is the whole point and a subsampled table hides it:
 
 | Mc | b | sigma | n | |
 |---|---|---|---|---|
-| 1.5 | 0.764 | 0.006 | 11,163 | climb |
-| 1.6 | 0.804 | 0.007 | 9,807 | climb |
-| **1.7** | **0.839** | **0.008** | **8,466** | **climb; maximum curvature returns this** |
-| 1.8 | 0.865 | 0.009 | 7,179 | climb |
-| 1.9 | 0.879 | 0.010 | 5,965 | climb |
-| 2.0 | 0.943 | 0.013 | 5,193 | climb |
-| **2.1** | **0.985** | **0.015** | **4,345** | **b-stability returns this** |
-| 2.2 | 1.003 | 0.018 | 3,526 | plateau |
-| 2.3 | 0.987 | 0.019 | 2,765 | plateau |
-| 2.4 | 0.990 | 0.022 | 2,217 | plateau |
-| 2.5 | 0.987 | 0.024 | 1,764 | plateau |
-| 2.6 | 0.968 | 0.027 | 1,384 | plateau |
-| 2.7 | 0.977 | 0.030 | 1,120 | plateau |
-| 2.8 | 0.980 | 0.034 | 900 | plateau |
-| 2.9 | 0.960 | 0.037 | 709 | plateau |
-| 3.0 | 0.989 | 0.043 | 585 | plateau |
+| 1.5 | 0.765 | 0.006 | 11,162 | climb |
+| 1.6 | 0.805 | 0.007 | 9,806 | climb |
+| **1.7** | **0.840** | **0.008** | **8,465** | **climb; maximum curvature returns this** |
+| 1.8 | 0.867 | 0.009 | 7,178 | climb |
+| 1.9 | 0.881 | 0.010 | 5,964 | climb |
+| 2.0 | 0.945 | 0.013 | 5,192 | climb |
+| **2.1** | **0.987** | **0.015** | **4,344** | **b-stability returns this** |
+| 2.2 | 1.006 | 0.017 | 3,525 | plateau |
+| 2.3 | 0.991 | 0.019 | 2,764 | plateau |
+| 2.4 | 0.995 | 0.021 | 2,216 | plateau |
+| 2.5 | 0.993 | 0.024 | 1,763 | plateau |
+| 2.6 | 0.974 | 0.026 | 1,383 | plateau |
+| 2.7 | 0.985 | 0.030 | 1,119 | plateau |
+| 2.8 | 0.989 | 0.033 | 899 | plateau |
+| 2.9 | 0.972 | 0.036 | 708 | plateau |
+| 3.0 | 1.003 | 0.042 | 584 | plateau |
 
 **The plateau is the single most important result in the paper.** Stated exactly: across
 the **nine consecutive thresholds from M 2.2 to M 3.0**, a span of 0.8 magnitude units,
-b ranges from **0.960 to 1.003** with a mean of 0.982 and no trend, on samples from 3,526
-down to 585 events. Below M 2.2 b climbs monotonically from 0.764. The flat stretch is
+b ranges from **0.972 to 1.006** with a mean of 0.990 and no trend, on samples from 3,525
+down to 584 events. Below M 2.2 b climbs monotonically from 0.765. The flat stretch is
 what a correctly-thresholded catalogue looks like, and it is what proves the climb below
-it is a real bias rather than an artefact of shrinking samples.
+it is a real bias rather than an artefact of shrinking samples. Above M 3.0 the curve
+stays between 0.970 and 1.006 to M 3.9, on samples of 455 down to 77 events, and reaches
+1.076 at M 4.0 on 66 events, where the standard error is 0.129.
 
 Maximum curvature returns **1.7**, which is 0.4 to 0.5 magnitude units below the plateau.
-b at its answer is 0.839 against a plateau value near 0.985: **0.146 low, against a quoted
-standard error of 0.008, a factor of eighteen.**
+b at its answer is 0.840 against 0.987 at the b-stability threshold: **0.147 low (0.150
+below the plateau mean of 0.990), against a quoted standard error of 0.008, a factor of
+about eighteen.**
 
-Do not write "0.98 plus or minus 0.02" for the plateau. It reads well and it is wrong at
-one end: b = 1.003 at M 2.2 falls outside that band. Quote the range.
+Do not write a mean with a symmetric band for the plateau. The nine values carry their own
+standard errors, 0.017 to 0.042, and a band such as "0.99 plus or minus 0.02" is narrower
+than most of them. Quote the range.
 
-**Catalogue C, Ridgecrest 2019.** USGS ComCat, 28,963 events M >= 1.0 within 100 km, 180
-days from the M 7.1 of 6 July 2019. A doublet, the M 7.1 preceded by an M 6.4 about
+**Catalogue C, Ridgecrest 2019.** USGS ComCat, 28,962 events M >= 1.0 within 100 km, 180
+days from the M 7.1 of 6 July 2019, the mainshock's own record excluded. A doublet, the M 7.1 preceded by an M 6.4 about
 thirty-four hours earlier.
 
 | threshold | 1.1 | 1.3 | 1.8 | 2.2 | 2.6 | 3.0 | 3.5 |
 |---|---|---|---|---|---|---|---|
-| b | 0.695 | **0.733** | 0.794 | 0.820 | 0.865 | 0.924 | 1.341 |
+| b | 0.695 | **0.733** | 0.795 | 0.822 | 0.868 | 0.931 | 1.373 |
 
 Maximum curvature returns 1.3. **b-stability returns no answer at all**: b never
 stabilises anywhere in the available range, and the implementation returns None rather
@@ -207,11 +261,12 @@ why it never plateaus. At Kahramanmaras the two cuts remove overlapping event se
 only the threshold effect survives. Full grids are in sections 9e and 10c.
 
 **Decay fits.** Refitting above the early completeness magnitude drops the Omori offset c
-monotonically in both catalogues, confirming that c absorbs the missing early population:
-Kahramanmaras 0.497 to 0.195 days across thresholds 3.5 to 4.4, Hector Mine 4.814 to
-0.710 across 1.7 to 2.6. **It does not rescue the fit.** The Kolmogorov-Smirnov departure
-grows and the rejection mostly stands. Report this as a half-confirmed prediction, which
-is what it is. Note also that p drifts upward with threshold, by 0.03 and 0.19
+in both catalogues, confirming that c absorbs the missing early population: Kahramanmaras
+0.497 to 0.195 days across thresholds 3.5 to 4.4, with three small reversals, and Hector
+Mine 4.830 to 0.717 across 1.7 to 2.6, monotonically. **It does not rescue the fit.** The
+calibrated p-value is below 0.05 at all eight refits, although Hector Mine at M 2.0
+(p = 0.045 +/- 0.005) cannot be told from 0.05. Report this as a half-confirmed
+prediction, which is what it is. Note also that p drifts upward with threshold, by 0.03 and 0.19
 respectively, so p needs its threshold stated for the same reason b does.
 
 ### 0.5 What the published literature does and does not confirm
@@ -271,8 +326,9 @@ the phenomenon and the recovery timescale, not for the values.
 ### 0.6 The correction you must not quietly drop
 
 Sections 9c and 9e report b estimated band by band at each band's own maximum-curvature
-Mc, giving b rising with time: 0.737 to 1.018 for Kahramanmaras, 0.881 to 1.004 for
-Ridgecrest. **The published time-resolved estimates run the other way.** Hainzl, Kumazawa
+Mc, giving b lowest in the first band and higher in the last, 0.726 to 1.018 for
+Kahramanmaras and 0.846 to 1.004 for Ridgecrest, with the bands in between not
+monotonic. **The published time-resolved estimates run the other way.** Hainzl, Kumazawa
 and Ogata (2024), using the Ogata-Katsura (1993) estimator which fits time-varying b
 jointly with a time-varying detection function, report b of about 1.2 for early
 aftershocks decaying to about 0.85 later, a 50 per cent coseismic increase. That is also
@@ -285,20 +341,21 @@ withdrawn, and nothing should be built on it.
 
 Two things were computed. First, the reported band values were **already estimated at
 each band's own maximum-curvature Mc**, not at a fixed M 3.5 - they reproduce exactly
-(0.723 +/- 0.034, 0.893 +/- 0.027, 1.018 +/- 0.040). So the bands were never being
-estimated below their own completeness, and "threshold below completeness" cannot be the
-mechanism.
+(on Kahramanmaras, 0.726 +/- 0.060 in the first band and 1.018 +/- 0.040 in the last).
+So the bands were never being estimated below their own completeness, and "threshold
+below completeness" cannot be the mechanism.
 
 Second, and worse for the explanation, **correcting for the threshold effect pushes the
-wrong way.** The early bands sit at *higher* Mc (3.9 and 3.6) than the late ones (3.3),
+wrong way.** The early bands sit at *higher* Mc (3.8 and 3.7) than the late ones (3.3),
 and section 9e establishes that b rises with threshold. The early bands should therefore
 read *higher* than the late ones. They read lower. Estimating every band instead at a
-fixed M 3.5 gives 0.601, 0.688, 0.981, 0.894, 0.955: the same rising trend. The
+fixed M 3.5 gives 0.607 in the first band and 0.955 in the last: the same direction. The
 discrepancy with the published estimates survives both treatments.
 
 The corrected version of the argument - that maximum curvature is itself biased low, and
-more so early - **could not be tested**, because `mc_b_stability` returns None for both
-early bands: with 71 and 513 events they are too small for b to stabilise anywhere.
+more so early - **could not be tested**, because `mc_b_stability` returns None for the
+three earliest bands: with 155, 106 and 120 events they are too small for b to stabilise
+anywhere.
 
 **So the position to take is that the discrepancy is real and unexplained.** Our
 band-by-band b rises with time; Hainzl, Kumazawa and Ogata, using an estimator built for
@@ -408,13 +465,15 @@ SSA journals require this section. It must be accurate, and reviewers check it.
 > were obtained from the U.S. Geological Survey Advanced National Seismic System
 > Comprehensive Catalog (ComCat) at https://earthquake.usgs.gov/fdsnws/event/1/ (last
 > accessed September 2026), selected within 100 km of each mainshock epicentre at
-> M >= 1.0 over 180 days; the exact query strings are distributed with the software in
-> `examples/ridgecrest.toml` and `examples/hectormine.toml`. Magnitudes were homogenised
-> to Mw following Scordilis (2006). All analyses were performed with Tremor Lab v1.1.1,
-> openly available under the MIT licence at https://github.com/HaikKaz/tremor-lab and
-> archived at https://doi.org/10.5281/zenodo.22653579; the version used here is
-> https://doi.org/10.5281/zenodo.22661044. The cross-check reported in the Discussion used
-> `seismostats` (Swiss Seismological Service, ETH Zurich).
+> M >= 1.0 over 180 days; the exact query strings are in the headers of
+> `examples/ridgecrest.toml` and `examples/hectormine.toml`, and the files as downloaded
+> are distributed beside them. Magnitudes were homogenised to Mw following Scordilis
+> (2006). All analyses were performed with Tremor Lab v1.1.2, openly available under the
+> MIT licence at https://github.com/HaikKaz/tremor-lab and archived at
+> https://doi.org/10.5281/zenodo.22653579 (the concept DOI, which resolves to the latest
+> release); the version used here has its own DOI, issued by Zenodo when v1.1.2 is
+> released and recorded in `CITATION.cff`. The cross-check reported in the Discussion
+> used `seismostats` (Swiss Seismological Service, ETH Zurich).
 
 Two cautions. Check the KOERI sentence against what can actually be documented; section 13
 records that the bundled file is derived rather than raw, and the original export is not
@@ -445,7 +504,7 @@ Prefer a concrete subject and the active voice outside Methods, where the passiv
 conventional and fine.
 
 State results in the past tense and established facts in the present. Report effect sizes
-and actual values rather than bare significance: "KS 0.0136 on 8,466 events, p = 0.003" is
+and actual values rather than bare significance: "KS 0.0136 on 8,465 events, p <= 0.003" is
 a result, "significantly different" is not.
 
 ## 1. What the tool is, in one paragraph
@@ -828,6 +887,13 @@ times its standard error."*
 
 ## 9c. A second catalogue: Ridgecrest 2019, and what it changes
 
+*Corrected on 5 October 2026. The Ridgecrest sample analysed in this section still held
+the mainshock's own record, so its counts and fitted values are off in the last digit or
+two: 20,644 events at the completeness class became 20,643, KS 0.0240 became 0.0239 and
+c = 1.415 became 1.416. The goodness-of-fit completeness estimate moved from M 1.1 to
+M 1.0. The correction box at the top of this record and section 0.4 give the current
+values. The band-by-band table below was superseded earlier, as the text after it says.*
+
 Everything above was measured on one sequence. On 8 September 2026 the tool was run
 on a second, independent one: the 2019 Ridgecrest sequence in California, from the
 USGS ComCat catalogue - 28,964 events at M >= 1.0 within 100 km of the M 7.1
@@ -940,19 +1006,22 @@ single mainshock with no M 6 or larger event anywhere in the following fortnight
 Landers 1992 was considered first and rejected as a control, because the M 6.3 Big
 Bear event three hours later makes it a doublet too.
 
-USGS ComCat, 13,525 events at M >= 1.0 within 100 km over 180 days, Mc 1.7:
+USGS ComCat, 13,524 events at M >= 1.0 within 100 km over 180 days, Mc 1.7. The table
+holds the corrected values of 5 October 2026 (see the box at the top of this record), with
+5,000 replicates for Kahramanmaras and 600 for the other two, at which the smallest
+attainable p is about 0.002:
 
 | sequence | structure | n | KS | 95th pct of the null | p | verdict |
 |---|---|---|---|---|---|---|
-| Kahramanmaras 2023 | doublet | 1,529 | 0.0210 | 0.0194 | 0.033 | rejected |
-| Ridgecrest 2019 | doublet | 20,644 | 0.0240 | 0.0054 | 0.003 | rejected |
-| **Hector Mine 1999** | **single** | 8,466 | **0.0136** | 0.0084 | **0.003** | **rejected** |
+| Kahramanmaras 2023 | doublet | 1,529 | 0.0210 | 0.0203 | 0.037 | rejected |
+| Ridgecrest 2019 | doublet | 20,643 | 0.0239 | 0.0053 | <= 0.003 | rejected |
+| **Hector Mine 1999** | **single** | 8,465 | **0.0136** | 0.0085 | **<= 0.003** | **rejected** |
 
 **The single mainshock is rejected as decisively as the doublets.** The doublet
 explanation in section 9a is therefore not supported, and the paper must not make it.
 
 The table also shows what the test is really responding to. The critical value falls
-from 0.0194 to 0.0054 as the catalogue grows from 1,529 events to 20,644, roughly as
+from 0.0203 to 0.0053 as the catalogue grows from 1,529 events to 20,643, roughly as
 one over the square root of n. Hector Mine has the **smallest** departure from the
 model of the three - KS 0.0136 against Kahramanmaras's 0.0210 - and is rejected far
 more decisively, because its sample is five times larger. Kahramanmaras's departure
@@ -969,7 +1038,7 @@ is large.
 
 ### What to write instead
 
-1. **Report the effect size, not only the verdict.** KS 0.0136 to 0.0240 across three
+1. **Report the effect size, not only the verdict.** KS 0.0136 to 0.0239 across three
    sequences means the fitted curve tracks the data closely in all of them. A table
    of KS, n and p says something; "rejected" on its own does not.
 2. **Do not attribute the rejection to the doublet structure.** The control rules
@@ -980,8 +1049,8 @@ is large.
    imperfect description of all three sequences, and that a residual test on a modern
    catalogue of thousands of events will detect the imperfection. That is a useful
    methodological point about the test, and it is defensible.
-4. **The large c values point at incompleteness.** Ridgecrest returns c = 1.415 days
-   and Hector Mine c = 4.814 days, where below half a day is usual. Section 9c shows
+4. **The large c values point at incompleteness.** Ridgecrest returns c = 1.416 days
+   and Hector Mine c = 4.830 days, where below half a day is usual. Section 9c shows
    completeness moving by 2.4 magnitude units over the first month at Ridgecrest. A
    missing early population flattens the start of the decay and c absorbs it. That is
    a more likely explanation for the misfit than sequence structure, and it is
@@ -992,6 +1061,10 @@ referee could have dismantled into something defensible. It is worth saying in t
 paper that it was done.
 
 ## 9e. Kahramanmaras: completeness moves, and the thesis's b-value is measured below the stable range
+
+*The Hector Mine and Ridgecrest tables in this section were updated on 5 October 2026 to
+the corrected values (see the box at the top of this record). The Kahramanmaras tables
+were not affected.*
 
 Section 9c found on Ridgecrest that completeness moves sharply after a mainshock. The
 same measurement on the thesis's own catalogue confirms it, and then leads somewhere
@@ -1075,29 +1148,30 @@ reported that spread; this says the top of it is the one to believe.
 
 Two readings are available. Either maximum curvature is underestimating completeness, or
 b genuinely varies with magnitude in this sequence. Hector Mine settles it - a single
-mainshock, a different network, a different decade, 13,525 events:
+mainshock, a different network, a different decade, 13,524 events:
 
 | Mc | 1.5 | **1.7 (maxcurv)** | 1.9 | **2.1 (b-stab)** | 2.2 | 2.4 | 2.6 | 2.8 | 3.0 |
 |---|---|---|---|---|---|---|---|---|---|
-| b | 0.764 | **0.839** | 0.879 | **0.985** | 1.003 | 0.990 | 0.968 | 0.980 | 0.989 |
-| n | 11,163 | 8,466 | 5,965 | 4,345 | 3,526 | 2,217 | 1,384 | 900 | 585 |
+| b | 0.765 | **0.840** | 0.881 | **0.987** | 1.006 | 0.995 | 0.974 | 0.989 | 1.003 |
+| n | 11,162 | 8,465 | 5,964 | 4,344 | 3,525 | 2,216 | 1,383 | 899 | 584 |
 
 **The same climb, and then an unambiguous plateau** - across the nine consecutive
-thresholds from M 2.2 to M 3.0, a span of 0.8 magnitude units, b ranges from 0.960 to
-1.003 with a mean of 0.982 and no trend, on samples from 3,526 down to 585 events. That
+thresholds from M 2.2 to M 3.0, a span of 0.8 magnitude units, b ranges from 0.972 to
+1.006 with a mean of 0.990 and no trend, on samples from 3,525 down to 584 events. That
 plateau is what a correctly-thresholded catalogue looks like, and it proves the shape is
 not an artefact of running out of data. (An earlier draft of this section wrote the
-plateau as "0.98 +/- 0.02 spanning 0.9 magnitude units". Both were slightly wrong: the
-span is 0.8, and b = 1.003 at M 2.2 sits outside that band. Quote the range.)
+plateau as "0.98 +/- 0.02 spanning 0.9 magnitude units". The span is 0.8, and a mean
+with a symmetric band hides that each of the nine values carries its own standard error
+of 0.017 to 0.042. Quote the range.)
 
-Maximum curvature returns 1.7 there, where b is 0.839. The stable value is 0.985. **The
+Maximum curvature returns 1.7 there, where b is 0.840. The stable value is 0.987. **The
 estimator underestimates completeness by about 0.4 magnitude units and biases b low by
 about 0.15, in a sequence with no doublet and no unusual feature at all.** Kahramanmaras
 shows the same thing, at the same size, for the same reason. This is known behaviour -
 maximum curvature is documented as biased low, and the +0.2 correction this package
 applies is an attempt to patch it that evidently does not go far enough here.
 
-Note also where both sequences land: 0.98 and about 1.04, either side of the canonical
+Note also where both sequences land: 0.99 and about 1.04, either side of the canonical
 Gutenberg-Richter value of 1.0, reached independently from two unrelated catalogues.
 
 ### What to write
@@ -1113,7 +1187,7 @@ Gutenberg-Richter value of 1.0, reached independently from two unrelated catalog
    threshold and is silent about a 0.2 shift driven by threshold choice. This is the same
    point section 9 makes, in its sharpest available form.
 4. **Cite the control.** A referee will ask whether the effect is peculiar to a doublet.
-   It is not, and Hector Mine shows so on 13,525 events.
+   It is not, and Hector Mine shows so on 13,524 events.
 5. **Do not claim b is "really" 1.04.** What is shown is that the estimate depends on the
    threshold and stabilises near 1.0. Whether the true b is that value depends on whether
    the catalogue is complete at M 4.1, which this data cannot establish.
@@ -1125,12 +1199,12 @@ been conflated, and shows the method failing in three distinguishable ways.
 
 | | events | maxcurv Mc | b-stability Mc | b at maxcurv | b where stable |
 |---|---|---|---|---|---|
-| Hector Mine (single) | 13,525 | 1.7 | **2.1** | 0.839 | 0.985, flat over 0.9 units |
+| Hector Mine (single) | 13,524 | 1.7 | **2.1** | 0.840 | 0.987, flat over M 2.2 to 3.0 |
 | Kahramanmaras (doublet) | 3,469 | 3.4 | **4.1** | 0.851 | 1.041, flattening at the data edge |
-| Ridgecrest (doublet) | 28,963 | 1.3 | **None** | 0.733 | never stabilises |
+| Ridgecrest (doublet) | 28,962 | 1.3 | **None** | 0.733 | never stabilises |
 
 **Ridgecrest never stabilises at all.** b climbs continuously from 0.695 at Mc 1.1 to
-1.341 at Mc 3.5 without a plateau anywhere, and `mc_b_stability` correctly returns None
+1.373 at Mc 3.5 without a plateau anywhere, and `mc_b_stability` correctly returns None
 rather than inventing a threshold. That is the right behaviour and worth saying: the
 estimator refuses when its own premise fails.
 
@@ -1142,7 +1216,7 @@ different mechanism, so the two had to be separated. Varying both:
 
 | start | thr 1.3 | thr 1.8 | thr 2.2 | thr 2.6 |
 |---|---|---|---|---|
-| 0 | 0.733 | 0.794 | 0.820 | 0.865 |
+| 0 | 0.733 | 0.795 | 0.822 | 0.868 |
 | 1 day | 0.886 | 0.988 | 1.016 | 1.066 |
 | 7 days | 0.950 | 1.003 | 1.050 | 1.129 |
 
@@ -1164,22 +1238,27 @@ that refitting above the early-time completeness would bring c down. Tested on b
 
 | | thr | p | c | KS | p-value |
 |---|---|---|---|---|---|
-| Kahramanmaras | 3.5 | 1.161 | **0.497** | 0.0210 | 0.042 |
-| | 3.8 | 1.147 | 0.364 | 0.0336 | 0.002 |
-| | 4.0 | 1.143 | 0.255 | 0.0497 | 0.002 |
-| | 4.4 | 1.195 | **0.195** | 0.0742 | 0.002 |
-| Hector Mine | 1.7 | 1.086 | **4.814** | 0.0136 | 0.002 |
-| | 2.0 | 1.204 | 2.808 | 0.0109 | 0.080 |
-| | 2.2 | 1.276 | 2.093 | 0.0181 | 0.002 |
-| | 2.6 | 1.276 | **0.710** | 0.0235 | 0.032 |
+| Kahramanmaras | 3.5 | 1.161 | **0.497** | 0.0210 | 0.0375 |
+|  | 3.8 | 1.147 | 0.364 | 0.0336 | 0.0005 |
+|  | 4.0 | 1.143 | 0.255 | 0.0497 | 0.0005 |
+|  | 4.4 | 1.195 | **0.195** | 0.0742 | 0.0005 |
+| Hector Mine | 1.7 | 1.087 | **4.830** | 0.0136 | 0.0005 |
+|  | 2.0 | 1.204 | 2.818 | 0.0109 | 0.0450 |
+|  | 2.2 | 1.277 | 2.102 | 0.0181 | 0.0005 |
+|  | 2.6 | 1.277 | **0.717** | 0.0236 | 0.0205 |
 
-**c falls monotonically in both, by a factor of 2.5 and of 6.8.** The prediction about c
-is confirmed, and confirmed on a control as well as on the doublet - c is absorbing
-missing early events, exactly as section 9d argued.
+The p-values are from 2,000 replicates each. 0.0005 means that no replicate reached the
+observed statistic, which is the floor at that count.
 
-**The fit is not rescued.** The KS departure grows as the threshold rises and the
-rejection mostly stands. Say the incompleteness explanation accounts for the offset
-parameter and not for the misfit, and leave it there. Note too that p drifts upward with
+**c falls monotonically in both at the thresholds shown, by a factor of 2.5 and of 6.7**
+(the full Kahramanmaras sweep has three small reversals, at M 3.8, 4.1 and 4.4). The
+prediction about c is confirmed, and confirmed on a control as well as on the doublet - c
+is absorbing missing early events, exactly as section 9d argued.
+
+**The fit is not rescued.** The KS departure grows with the threshold on Kahramanmaras,
+and the calibrated p-value is below 0.05 at all eight refits, although Hector Mine at
+M 2.0 (p = 0.045 +/- 0.005) cannot be told from 0.05. Say the incompleteness explanation
+accounts for the offset parameter and not for the misfit, and leave it there. Note too that p drifts upward with
 threshold in both - by 0.03 and 0.19 - so p is threshold-dependent as well, and any
 reported p needs its threshold stated for the same reason b does.
 
@@ -1533,7 +1612,7 @@ independent catalogues** over 618 days:
 
 **c moves by a factor of about 38 across two magnitude units, on both catalogues, while p
 stays within about 0.1.** That is exactly the pattern section 9e measures (c falling
-0.497 to 0.195 on Kahramanmaras and 4.814 to 0.710 on Hector Mine, with p drifting only
+0.497 to 0.195 on Kahramanmaras and 4.830 to 0.717 on Hector Mine, with p drifting only
 slightly), reported independently by another group who fitted a different agency's
 catalogue over a different window.
 
@@ -1623,11 +1702,14 @@ examiner will press on exactly this:
 
 ## 11. Facts and figures
 
-- Package: `tremor-lab` 1.1.1, MIT licence, Python 3.11+, released as `v1.1.1` and
-  archived at doi.org/10.5281/zenodo.22661044.
+- Package: `tremor-lab` 1.1.2, MIT licence, Python 3.11+, released as `v1.1.2`. Zenodo
+  issues the version DOI when the release is published, and it is recorded in
+  `CITATION.cff`. Version 1.1.1 is doi.org/10.5281/zenodo.22661044.
 - Runtime dependencies: NumPy (>=2.0,<3), SciPy (>=1.13,<2), pandas (>=2.2,<3). Nothing else.
-- Source: about 2,700 lines across 10 modules. **294 tests**, green in continuous
-  integration on Python 3.11, 3.12 and 3.13.
+- Source: about 2,700 lines across 10 modules. **299 tests**, green in continuous
+  integration on Python 3.11, 3.12 and 3.13. Five of them guard
+  `docs/USER_GUIDE.md`: one runs its Python examples, and the others compare its tables
+  and version with the package.
 - Browser page: one file, about 2,800 lines, 205 KB, pure ASCII. The only things it
   fetches are the Google Fonts stylesheet and the font files it points at; with no network it
   falls back to system fonts and every number is still computed. Runs from a
@@ -1681,12 +1763,13 @@ Read this before drafting. Each of these is a real trap.
    returns within 10%. At that test's own seed k comes back 1.3% low; across seeds 0-4 the
    k error reaches 6.4% while p stays within 1.4%. p is the robust number.
 6. **The DOI exists; cite the right one.** Cite the concept DOI,
-   10.5281/zenodo.22653579, which always resolves to the latest version. The DOI of
-   the current release is 10.5281/zenodo.22661044 (v1.1.1); use a version DOI only
-   where the exact release matters, and use 1.1.1 rather than 1.1.0 - the estimators
-   are the same, but 1.1.0 mis-reads a European CSV export and takes the b-value
-   sample at a bound its own estimator does not assume. Do not cite the
-   GitHub URL in place of the DOI: a repository can be renamed or deleted.
+   10.5281/zenodo.22653579, which always resolves to the latest version. Use a version
+   DOI only where the exact release matters, and then use 1.1.2, the release the paper
+   describes. Version 1.1.1 (10.5281/zenodo.22661044) ships example settings files
+   whose whole-second origin times leave the Hector Mine and Ridgecrest mainshocks
+   inside their own aftershock samples, and 1.1.0 mis-reads a European CSV export and
+   takes the b-value sample at a bound its own estimator does not assume. Do not cite
+   the GitHub URL in place of the DOI: a repository can be renamed or deleted.
 7. **Do not claim the decay-fit rejection is caused by the doublet structure.** It
    was tested: a single mainshock is rejected just as hard (section 9d). Report the
    rejection with its KS statistic and sample size, and say that the modified
@@ -1705,7 +1788,7 @@ Read this before drafting. Each of these is a real trap.
 11. **Do not let the self-test stand for validation of a reader's own analysis.** It
    checks the estimators against known values on a bundled catalogue. It says nothing
    about whether the reader chose a sensible window, threshold or mainshock.
-12. **Do not present "294 tests" as coverage.** It is a count, not a measure. What can
+12. **Do not present "299 tests" as coverage.** It is a count, not a measure. What can
     honestly be said is stronger and more specific: ten deliberate breakages of the
     estimators were each caught by at least one test (section 10).
 13. **Do not describe the bundled fixture as raw data.** `kahramanmaras_180d.csv` is a
@@ -1737,11 +1820,13 @@ Read this before drafting. Each of these is a real trap.
 
 Everything is done. The software is public, released, archived and citable.
 
-- **Repository:** github.com/HaikKaz/tremor-lab, current release `v1.1.1`.
+- **Repository:** github.com/HaikKaz/tremor-lab, current release `v1.1.2`.
 - **DOI:** concept 10.5281/zenodo.22653579, which always resolves to the latest
-  version and is the one to cite. Version 1.1.1 is 10.5281/zenodo.22661044; version
-  1.1.0 is 10.5281/zenodo.22653580 and should not be cited in preference to it. The
-  1.1.0 archive also carries a Software Heritage identifier,
+  version and is the one to cite. Version 1.1.2 has its own DOI, issued by Zenodo when
+  the release is published and recorded in `CITATION.cff`. Version 1.1.1 is
+  10.5281/zenodo.22661044 and version 1.1.0 is 10.5281/zenodo.22653580; neither should
+  be cited in preference to 1.1.2. The 1.1.0 archive also carries a Software Heritage
+  identifier,
   `swh:1:dir:d09344f80b18a2ba5ad8408d0140ee9450182652`.
 - **ORCID:** 0009-0007-1842-1590, affiliation National Academy of Sciences of
   Armenia, both in `CITATION.cff` and in the Zenodo metadata.
@@ -1761,12 +1846,12 @@ cited software is how one citation record becomes two.
 
 The availability statement can now be written. One that is accurate:
 
-> *Tremor Lab v1.1.1 is openly available under the MIT licence at
+> *Tremor Lab v1.1.2 is openly available under the MIT licence at
 > https://github.com/HaikKaz/tremor-lab and archived at
 > https://doi.org/10.5281/zenodo.22653579. The version used in this work is
-> v1.1.1 (https://doi.org/10.5281/zenodo.22661044). It reproduces every value
-> reported here from the bundled catalogue with a single command, and its test
-> suite runs on Python 3.11 to 3.13 in continuous integration.*
+> v1.1.2 (its own DOI, as issued by Zenodo for that release). It reproduces every
+> value reported here from the bundled catalogues with a single command each, and its
+> test suite runs on Python 3.11 to 3.13 in continuous integration.*
 
 Two cautions on that wording. "Reproduces every value reported here" is true of the
 values in section 4 and false of anything computed outside this tool, so check it
@@ -1807,8 +1892,8 @@ above records what the code implements, not a verified bibliography.
 
 ## Files the writer may want
 
-- `tremor_lab/README.md` — the fullest existing prose description; much of the software
-  section can be adapted from it.
+- `tremor_lab/README.md` and `tremor_lab/docs/USER_GUIDE.md` — the fullest existing prose
+  descriptions; much of the software section can be adapted from them.
 - `tremor_lab/web/tremor-lab.html` — the browser tool; open it and press the example
   button to see the whole thing work.
 - `tremor_lab/examples/reproduce_reference.py` — one command, prints the eight reference
