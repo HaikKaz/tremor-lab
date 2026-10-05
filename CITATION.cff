@@ -35,3 +35,6 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.22653580
     description: Version 1.1.0, the first published release.
+  - type: doi
+    value: 10.5281/zenodo.23161364
+    description: Version 1.1.2, the version described in the paper.
