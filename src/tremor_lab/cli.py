@@ -322,7 +322,7 @@ def _magnitude_note(
     if already_windowed:
         # A file of elapsed days and magnitudes is read straight through; no
         # conversion happens on this route, so the note must not name a scale
-        # column, which would read as a homogenisation that never took place.
+        # column, which would read as a conversion that never took place.
         return (
             f"{source}, used as published; a catalogue given as elapsed days is read "
             f"as it stands and no scale conversion is performed"

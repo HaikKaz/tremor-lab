@@ -7,8 +7,12 @@ for a whole session; see that module for how.
 from tremor_lab import constants
 from tremor_lab.analysis import analyze_case
 from tremor_lab.bvalue import (
+    BPlateau,
+    BShift,
     BStability,
     BValue,
+    b_plateau,
+    b_shift,
     b_stability,
     b_value_aki,
     b_value_tinti,
@@ -40,11 +44,13 @@ from tremor_lab.omori import (
     omori_nll,
 )
 
-__version__ = "1.1.2"
+__version__ = "1.2.0"
 
 __all__ = [
     "CATALOG_COLUMNS",
     "FMD",
+    "BPlateau",
+    "BShift",
     "BStability",
     "BValue",
     "FitTest",
@@ -52,6 +58,8 @@ __all__ = [
     "Omori",
     "OmoriBootstrap",
     "analyze_case",
+    "b_plateau",
+    "b_shift",
     "b_stability",
     "b_value_aki",
     "b_value_tinti",

@@ -1,15 +1,21 @@
-"""Draw Figures 1 to 3 of the paper from docs/tremor_lab_regeneration_data.json.
+"""Draw the figures of the paper from the JSON files the study scripts write.
 
-    python examples/regenerate_paper_figures.py      # once: writes the JSON
+    python examples/regenerate_paper_figures.py      # once: writes the catalogue JSON
+    python examples/synthetic_incompleteness.py     # once: writes the simulation JSON
     python examples/make_paper_figures.py [OUTPUT_DIR]
 
 Needs matplotlib, which is not a dependency of the package:
 
     pip install matplotlib
 
-Writes Figure_1, Figure_2 and Figure_3 as vector PDF and as 300 dpi PNG into
+Writes Figure_1, Figure_2, Figure_3 and Figure_S1 as vector PDF and as 300 dpi PNG into
 OUTPUT_DIR (default: figures/ at the top of the repository). Every plotted value is
-read from the JSON, so a figure cannot disagree with the table it illustrates.
+read from a JSON file, so a figure cannot disagree with the table it illustrates.
+
+    Figure 1   the synthetic experiment: mean b against threshold, Hector Mine on top
+    Figure 2   b against the completeness threshold on the three catalogues
+    Figure 3   the Omori offset c against the threshold used for the fit
+    Figure S1  completeness by time band after the Kahramanmaras mainshock
 
 Colours are the Okabe-Ito set, chosen to stay distinguishable under the common forms
 of colour-vision deficiency, and each catalogue keeps its colour across figures.
@@ -32,6 +38,7 @@ from matplotlib.transforms import ScaledTranslation
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "docs" / "tremor_lab_regeneration_data.json"
+SYNTHETIC = REPO / "docs" / "tremor_lab_synthetic_incompleteness.json"
 
 BLUE = "#0072B2"
 VERMILLION = "#D55E00"
@@ -87,6 +94,10 @@ def curve_point(rows, threshold):
     raise KeyError(f"no point at threshold {threshold}")
 
 
+def has_point(rows, threshold):
+    return any(abs(row["threshold"] - threshold) < 1e-9 for row in rows)
+
+
 def note(ax, text, xy, xytext, **kwargs):
     """Annotation in neutral ink with a thin leader to the marked point."""
     ax.annotate(
@@ -101,17 +112,22 @@ def note(ax, text, xy, xytext, **kwargs):
     )
 
 
-def figure_1(data):
-    """b against the completeness threshold, one panel per catalogue."""
+def figure_catalogues(data):
+    """b against the completeness threshold, one panel per catalogue.
+
+    The number of events used at each labelled threshold sits under its tick, so
+    a reader can see how fast the sample thins as the curve climbs. The plateau test
+    of `b_plateau` is drawn as a diamond at its onset, with the range above it shaded.
+    """
     widths = [hi - lo for _, _, _, (lo, hi) in CATALOGUES.values()]
     fig, axes = plt.subplots(
         1,
         3,
-        figsize=(7.5, 3.3),
+        figsize=(7.5, 3.6),
         sharey=True,
         gridspec_kw={"width_ratios": widths, "wspace": 0.06},
     )
-    fig.subplots_adjust(left=0.075, right=0.995, top=0.90, bottom=0.25)
+    fig.subplots_adjust(left=0.075, right=0.995, top=0.90, bottom=0.27)
     for ax, (key, (letter, title, color, xlim)) in zip(
         axes, CATALOGUES.items(), strict=True
     ):
@@ -119,15 +135,18 @@ def figure_1(data):
         x = np.array([r["threshold"] for r in rows])
         b = np.array([r["b"] for r in rows])
         s = np.array([r["sigma"] for r in rows])
+        mc = data[key]["mc"]
+        plateau = data[key]["plateau"]
         ax.set_axisbelow(True)
         ax.yaxis.grid(True, color=GRID, lw=0.6)
+        if plateau["onset"] is not None:
+            ax.axvspan(plateau["onset"], x[-1] + 0.05, color=color, alpha=0.08, lw=0)
         ax.errorbar(
             x, b, yerr=s, fmt="none", ecolor=color, elinewidth=0.7, alpha=0.55, zorder=2
         )
         ax.plot(x, b, color=color, lw=1.0, alpha=0.9, zorder=3)
         ax.plot(x, b, "o", color=color, ms=2.4, zorder=4)
 
-        mc = data[key]["mc"]
         top = curve_point(rows, mc["maxcurvature"])
         ax.plot(
             top["threshold"],
@@ -155,10 +174,34 @@ def figure_1(data):
                 ls="none",
                 zorder=5,
             )
+        if plateau["onset"] is not None:
+            onset = curve_point(rows, plateau["onset"])
+            ax.plot(
+                onset["threshold"],
+                onset["b"],
+                marker="D",
+                ms=6,
+                mfc=INK,
+                mec="white",
+                mew=0.8,
+                ls="none",
+                transform=lift(ax, -8),
+                zorder=7,
+                clip_on=False,
+            )
 
         ax.set_xlim(*xlim)
         ax.set_ylim(0.65, 1.45)
-        ax.set_xticks(np.arange(np.ceil(xlim[0] * 2) / 2, xlim[1], 0.5))
+        ticks = np.arange(np.ceil(xlim[0] * 2) / 2, xlim[1], 0.5)
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(
+            [
+                f"{t:.1f}\n{curve_point(rows, t)['n']:,}"
+                if has_point(rows, round(t, 2))
+                else f"{t:.1f}"
+                for t in ticks
+            ]
+        )
         ax.set_title(
             f"{letter}  {title}",
             loc="left",
@@ -173,11 +216,10 @@ def figure_1(data):
             ax.spines["left"].set_visible(False)
 
         if key == "kahramanmaras":
-            top_b = top["b"]
             note(
                 ax,
                 f"maximum curvature\nM {mc['maxcurvature']}",
-                (top["threshold"], top_b),
+                (top["threshold"], top["b"]),
                 (3.45, 0.70),
                 ha="left",
                 va="center",
@@ -191,12 +233,21 @@ def figure_1(data):
                 ha="left",
                 va="center",
             )
-        elif key == "hectormine":
-            ax.axvspan(2.2, 3.0, color=color, alpha=0.08, lw=0, zorder=0)
             ax.text(
-                2.6,
+                x[-1],
+                1.40,
+                f"plateau test,\nonset M {plateau['onset']}",
+                ha="right",
+                va="top",
+                fontsize=7,
+                color=INK,
+                linespacing=1.15,
+            )
+        elif key == "hectormine":
+            ax.text(
+                (plateau["onset"] + x[-1]) / 2,
                 1.415,
-                "plateau, M 2.2 to 3.0",
+                f"plateau test, onset M {plateau['onset']}",
                 ha="center",
                 va="top",
                 fontsize=7,
@@ -231,38 +282,212 @@ def figure_1(data):
             ax.text(
                 1.05,
                 1.30,
-                "b-stability returns no value:\nb does not stabilise",
+                "b-stability returns no value and\nthe plateau test finds no onset\n"
+                "on this grid",
                 ha="left",
                 va="center",
                 fontsize=7,
                 color=INK,
+                linespacing=1.15,
             )
-        ax.set_xlabel("Completeness threshold, M")
+            # Above M 3.0 the preferred magnitude type changes from ML to MLr and Mw
+            # (Section 5.3), so the steep climb there is not one scale's b.
+            ax.axvline(3.0, color=MUTED, lw=0.7, ls=(0, (1, 2)), zorder=1)
+            ax.text(
+                2.96,
+                1.0,
+                "magnitude\ntypes mix\nabove M 3.0",
+                ha="right",
+                va="bottom",
+                fontsize=6.8,
+                color=INK,
+                linespacing=1.15,
+            )
+        ax.set_xlabel("Completeness threshold, M\n(events used, below the tick)")
 
     axes[0].set_ylabel("Gutenberg-Richter b-value")
     handles = [
         Line2D([], [], marker="v", ls="none", ms=7, mfc=INK, mec="white"),
         Line2D([], [], marker="o", ls="none", ms=8, mfc="none", mec=INK, mew=1.4),
+        Line2D([], [], marker="D", ls="none", ms=5.5, mfc=INK, mec="white"),
         Line2D([], [], color=INK, lw=0.8, alpha=0.6),
     ]
     labels = [
         "maximum-curvature Mc",
         "b-stability Mc",
+        "plateau-test onset",
         "Shi and Bolt (1982) standard error",
     ]
     fig.legend(
         handles,
         labels,
         loc="lower center",
-        ncol=3,
+        ncol=4,
         bbox_to_anchor=(0.5, 0.0),
         handletextpad=0.5,
-        columnspacing=2.0,
+        columnspacing=1.8,
     )
     return fig
 
 
-def figure_2(data):
+SIGMA = "\N{GREEK SMALL LETTER SIGMA}"
+
+# Grey for the simulated curves, darker the more gradual the loss of detection.
+SIGMA_GREYS = {
+    "0.15": "#b5b5b5",
+    "0.30": "#8c8c8c",
+    "0.46": "#2b2b2b",
+    "0.70": "#5f5f5f",
+}
+
+
+def figure_synthetic(data, synthetic):
+    """The synthetic experiment: mean b against threshold, true b equal to 1.
+
+    Each grey line is the mean over 500 simulated catalogues whose events are
+    recorded with a smooth detection probability, for one width of the loss. The
+    markers sit where the standard rules place the threshold on the curve with the
+    width fitted to Hector Mine. The dots are the observed Hector Mine curve.
+    """
+    by_name = {s["scenario"]["name"]: s for s in synthetic["scenarios"]}
+    fig, ax = plt.subplots(figsize=(6.4, 3.9))
+    fig.subplots_adjust(left=0.095, right=0.975, top=0.975, bottom=0.135)
+    ax.set_xlim(0.7, 3.5)
+    ax.set_ylim(0.35, 1.2)
+    ax.set_axisbelow(True)
+    ax.yaxis.grid(True, color=GRID, lw=0.6)
+    ax.axhline(1.0, color=INK, lw=0.8, ls=(0, (4, 3)), zorder=1)
+    ax.text(0.72, 1.012, "true b = 1.0", ha="left", va="bottom", fontsize=7)
+    curves = {}
+
+    for label, grey in SIGMA_GREYS.items():
+        result = by_name.get(f"sigma {label}")
+        if result is None:
+            continue
+        curve = result["curve"]
+        t = np.array(curve["thresholds"])
+        mean = np.array([np.nan if v is None else v for v in curve["mean_b"]])
+        wide = label == "0.46"
+        curves[label] = (t, mean)
+        ax.plot(t, mean, color=grey, lw=1.9 if wide else 1.2, zorder=3)
+        ax.annotate(
+            f"{SIGMA} {label}",
+            (t[0], mean[0]),
+            xytext=(-4, 0),
+            textcoords="offset points",
+            ha="right",
+            va="center",
+            fontsize=7,
+            color=INK,
+            fontweight="bold" if wide else "normal",
+        )
+
+    rows = [r for r in data["hectormine"]["b_sweep"] if r["threshold"] <= 3.5]
+    x = np.array([r["threshold"] for r in rows])
+    b = np.array([r["b"] for r in rows])
+    s = np.array([r["sigma"] for r in rows])
+    ax.errorbar(
+        x, b, yerr=s, fmt="none", ecolor=VERMILLION, elinewidth=0.8, alpha=0.7, zorder=4
+    )
+    ax.plot(x, b, "o", color=VERMILLION, ms=3.6, mec="white", mew=0.5, zorder=5)
+
+    gradual = by_name.get("sigma 0.46")
+    if gradual is not None:
+        mu = gradual["scenario"]["mu"]
+        detection = gradual["oracle_threshold"]
+        ax.axvline(detection, color=MUTED, lw=0.7, ls=(0, (1, 2)), zorder=1)
+        ax.text(
+            detection + 0.03,
+            0.37,
+            f"99% of events\nrecorded, M {detection}",
+            ha="left",
+            va="bottom",
+            fontsize=6.8,
+            color=INK,
+            linespacing=1.15,
+        )
+        ax.axvline(mu, color=MUTED, lw=0.7, ls=(0, (1, 2)), zorder=1)
+        ax.text(
+            mu - 0.03,
+            0.37,
+            f"half recorded,\nM {mu}",
+            ha="right",
+            va="bottom",
+            fontsize=6.8,
+            color=INK,
+            linespacing=1.15,
+        )
+        marks = [
+            ("maxcurvature", "v", "maximum curvature", 7.5),
+            ("plateau", "D", "plateau test", 6),
+            ("b_stability", "o", "b-stability", 8.5),
+        ]
+        t_wide, mean_wide = curves["0.46"]
+        mark_handles, mark_labels = [], []
+        for key, marker, name, size in marks:
+            r = gradual[key]
+            mc, mean_b = r["mc_median"], r["b_mean"]
+            on_curve = mean_wide[int(np.argmin(np.abs(t_wide - mc)))]
+            style = dict(
+                marker=marker,
+                ms=size,
+                mfc="none" if marker == "o" else INK,
+                mec=INK if marker == "o" else "white",
+                mew=1.4 if marker == "o" else 0.8,
+                ls="none",
+            )
+            ax.plot(mc, on_curve, zorder=7, **style)
+            mark_handles.append(Line2D([], [], **style))
+            mark_labels.append(f"{name}: M {mc:.1f}, mean b {mean_b:.2f}")
+
+    ax.set_xticks(np.arange(1.0, 3.51, 0.5))
+    ax.set_yticks(np.arange(0.4, 1.01, 0.1))
+    ax.set_xlabel("Completeness threshold, M")
+    ax.set_ylabel("Gutenberg-Richter b-value")
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    handles = [
+        Line2D([], [], color=SIGMA_GREYS["0.46"], lw=1.9),
+        Line2D(
+            [], [], color=VERMILLION, marker="o", ms=4, ls="none", mec="white", mew=0.5
+        ),
+    ]
+    labels = [
+        f"simulated mean, 500 catalogues for each width {SIGMA} of the detection loss",
+        "Hector Mine 1999, observed, with Shi and Bolt error bars",
+    ]
+    first = ax.legend(
+        handles,
+        labels,
+        loc="upper left",
+        bbox_to_anchor=(0.0, 1.0),
+        handletextpad=0.6,
+        frameon=True,
+        framealpha=1.0,
+        facecolor="white",
+        edgecolor="none",
+    )
+    first.set_zorder(10)
+    ax.add_artist(first)
+    if gradual is not None:
+        ax.legend(
+            mark_handles,
+            mark_labels,
+            loc="lower right",
+            bbox_to_anchor=(1.0, 0.13),
+            title=f"Median threshold chosen, {SIGMA} {gradual['scenario']['sigma']}",
+            title_fontsize=7,
+            handletextpad=0.6,
+            alignment="left",
+            frameon=True,
+            framealpha=1.0,
+            facecolor="white",
+            edgecolor="none",
+        ).set_zorder(10)
+    return fig
+
+
+def figure_s1(data):
     """Completeness magnitude by time band after the Kahramanmaraş mainshock."""
     bands = data["kahramanmaras"]["time_bands"]
     early = [b for b in bands if b["band_hi"] <= 5.0]
@@ -434,17 +659,23 @@ def main():
         "outdir",
         nargs="?",
         default=str(REPO / "figures"),
-        help="where to write Figure_1 to Figure_3 (default: figures/)",
+        help="where to write the figures (default: figures/)",
     )
     args = parser.parse_args()
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
     data = json.loads(DATA.read_text(encoding="utf-8"))
-    for number, draw in enumerate((figure_1, figure_2, figure_3), start=1):
-        fig = draw(data)
+    synthetic = json.loads(SYNTHETIC.read_text(encoding="utf-8"))
+    figures = {
+        "Figure_1": figure_synthetic(data, synthetic),
+        "Figure_2": figure_catalogues(data),
+        "Figure_3": figure_3(data),
+        "Figure_S1": figure_s1(data),
+    }
+    for name, fig in figures.items():
         for suffix in ("pdf", "png"):
-            path = outdir / f"Figure_{number}.{suffix}"
+            path = outdir / f"{name}.{suffix}"
             fig.savefig(path)
             print(f"wrote {path}")
         plt.close(fig)

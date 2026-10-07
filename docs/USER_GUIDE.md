@@ -66,7 +66,7 @@ python examples/reproduce_reference.py
 python -m pytest -q
 ```
 
-The first prints `Tremor Lab 1.1.2`. The second recomputes the eight reference values for
+The first prints `Tremor Lab 1.2.0`. The second recomputes the eight reference values for
 the 2023 Kahramanmaras sequence and ends with `All reported values reproduced.`; it exits
 non-zero if any value disagrees. The third runs the test suite.
 
@@ -111,7 +111,7 @@ you name.
 | `datetime` | One timestamp column. ISO strings with a trailing `Z` or a numeric UTC offset are accepted when every row carries the same offset; the offset is dropped, not converted. |
 | `lat`, `lon` | Epicentre in decimal degrees. Needed for `radius_km`; without them no distance is computed. |
 | `mag` | The magnitude. |
-| `mag_type` | The magnitude scale of each row, for homogenisation to Mw (section 3.4). |
+| `mag_type` | The magnitude scale of each row, to convert Ms and mb to Mw (section 3.4). |
 | `dt_days` | Days elapsed since the mainshock. The file is used as it stands. |
 
 A row whose time, named position or magnitude cannot be read is dropped, and the report
@@ -149,7 +149,7 @@ estimate by one bin. The examples therefore use the timestamp as the catalogue p
 ### 3.4 Magnitudes
 
 Magnitudes are taken to be moment magnitudes unless you name a `mag_type` column. With one,
-each row is homogenised to Mw by the Scordilis (2006) global relations: labels beginning
+each row is converted to Mw by the Scordilis (2006) global relations: labels beginning
 `mw` pass through, `ms` and `mb` are converted, and every other label (`ml`, `md`, a blank)
 is used as reported, because no global relation is published for those scales. Matching
 ignores case and surrounding spaces. The report counts what was converted:
@@ -259,7 +259,7 @@ The command line prints one block of text. This is `examples/hectormine.toml` wi
 default settings:
 
 ```text
-Tremor Lab 1.1.2
+Tremor Lab 1.2.0
 catalogue            hectormine.csv
 rows                 13526 read, 13526 usable
 distance limit       100 km from the epicentre, 1 of the 13525 events inside the window removed; farthest kept 100 km
@@ -525,6 +525,82 @@ not depend on where the threshold is put. A curve that keeps climbing above the 
 Mc means completeness was placed too low, or that the sample is not one Gutenberg-Richter
 population. Report the threshold with every b-value.
 
+The curve does not say whether a climb is larger than noise. The standard errors beside
+the b-values describe one estimate each, and the estimates are not independent: the
+events above M 2.1 are a subset of the events above M 1.7. `b_shift` gives the error of
+the difference itself:
+
+```python
+from tremor_lab import b_shift
+
+mags = catalog["mw"].to_numpy()
+shift = b_shift(mags, 1.7, 2.1, n_boot=2000, seed=0)
+lo, hi = shift.ci_boot
+print(f"b {shift.b_low:.3f} at M >= {shift.mc_low}, {shift.b_high:.3f} at M >= {shift.mc_high}")
+print(f"shift {shift.shift:+.3f}, 95% interval [{lo:+.3f}, {hi:+.3f}], bootstrap error {shift.se_boot:.3f}")
+print(f"z if b were the same at both thresholds: {shift.z_constant_b:.1f}")
+```
+
+```text
+b 0.840 at M >= 1.7, 0.987 at M >= 2.1
+shift +0.147, 95% interval [+0.127, +0.170], bootstrap error 0.011
+z if b were the same at both thresholds: 18.5
+```
+
+The interval comes from resampling the events above the lower threshold and recomputing
+both b-values on every resample, so it holds whether or not b is constant. `z_constant_b`
+divides the shift by the error it would have if b were the same at both thresholds,
+sigma_low sqrt(n_low / n_high - 1), and is a test of that hypothesis rather than a size
+for the shift. Do not divide a shift by the error printed beside either b-value. The
+0.015 beside the b at M 2.1 would make this shift look about ten times its error, which
+is a ratio with no probabilistic meaning; the bootstrap error is 0.011 and the shift is
+13 of them.
+
+To ask where the climb stops, `b_plateau` tests, for each candidate threshold, whether b
+is the same at every higher threshold that still keeps 50 events:
+
+```python
+from tremor_lab import b_plateau
+
+plateau = b_plateau(mags, n_simulations=500, seed=0)
+print(plateau.onset, plateau.method)
+for m, stat, steps, p in zip(
+    plateau.thresholds, plateau.statistic_profile, plateau.dof_profile, plateau.p_profile
+):
+    print(f"M >= {m:.1f}   T {stat:6.1f}   steps {steps:2d}   p {p:.3f}")
+```
+
+```text
+2.1 simulated null, 500 draws
+M >= 1.5   T 1138.3   steps 25   p 0.002
+M >= 1.6   T  707.6   steps 24   p 0.002
+M >= 1.7   T  489.0   steps 23   p 0.002
+M >= 1.8   T  392.8   steps 22   p 0.002
+M >= 1.9   T  371.0   steps 21   p 0.002
+M >= 2.0   T   86.4   steps 20   p 0.002
+M >= 2.1   T   24.9   steps 19   p 0.255
+M >= 2.2   T   16.5   steps 18   p 0.565
+M >= 2.3   T   14.3   steps 17   p 0.621
+M >= 2.4   T   13.9   steps 16   p 0.641
+```
+
+(the profile continues to M 4.0). T adds up the squared change in b from each threshold
+to the next, each scaled by its own variance, and the changes are independent when b is
+constant. It is compared with a null distribution simulated on the catalogue, 500 draws
+here, and not with chi-squared, which rejected 10.1 per cent of 2,000 catalogues of 8,500
+events with a constant b at the 5 per cent level because the top steps rest on a few
+dozen events. A simulated p-value cannot fall below
+1 / (1 + draws), the 0.002 above. The onset is the lowest threshold whose p-value is at
+least 0.05, M 2.1 here; a candidate with fewer than three steps above it is not tested
+and shows `nan`. The run takes about a
+second on this catalogue and about a quarter of a minute on 30,000 events.
+
+The onset is a decision rule, not an estimate with a confidence level. It says that above
+M 2.1 the test finds no dependence of b on the threshold. That is weaker than showing the
+catalogue is complete there, and a slow drift over a range with few events will pass.
+Quote the profile with the onset, and the b and n at it (`plateau.b`, `plateau.n`).
+Neither function is part of `analyze_case`, the command-line report or the browser page.
+
 ### 7.5 Fit the decay above a higher threshold, or after the first day
 
 The command line fits the decay from the mainshock. Python lets you choose the sample and
@@ -649,9 +725,27 @@ The first reads `tests/data/kahramanmaras_180d.csv`, `examples/hectormine.csv` a
 supplementary tables with the package's own functions, and writes
 `docs/tremor_lab_regeneration_data.json`. It takes about three minutes, nearly all of it
 the calibrated decay-fit tests; `--skip-fit-test` leaves those out. The second draws
-Figures 1 to 3 into `figures/` from that file and needs matplotlib. Fetching the
-catalogues again returns different files (section 7.2), so regenerate from the committed
-ones.
+Figures 1 to 3 and supplementary Figure S1 into `figures/` from that file and from the
+simulation file below, and needs matplotlib. Fetching the catalogues again returns
+different files (section 7.2), so regenerate from the committed ones.
+
+The two simulation studies of Section 4 of the paper have their own scripts:
+
+```
+python examples/calibration_study.py
+python examples/synthetic_incompleteness.py
+```
+
+`calibration_study.py` draws sequences from known Omori decays and measures how often the
+decay-fit test rejects them, with the asymptotic p-value and with the calibrated one. It
+took about an hour on two processor cores. `synthetic_incompleteness.py` draws magnitudes
+from a Gutenberg-Richter law with b = 1.0, removes events with a smooth detection
+function, and records the bias of b at the threshold each rule returns; it took about half
+an hour. Both write to `docs/`, give every sequence its own seed so that the result does
+not depend on the number of workers, and resume from the output file if interrupted;
+`--quick` runs a reduced version in a few minutes. `python
+examples/mutation_check_threshold.py` breaks `b_shift` and `b_plateau` seventeen ways and
+confirms that at least one test fails each time.
 
 ### 7.12 Check against an independent implementation
 

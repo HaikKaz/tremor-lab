@@ -197,12 +197,12 @@ def test_the_sample_is_taken_at_the_same_bound_the_b_value_formula_assumes():
 
     On a catalogue reported on the dm grid the two bounds select the same events,
     which is why every test here passed while this was wrong. They differ on a
-    homogenised catalogue: Ms -> Mw is 0.67 Ms + 2.07, which maps a 0.1 grid onto
+    converted catalogue: Ms -> Mw is 0.67 Ms + 2.07, which maps a 0.1 grid onto
     a 0.067 one, and events then land between the bin edges.
     """
     rng = np.random.default_rng(0)
     n = 4000
-    # Off-grid, as homogenisation leaves them, and complete from the lower edge of
+    # Off-grid, as the conversion leaves them, and complete from the lower edge of
     # the Mc bin, which is where a real catalogue's completeness starts.
     mw = 3.25 + rng.exponential(1 / (1.0 * np.log(10)), n)
     catalog = pd.DataFrame(

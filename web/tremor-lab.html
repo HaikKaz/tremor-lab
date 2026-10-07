@@ -673,8 +673,8 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
       the Aki (1965) maximum&#8209;likelihood estimator with the Shi &amp; Bolt (1982) standard error,
       the modified Omori&ndash;Utsu decay by maximum likelihood (Ogata 1983; Utsu, Ogata &amp;
       Matsuura 1995) optimised with a Nelder&ndash;Mead simplex, radiated energy
-      log<sub>10</sub>E = 1.5M + 4.8, the B&aring;th energy screen, and magnitude homogenisation to
-      Mw by the Scordilis (2006) relations.
+      log<sub>10</sub>E = 1.5M + 4.8, the B&aring;th energy screen, and conversion of Ms and mb magnitudes
+      to Mw by the Scordilis (2006) relations.
     </p>
     <p class="note">
       <strong>Which numbers to publish.</strong> This page runs the JavaScript implementation.
@@ -693,7 +693,7 @@ footer.colophon strong { color: var(--ink-2); font-weight: 600; }
       completeness magnitude, more than 100 above the threshold for a b&#8209;value or a decay
       fit &mdash; rather than the spreadsheet&rsquo;s lower ones.
     </p>
-    <p class="note tight">MIT licence &middot; Aik Kazarian &middot; Tremor Lab 1.1.2</p>
+    <p class="note tight">MIT licence &middot; Aik Kazarian &middot; Tremor Lab 1.2.0</p>
   </footer>
 </div>
 
@@ -1522,7 +1522,7 @@ function analyse(events, s) {
   // matching bValueAki's own denominator: a magnitude reported as Mc stands for
   // Mc +/- dm/2. Selecting at Mc dropped the lower half of the completeness class
   // from a formula that assumes it is there - invisible on a catalogue reported on
-  // the dm grid, and several standard errors on a homogenised one.
+  // the dm grid, and several standard errors on a converted one.
   out.sampleFloor = out.threshold - s.dm / 2;
   var above = post.filter(function (e) {
     return atOrAbove(e.mw, out.sampleFloor);
@@ -2279,7 +2279,7 @@ function asciiText(s) {
 }
 
 function resultsAsText(result, s) {
-  var lines = ["Tremor Lab 1.1.2"];
+  var lines = ["Tremor Lab 1.2.0"];
   // Everything needed to run this again, so the numbers never travel alone.
   lines.push("catalogue               " + (STATE.name || "?") + ", " +
              STATE.rows.length.toLocaleString() + " rows");

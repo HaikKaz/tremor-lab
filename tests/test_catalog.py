@@ -1,4 +1,4 @@
-"""Catalogue reading, windowing, distance and magnitude homogenisation.
+"""Catalogue reading, windowing, distance and magnitude conversion.
 
 The two fixture files describe the same four in-window events in the two export
 formats the tool has to cope with, so agreement between them is itself a test.
@@ -94,7 +94,7 @@ def test_distances_are_measured_from_the_mainshock():
     assert cat["dist_km"].to_list() == pytest.approx([0.0, 111.19, 0.0, 0.0], abs=0.5)
 
 
-def test_magnitudes_are_homogenised_when_a_type_column_is_given():
+def test_ms_and_mb_are_converted_when_a_type_column_is_given():
     cat = read_koeri(mag_type_col="Tip")
     # ML passes through; Ms 4.2 and mb 5.5 convert by Scordilis; Mw passes through.
     assert cat["mw"].to_list() == pytest.approx([4.5, 4.884, 5.705, 3.9])

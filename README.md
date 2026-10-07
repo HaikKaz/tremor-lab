@@ -5,7 +5,7 @@
 
 Aftershock-sequence statistics in Python: the magnitude of completeness, the
 Gutenberg-Richter b-value, the modified Omori-Utsu decay, radiated energy and the Bath
-energy screen, and magnitude homogenisation to Mw.
+energy screen, and conversion of Ms and mb magnitudes to Mw.
 
 Tremor Lab is the scripting counterpart of `SeismoSheet.gs`, a spreadsheet
 implementation of the same estimators. The two were written independently, each with its
@@ -54,7 +54,7 @@ That command reads a file that already carries elapsed days, so it exercises the
 estimators but not the catalogue pipeline. `examples/rebuild_koeri_fixture.py` reaches
 the same values the long way: it reconstructs KOERI-shaped timestamps at whole-second
 precision, adds ten events outside the window that must be excluded, and runs the whole
-path — parsing, homogenisation, windowing, estimation — to land on 3,469 events, Mc 3.4,
+path (parsing, magnitude conversion, windowing, estimation) to land on 3,469 events, Mc 3.4,
 b 0.844 and p 1.161. `tests/test_regression.py` locks that path too.
 
 It is a pipeline test, not provenance: the timestamps are derived from the elapsed days,
@@ -85,12 +85,18 @@ print(result["mc"], result["b_value"], result["omori"])
 Individual estimators can be used on their own:
 
 ```python
-from tremor_lab import b_value_aki, energy_joules, fit_omori, mc_maxcurvature
+from tremor_lab import (
+    b_plateau, b_shift, b_value_aki, energy_joules, fit_omori, mc_maxcurvature,
+)
 
 mc = mc_maxcurvature(mags)                  # 3.4
 b, sigma, n = b_value_aki(mags, mc=3.5)     # 0.844, 0.019, 1529
 p, c, k, n = fit_omori(times_days)          # 1.161, 0.497, 358.9, 1529
 energy_joules(7.8)                          # 3.16e16 joules
+
+shift = b_shift(mags, 3.4, 4.1)             # b 0.851 to 1.041, shift +0.190
+print(shift.ci_boot)                        # (0.115, 0.270): zero is outside it
+print(b_plateau(mags).onset)                # 3.8, the lowest threshold with a flat b
 ```
 
 ## Use from the command line
@@ -124,8 +130,9 @@ time = "Saat"
 lat  = "Enlem"
 lon  = "Boylam"
 mag  = "Mag"
-mag_type = "Tip"                # optional; enables homogenisation to Mw on a raw
-                                # export, and the report counts what was converted
+mag_type = "Tip"                # optional; converts Ms and mb to Mw on a raw export
+                                # (other types are used as reported), and the report
+                                # counts what was converted
 
 [mainshock]
 t = "2023-02-06 01:17:32"       # on the same clock as the catalogue
@@ -173,7 +180,13 @@ second that the catalogue prints for it; section 3.3 of the user guide says why.
 Kahramanmaras file in `tests\data`, every number in the application section of the
 accompanying methods paper and writes them to
 `docs\tremor_lab_regeneration_data.json`; `examples\make_paper_figures.py` draws the
-paper's figures from that file and needs matplotlib.
+paper's figures from that file and needs matplotlib. The two simulation studies of the
+paper are `examples\calibration_study.py` (the decay-fit test on 5,500 sequences with a
+known answer, about an hour on two processor cores) and
+`examples\synthetic_incompleteness.py` (b under a gradual loss of detection, about half
+an hour); each writes its own file to `docs\` and can be resumed.
+`examples\mutation_check_threshold.py` breaks the threshold code seventeen ways and
+confirms that a test fails each time.
 
 ## Use from a browser
 
@@ -228,6 +241,25 @@ biased low off it.
 The half-bin offset is the lower edge of the completeness bin: a magnitude reported as
 Mc stands for the interval Mc +/- dm/2.
 
+**Does b depend on the threshold?** `b_stability` gives b at every threshold, and a b
+that keeps rising above the chosen Mc is the usual sign that completeness was placed too
+low. Two functions put an error on what that curve shows. `b_shift` takes the change in b
+between two thresholds and judges it against the error of the change itself. The standard
+error printed beside a b-value cannot do that job, because the sample above the higher
+threshold is a subset of the sample above the lower one and the two estimates are
+correlated. If b were the same at both thresholds the error of the difference would be
+sigma_low sqrt(n_low / n_high - 1), where sigma_low is the Shi and Bolt error at the
+lower threshold (Hausman 1978); a bootstrap that resamples the events above the lower
+threshold gives an interval that does not assume b is constant. `b_plateau` finds the
+lowest threshold above which b shows no detectable dependence on the threshold. It adds up
+independent comparisons between consecutive thresholds and refers the sum to a simulated
+null distribution, because the chi-squared reference rejected 10.1 per cent of 2,000
+constant-b catalogues of 8,500 events at the 5 per cent level. The onset is a
+decision rule, not proof that the catalogue is complete there. Each candidate threshold
+is tested at 0.05 and the rule as a whole has no single error rate, so the function
+returns the whole profile and the rule can be checked by eye. Both are called from
+Python; the command-line report and the browser page do not include them.
+
 **Modified Omori-Utsu decay**, n(t) = k / (c + t)^p, by maximum likelihood on unbinned
 post-mainshock times (Ogata 1983; Utsu, Ogata and Matsu'ura 1995), minimised with the
 Nelder-Mead simplex (Nelder and Mead 1965) in `scipy.optimize.minimize`. Only c and p
@@ -246,9 +278,11 @@ the choice moves p in the third decimal.
 fitted cumulative rate, and the rescaled times are tested against a uniform distribution
 with the Kolmogorov-Smirnov statistic. Because c and p were estimated from the same
 times, the textbook p-value is far too generous, the effect Lilliefors (1967) described
-for the normal distribution: on 300 sequences simulated from the fitted model it
-rejected at the 5 per cent level in none of them. The null distribution is therefore
-simulated by parametric bootstrap, refitting the decay on every replicate. The report
+for the normal distribution: on 5,500 sequences of 200 to 5,000 events simulated from
+five Omori decays it rejected at the 0.05 level in none of them, with a mean p-value of
+0.83 to 0.87 where 0.50 is expected. The null distribution is therefore simulated by
+parametric bootstrap, refitting the decay on every replicate; on the same sequences that
+test rejected 4.3 to 5.5 per cent at 0.05 (`examples/calibration_study.py`). The report
 gives the p-value with its Monte Carlo standard error, and gives no verdict when the
 p-value lies within two standard errors of 0.05; the remedy is a larger
 `n_fit_simulations`, not a firmer verdict. A small p-value means the sequence is not a
@@ -259,9 +293,10 @@ own inside the window.
 Kanamori 1977), and the Bath energy ratio 10^(1.5 (M_sec - (M_main - delta_mb))) with
 delta_mb defaulting to 1.15 (Bath 1965).
 
-**Magnitude homogenisation to Mw** by the Scordilis (2006) global relations, Ms in two
+**Magnitude conversion to Mw** by the Scordilis (2006) global relations, Ms in two
 branches and mb linearly. Labels beginning "mw" pass through; ml, md and blank labels
-are taken as reported, since no global relation is published for them.
+are taken as reported, since no global relation is published for them, so a catalogue of
+mixed types stays mixed and the report says how many of each were converted.
 
 ## Changing the constants
 
@@ -367,7 +402,11 @@ numbers.
 
 The estimators are standard and inherit their known behaviour. Maximum-curvature Mc is
 sensitive to binning and to short-term aftershock incompleteness in the first hours
-after a mainshock. The Aki b-value assumes completeness above the chosen threshold. The
+after a mainshock. The Aki b-value assumes completeness above the chosen threshold, and
+where that fails b climbs with the threshold: on the three catalogues in the accompanying
+paper it moves by more than its sampling error allows (`b_shift`) between the
+maximum-curvature Mc and a threshold a few tenths higher. Quote a b-value with its
+threshold, and read the stability curve before trusting the number. The
 Omori fit needs a dense catalogue and is not forced on sparse historical sequences:
 where the catalogue above threshold is too thin, the absence is reported rather than a
 fit produced. Of the three decay parameters, k is the least well constrained; it is
@@ -427,6 +466,9 @@ https://doi.org/10.1785/BSSA0340040185
 Gutenberg, B. and Richter, C. F. (1956). Earthquake magnitude, intensity, energy, and
 acceleration (second paper). Bulletin of the Seismological Society of America, 46(2),
 105-145.
+
+Hausman, J. A. (1978). Specification tests in econometrics. Econometrica, 46(6),
+1251-1271. https://doi.org/10.2307/1913827
 
 Kanamori, H. (1977). The energy release in great earthquakes. Journal of Geophysical
 Research, 82(20), 2981-2987.

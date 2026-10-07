@@ -133,7 +133,7 @@ def analyze_case(
     # denominator. Selecting at Mc while computing with Mc - dm/2 drops the lower
     # half of the completeness class from a sample the formula assumes contains it.
     # On a catalogue reported on the dm grid the two select the same events, which
-    # is why this went unseen; on a homogenised one they do not, because Ms -> Mw
+    # is why this went unseen; on a converted one they do not, because Ms -> Mw
     # maps a 0.1 grid onto a 0.067 grid, and b came out several standard errors low.
     above = (
         post

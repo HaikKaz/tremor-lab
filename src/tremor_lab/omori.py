@@ -300,13 +300,16 @@ def omori_fit_test(
 
     Because c and p were estimated from the very times being tested, the fitted
     curve hugs the data and the statistic is systematically smaller than the
-    standard Kolmogorov distribution assumes. Taking the textbook p-value here
-    would be badly anti-conservative: on sequences drawn from the model it
-    rejects at 5 per cent in 0 per cent of cases, with a mean p-value near 0.87
-    rather than 0.5. The null distribution is therefore obtained by parametric
-    bootstrap, simulating from the fitted model, refitting each replicate, and
-    comparing statistics. Set `n_simulations=0` to fall back to the uncalibrated
-    asymptotic form, which is reported as such.
+    standard Kolmogorov distribution assumes. The textbook p-value is therefore
+    too large and the test almost never rejects: on 5,500 sequences of 200 to
+    5,000 events drawn from five Omori decays it rejected none at the 0.05 level,
+    with a mean p-value of 0.83 to 0.87 where a valid test gives 0.50
+    (``examples/calibration_study.py``). The null distribution is therefore
+    obtained by parametric bootstrap, simulating from the fitted model, refitting
+    each replicate, and comparing statistics; on the same sequences, with 199
+    replicates each, that test rejected 4.3 to 5.5 per cent at 0.05. Set
+    `n_simulations=0` to fall back to the uncalibrated asymptotic form, which is
+    reported as such.
 
     Parameters
     ----------

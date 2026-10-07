@@ -1,4 +1,4 @@
-"""Magnitude-energy relations, the Bath energy screen, and homogenisation to Mw.
+"""Magnitude-energy relations, the Bath screen, and conversion of Ms and mb to Mw.
 
 Every function accepts scalars or arrays and returns a NumPy value of the same shape.
 Coefficients default to the published values in `tremor_lab.constants` and can be
@@ -190,7 +190,7 @@ def mb_to_mw(
 
 def to_mw(mag: ArrayLike, mtype: ArrayLike) -> NDArray[np.float64]:
     """
-    Homogenise reported magnitudes to Mw according to their scale label.
+    Convert reported Ms and mb magnitudes to Mw according to their scale label.
 
     Labels beginning "mw" (mw, mwb, mww) pass through. "ms" and "mb" are converted by
     `ms_to_mw` and `mb_to_mw`, which read their coefficients from `tremor_lab.constants`

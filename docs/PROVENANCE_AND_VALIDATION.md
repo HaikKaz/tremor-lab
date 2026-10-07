@@ -14,9 +14,10 @@ that will be lost.
 
 For whoever writes the software/methods article. Everything below is fact, checked
 against the code and the test suite, last on 9 September 2026, except that the Hector
-Mine and Ridgecrest figures were recomputed on 5 October 2026 (see the correction below).
-Section 12 lists the seventeen things that must **not** be claimed; read it before
-drafting. Several claims made in earlier drafts were withdrawn on 9 September after being
+Mine and Ridgecrest figures were recomputed on 5 October 2026 and the threshold tests, the
+synthetic experiment and the decay-test calibration were added on 7 October 2026 (see the
+corrections below). Section 12 lists the twenty-one things that must **not** be claimed; read
+it before drafting. Several claims made in earlier drafts were withdrawn on 9 September after being
 computed rather than argued, and section 0 states the position that survived.
 
 **Drafting the paper? Read section 0 first.** It states the settled position in one
@@ -71,6 +72,42 @@ from section 0.4, the table and section 0.4 win. Those sections are kept as the 
 record they were, apart from the tables in 9d and 9e that repeat these numbers, which
 were updated.
 
+**Correction of 7 October 2026, version 1.2.0.** The paper was revised after a critical
+review, and several statements in this record were narrowed or withdrawn. Where this block
+and a section below disagree, this block wins. Section 10d records the new work and section
+12 has four new entries (18 to 21).
+
+1. *Withdrawn: "b varies with the threshold by an order of magnitude more than its
+   uncertainty", and every ratio of the form "eighteen times", "twenty times" or "ten times
+   the Shi and Bolt error" (sections 0.1, 0.4, 9, 12 item 14 and 14).* The Shi and Bolt error at
+   the lower threshold and the one at the higher threshold belong to nested samples, so the gap
+   between the two b-values cannot be divided by either. The change is now tested with `b_shift`.
+   Its bootstrap error (5,000 resamples) is 1.15 to 1.6 times the error a constant b would give,
+   and the changes quoted in the paper are 4.0 to 13.2 bootstrap errors (Table 4 of the paper).
+2. *Narrowed: the control.* Section 9e ("this is the estimator, not the sequence", "Hector Mine
+   settles it") and section 0.3 say Hector Mine shows that the effect belongs to the estimator and
+   not to doublets. What the data show is that a single mainshock gives a b that climbs with the
+   threshold to a plateau, at about the size a constant b with a smooth loss of detection gives
+   in simulation. A b that truly varies with magnitude would look similar, and one catalogue
+   cannot separate the two. Say "sufficient, not proven".
+3. *Narrowed: "a specific observation about doublets that a single mainshock cannot produce"
+   (section 0.1).* The collapse of completeness at the second mainshock is observed on
+   Kahramanmaras. No claim is made about what a single mainshock can or cannot produce.
+4. *Narrowed: where a b may be quoted.* Where `b_plateau` finds an onset, the plateau b and its
+   range may be quoted with the threshold and the grid it came from; where it finds none
+   (Ridgecrest) nothing is claimed. The onset depends on the top of the threshold grid in two of
+   the three catalogues, and only Hector Mine's M 2.1 holds for all five grids tried.
+5. *Withdrawn: "magnitudes homogenised to Mw" (sections 0.3, 0.4, 0.10, 1 and 14).* Only
+   surface-wave and body-wave magnitudes are converted (Scordilis 2006), 3 of 13,524 events at
+   Hector Mine and none at Ridgecrest. Every other type is used as the agency published it, so
+   the USGS catalogues mix ML, MLr, Mh, Mw and others, and the bundled Kahramanmaras file has no
+   type labels. The paper says so in its Data section, Table 6 and the supplement.
+6. *Replaced: the decay-test calibration* ("300 sequences, 7.5 per cent, mean p 0.473", section
+   10). Section 10d reports 5,500 simulated sequences from five decays.
+7. *Counts.* The suite has 339 tests (299 earlier, 27 for `b_shift` and `b_plateau`, 13 for the
+   study scripts). Deliberate breakages: 27, the ten of section 10 and seventeen more in
+   `examples/mutation_check_threshold.py`, all caught. The public API has 34 names.
+
 Author: Aik Kazarian. Single-author methods paper. Companion to the PhD thesis
 "Triggers: The Effect and Interaction of Earthquakes on the Example of Strong Events in
 the Trans-Caucasus and Anatolian Region".
@@ -101,6 +138,12 @@ mine and which you may overturn if you disagree, is this.
 unless the magnitude threshold is reported with it, because b varies with that threshold
 by roughly an order of magnitude more than its conventional uncertainty; and the standard
 maximum-curvature estimator selects a threshold below the range in which b is stable.*
+
+> Superseded wording (correction of 7 October 2026 at the top of this file): the paper does not
+> claim an order of magnitude and does not name the cause for any one catalogue. It claims that b
+> moves with the threshold by more than its bootstrap error in all three catalogues, that a
+> constant b with a gradual loss of detection gives the same pattern in simulation, and that
+> maximum curvature returned a threshold below the plateau wherever a plateau was found.
 
 That claim is quantitative, it is falsifiable, it is supported by three catalogues
 including a control designed to break it, and it has been independently confirmed by
@@ -143,12 +186,12 @@ established, and what this paper supplies, is a quantitative statement of what t
 omission costs.
 
 **Data and Methods.** Three catalogues, chosen so that one is a control (see 0.4). State
-for each: source, access date, magnitude type, homogenisation, spatial and temporal
+for each: source, access date, magnitude type, any conversion, spatial and temporal
 selection, and the completeness treatment. Magnitude type matters and reviewers check it:
-the Kahramanmaras catalogue is homogenised to Mw via Scordilis (2006), the two USGS
-catalogues carry mixed types homogenised the same way, and the published comparisons in
-section 10c use ML in two cases, which is why several of them are not directly
-comparable. Name every estimator with its source (0.9) and name the software with its
+the Kahramanmaras file has no type labels and is used as KOERI reported it, the two USGS
+catalogues carry mixed types and only the few Ms and mb magnitudes are converted by
+Scordilis (2006), and the published comparisons in section 10c use ML in two cases, which is
+why several of them are not directly comparable. Name every estimator with its source (0.9) and name the software with its
 version and DOI.
 
 **Results.** Report the stability curves and the completeness bands without interpreting
@@ -170,7 +213,8 @@ uncertainties by Shi and Bolt (1982), bin width 0.1. All Mc by maximum curvature
 and Wyss, 2000) with the +0.2 correction unless stated. b-stability is Cao and Gao (2002)
 as formulated by Woessner and Wiemer (2005).
 
-**Catalogue A, Kahramanmaras 2023.** KOERI, homogenised to Mw, 3,469 events M 3.0 to 7.6,
+**Catalogue A, Kahramanmaras 2023.** KOERI, magnitudes as reported (no type labels in the
+bundled file), 3,469 events M 3.0 to 7.6,
 180 days from the M 7.8 of 6 February 2023. Note the catalogue is truncated at M 3.0,
 which matters (0.7).
 
@@ -224,7 +268,8 @@ stays between 0.970 and 1.006 to M 3.9, on samples of 455 down to 77 events, and
 Maximum curvature returns **1.7**, which is 0.4 to 0.5 magnitude units below the plateau.
 b at its answer is 0.840 against 0.987 at the b-stability threshold: **0.147 low (0.150
 below the plateau mean of 0.990), against a quoted standard error of 0.008, a factor of
-about eighteen.**
+about eighteen.** (The ratio is withdrawn, see the correction of 7 October 2026;
+the shift is tested with `b_shift`.)
 
 Do not write a mean with a symmetric band for the plateau. The nine values carry their own
 standard errors, 0.017 to 0.042, and a band such as "0.99 plus or minus 0.02" is narrower
@@ -467,11 +512,12 @@ SSA journals require this section. It must be accurate, and reviewers check it.
 > accessed September 2026), selected within 100 km of each mainshock epicentre at
 > M >= 1.0 over 180 days; the exact query strings are in the headers of
 > `examples/ridgecrest.toml` and `examples/hectormine.toml`, and the files as downloaded
-> are distributed beside them. Magnitudes were homogenised to Mw following Scordilis
-> (2006). All analyses were performed with Tremor Lab v1.1.2, openly available under the
+> are distributed beside them. Magnitudes are used as each agency published them, apart from
+> surface-wave and body-wave magnitudes, which are converted to Mw following Scordilis
+> (2006). All analyses were performed with Tremor Lab v1.2.0, openly available under the
 > MIT licence at https://github.com/HaikKaz/tremor-lab and archived at
 > https://doi.org/10.5281/zenodo.22653579 (the concept DOI, which resolves to the latest
-> release); the version used here has its own DOI, issued by Zenodo when v1.1.2 is
+> release); the version used here has its own DOI, issued by Zenodo when v1.2.0 is
 > released and recorded in `CITATION.cff`. The cross-check reported in the Discussion
 > used `seismostats` (Swiss Seismological Service, ETH Zurich).
 
@@ -512,7 +558,7 @@ a result, "significantly different" is not.
 Tremor Lab is a small open-source package that computes the standard estimators of
 catalogue seismology for a single aftershock sequence: the magnitude of completeness,
 the Gutenberg-Richter b-value, the modified Omori-Utsu decay, radiated energy and the
-Bath energy screen, and magnitude homogenisation to the moment scale. It exists in two
+Bath energy screen, and conversion of Ms and mb to the moment scale. It exists in two
 forms that share no code: a Python package (the authority for published values) and a
 single self-contained HTML page that runs the same estimators in a browser with nothing
 installed. Both reproduce a set of locked reference values computed for the 2023
@@ -583,7 +629,7 @@ Kanamori (1977).*
 largest aftershock expected under Bath's law:
 10^(1.5 (M_sec - (M_main - dMB))), with dMB = 1.15 by default. *Bath (1965).*
 
-**Homogenisation to Mw** — Scordilis global relations. Ms in two branches
+**Conversion to Mw (Ms and mb only)** — Scordilis global relations. Ms in two branches
 (0.67 Ms + 2.07 at or below Ms 6.1; 0.99 Ms + 0.08 above), mb linearly
 (0.85 mb + 1.03). Labels beginning "mw" pass through; ml, md and unlabelled magnitudes
 are taken as published, because no global relation exists for them. *Scordilis (2006).*
@@ -707,7 +753,7 @@ operating point can certify agreement that does not exist elsewhere. Cross-valid
 has to be run across the parameter space, not at the published values.
 
 The bug is fixed; the two now agree on off-grid thresholds, non-default bin widths, and
-homogenised (therefore off-grid) magnitudes from USGS exports. The command-line report
+converted (therefore off-grid) magnitudes from USGS exports. The command-line report
 states the bound it sampled at — "1529 events in its completeness class, at or above
 3.45" — so the rule never has to be inferred from a threshold alone.
 
@@ -760,7 +806,7 @@ climbs by 0.381 across the range, from 0.743 to 1.124, which is twenty times the
 +/- 0.019 quoted at the published threshold. **The Shi and Bolt standard error describes
 sampling scatter at one chosen threshold and nothing else.** Reporting
 b = 0.844 +/- 0.019 without the curve overstates the precision by more than an
-order of magnitude.
+order of magnitude. (Both ratios are withdrawn, see the correction of 7 October 2026.)
 
 Two things must therefore appear in the paper.
 
@@ -1146,6 +1192,10 @@ reported that spread; this says the top of it is the one to believe.
 
 ### The control: this is the estimator, not the sequence
 
+*Narrowed in 1.2.0: Hector Mine shows the pattern in a single mainshock, which is sufficient
+to show that doublet structure is not needed for it, but it does not settle the cause. See
+the correction of 7 October 2026 at the top of this file.*
+
 Two readings are available. Either maximum curvature is underestimating completeness, or
 b genuinely varies with magnitude in this sequence. Hector Mine settles it - a single
 mainshock, a different network, a different decade, 13,524 events:
@@ -1280,11 +1330,12 @@ known p, c and k by inverse-CDF sampling. Both recovered across several seeds.
 Kolmogorov-Smirnov residual test, with one subtlety that must be stated in the
 paper. The parameters are estimated from the very times being tested, so the
 fitted curve hugs the data and the textbook Kolmogorov p-value does not apply.
-Measured on 300 sequences drawn from the model, the uncalibrated form rejected at
-the 5 per cent level in 0 per cent of cases, with a mean p-value of 0.87: it
-could hardly ever fail. The tool therefore simulates the null distribution by
-parametric bootstrap, refitting each replicate; that rejects at 7.5 per cent
-against a 5 per cent target, with a mean p-value of 0.473.
+Measured on 5,500 sequences drawn from five Omori decays (section 10d), the
+uncalibrated form rejected at the 0.05 level in none of them, with a mean p-value of
+0.83 to 0.87 where a valid test gives 0.50: it could hardly ever fail. The tool
+therefore simulates the null distribution by parametric bootstrap, refitting each
+replicate; that rejects 4.3 to 5.5 per cent of the same sequences at 0.05, with a mean
+p-value of 0.50 to 0.51.
 
 The calibration itself reproduces across the two implementations, which is worth
 stating because it is the part a reader is most likely to doubt. On the reference
@@ -1316,7 +1367,9 @@ to 2.0; setting the Mc correction to zero; fixing the observation interval at 18
 swapping the two Scordilis branches; changing the Earth radius by 1%; swapping p and c in
 the returned result; and two plumbing mutations in the command-line tool and the
 bootstrap seed. **All ten are caught.** Three of them passed silently before the audit,
-against a suite that was then 136 tests and green.
+against a suite that was then 136 tests and green. Version 1.2.0 adds seventeen more, aimed at
+`b_shift` and `b_plateau` (`examples/mutation_check_threshold.py`, section 10d), all caught,
+which makes 27 in all.
 
 This is the part most worth writing up: a green test suite is not evidence until you have
 shown it can go red.
@@ -1700,13 +1753,113 @@ examiner will press on exactly this:
    pre-mainshock b of 0.71 +/- 0.04 from a paper that was **not fetched**; those must not
    enter the manuscript on that basis.
 
+## 10d. Threshold dependence in simulation and in the catalogues, and the calibration of the decay test
+
+Added in version 1.2.0 after a critical review of the paper. It supports Sections 4 and 5
+of the paper. Every number below is copied from `docs/tremor_lab_synthetic_incompleteness.json`,
+`docs/tremor_lab_calibration_study.json` or `docs/tremor_lab_regeneration_data.json`, which are
+the authority, and each was checked against the manuscript text before submission.
+Where this section and an older one disagree, this one wins.
+
+**What was added to the package.** `b_shift` gives the change in b between two nested
+thresholds with two errors: the one it would have if b were the same at both,
+sigma_low sqrt(n_low / n_high - 1) (Hausman 1978), and a bootstrap that resamples the events
+above the lower threshold and does not assume b is constant. `b_plateau` finds the lowest
+threshold above which a statistic T, the sum over consecutive thresholds of the squared change
+in b scaled by its variance, shows no dependence of b on the threshold. T is referred to a null
+distribution simulated on the catalogue, because the chi-squared reference rejected
+10.1 per cent of 2,000 catalogues with a constant b at the first candidate threshold
+(Wilson 95 per cent interval 8.8 to 11.4) against 4.4 per cent (2.9 to 6.6) for the simulated null. Neither function is called by `analyze_case`, the command line or the
+browser page, so no output a user already relied on has changed. The onset is a decision rule, not an
+estimate and not proof of completeness. Each candidate threshold is tested at 0.05, and the rule that
+takes the lowest candidate that passes has no single error rate.
+
+**Layer 4, tests of the new code.** `tests/test_threshold_dependence.py` (27 tests) checks both
+functions against hand calculations, against simulated data with known answers, and for the rate
+at which the plateau test rejects a constant b. `tests/test_study_scripts.py` (13 tests) tests the
+parts of the two long study scripts on small inputs with known answers: the interval arithmetic, the
+simulators and the fit that recovers a detection function. `examples/mutation_check_threshold.py` breaks the new code
+seventeen ways and runs the 27 tests against each broken copy in a scratch directory: all seventeen
+were caught (17 of 17 mutations caught). With the ten of section 10 the suite has been shown to fail
+on 27 deliberate breakages. The suite has 339 tests in all.
+
+**The synthetic experiment** (`examples/synthetic_incompleteness.py`). Magnitudes are drawn from a
+Gutenberg-Richter law with b = 1.0 on the 0.1 grid, and each event is recorded with probability
+Phi((M - mu) / sigma) (Ogata and Katsura 1993). The gradual scenarios draw 170,000 events from
+M 0.5 and record from M 1.0 with mu = 1.68; the complete scenario draws 8,500 events from M 1.7.
+Each scenario has 500 catalogues, each with its own seed, and the plateau test used 199 draws of its
+simulated null. The oracle threshold is mu + 2.326 sigma rounded up to 0.1, the lowest at which
+99 per cent of events are recorded. The scenario with sigma 0.46 records about
+17,200 events from M 1.0 (the Hector Mine file has 13,524), so it was sized to reproduce the count
+above M 2.1 (about 4,390 against 4,344 observed) and does not reproduce the network below M 1.7.
+Bias of b (mean b minus 1.0) at the threshold each rule chose, and in parentheses the share of
+catalogues in which the 95 per cent Shi and Bolt interval at that threshold contains 1.0:
+
+| scenario | oracle threshold | maximum curvature | goodness of fit | b-stability | plateau test | oracle |
+|---|---|---|---|---|---|---|
+| no loss | 1.7 | -0.004 (93%) | -0.004 (93%) | -0.005 (91%) | -0.003 (93%) | -0.004 (93%) |
+| sigma 0.15 | 2.1 | -0.009 (88%) | -0.118 (0%) | -0.009 (76%) | -0.016 (59%) | -0.005 (93%) |
+| sigma 0.30 | 2.4 | -0.062 (2%) | -0.182 (0%) | -0.013 (72%) | -0.027 (38%) | -0.005 (94%) |
+| sigma 0.46 | 2.8 | -0.169 (0%) | -0.234 (0%) | -0.022 (66%) | -0.045 (27%) | -0.007 (95%) |
+| sigma 0.70 | 3.4 | -0.297 (0%) | -0.305 (0%) | -0.037 (49%) | -0.061 (20%) | -0.004 (95%) |
+| sigma 0.46, rounded to 0.01 | 2.8 | -0.160 (0%) | -0.228 (0%) | -0.004 (77%) | -0.027 (39%) | +0.010 (93%) |
+
+With no loss the bias of -0.003 to -0.005 is the half-bin form of the estimator (low to first order
+by (b ln 10 dM)^2 / 12, 0.44 per cent), and it is why the interval holds the truth in 91 to 93 per
+cent of catalogues and not 95. Under gradual loss maximum curvature and goodness of fit are biased
+low by 0.06 to 0.30 with quoted intervals that held the truth in at most 2 per cent of catalogues;
+b-stability and the plateau test remove 74 to 87 per cent of the maximum-curvature bias at sigma 0.46
+and 0.70, not all of it. Only the oracle gives b within 0.01 of the truth with near-nominal coverage.
+Rounding magnitudes to 0.01 raises every b by 0.006 to 0.018 and leaves the order of the rules
+unchanged.
+
+**What the experiment does and does not show.** A constant b with a smooth loss of detection is
+sufficient to give a b that climbs with the threshold to a plateau, with maximum curvature below
+the plateau. That is a statement about the estimators. It is not evidence that detection loss is
+what happened at Hector Mine, since a b that truly varies with magnitude would give a similar curve.
+The detection function fitted to the Hector Mine curve (b 1.007, mu 1.675, sigma 0.459; weighted sum of squares 21.8 on 18 points)
+has believable parameters. The same fit to Kahramanmaras and Ridgecrest needs mu of 5.3 and 4.6, at the upper
+limit of the search range, and sigma of 1.04 and 1.56 (sums of squares 13.5 on 14 points and
+128.8 on 26), so it does not describe them and the paper says so.
+
+**The three catalogues** (`examples/regenerate_paper_figures.py`; the paper's Table 4). The change in b
+from the maximum-curvature threshold to the plateau onset, with a bootstrap 95 per cent interval from
+5,000 resamples: Hector Mine +0.147 (0.126 to 0.170) from M 1.7 to M 2.1, 13.2 bootstrap errors;
+Kahramanmaras +0.134 (0.092 to 0.179) from M 3.4 to M 3.8, 6.1 bootstrap errors; Ridgecrest has no
+plateau onset on the default grid and none on four of five grids tried. The bootstrap error of a shift
+is 1.15 to 1.6 times the error a constant b would give. The onset moves with the top of the threshold
+grid in two catalogues (Kahramanmaras M 3.8 or 3.9, none at a grid ending at M 4.0; Ridgecrest M 2.5 for
+one grid only), and only Hector Mine's M 2.1 holds for all five. Quote an onset with the grid it came from.
+
+**Magnitude types.** The three files do not hold one magnitude scale. The USGS files carry ML, MLr, Mh,
+Mw and a few others; the Kahramanmaras file has no type labels. Only Ms and mb are converted to Mw
+(Scordilis 2006): 3 of 13,524 events at Hector Mine and none at Ridgecrest. Everything else is used as the
+agency published it. Leaving the Mh events out of Hector Mine changes b by at most 0.021 above M 2.1
+and leaves the onset at M 2.1; ML alone puts it at M 2.2. Ridgecrest above M 3.0 mixes ML, MLr and Mw and
+is not interpreted there.
+
+**Calibration of the decay-fit test** (`examples/calibration_study.py`, 199 replicates per test).
+5,500 sequences of 200 to 5,000 events were drawn from five Omori decays (p 0.9 to 1.4, c 0.02 to
+2.0 days). The asymptotic p-value rejected none of them at the 0.05 level (upper 95 per cent limit
+0.07 per cent) with a mean p-value of 0.83 to 0.87, where a valid test gives 0.50. The
+calibrated test had a mean p-value of 0.50 to 0.51 and rejected 4.3 to 5.5 per cent at 0.05, 8.8 to 10.6 per
+cent at 0.10 and 0.3 to 1.2 per cent at 0.01, every Wilson interval containing its nominal level at 0.05 and 0.10 and
+slightly conservative at 0.01. With a second sequence holding 20 per cent of the events, beginning
+one day after the first, the calibrated test rejected all 500 sequences at 0.05 and the asymptotic
+test 78.4 per cent (74.6 to 81.8). The figures quoted in earlier versions (300 sequences, 7.5 per cent, a mean
+p-value of 0.473) rested on 300 sequences and are replaced by these.
+
+**How long the studies take.** About 67 minutes for the calibration study and 26
+minutes for the synthetic experiment on two processor cores, with `--quick` versions of a few minutes.
+
 ## 11. Facts and figures
 
-- Package: `tremor-lab` 1.1.2, MIT licence, Python 3.11+, released as `v1.1.2`. Zenodo
+- Package: `tremor-lab` 1.2.0, MIT licence, Python 3.11+, released as `v1.2.0`. Zenodo
   issues the version DOI when the release is published, and it is recorded in
-  `CITATION.cff`. Version 1.1.1 is doi.org/10.5281/zenodo.22661044.
+  `CITATION.cff`. Version 1.1.2 is doi.org/10.5281/zenodo.23161364 and version 1.1.1 is
+  doi.org/10.5281/zenodo.22661044.
 - Runtime dependencies: NumPy (>=2.0,<3), SciPy (>=1.13,<2), pandas (>=2.2,<3). Nothing else.
-- Source: about 2,700 lines across 10 modules. **299 tests**, green in continuous
+- Source: about 3,200 lines across 10 modules. **339 tests**, green in continuous
   integration on Python 3.11, 3.12 and 3.13. Five of them guard
   `docs/USER_GUIDE.md`: one runs its Python examples, and the others compare its tables
   and version with the package.
@@ -1718,7 +1871,7 @@ examiner will press on exactly this:
   bootstrap count, the fit-test replicate count and the seed. The rest of the published
   constants are fixed in the page and adjustable in the package, which is the authority
   for published values in any case.
-- Public API: 30 names, including `b_stability`, `mc_b_stability`,
+- Public API: 34 names, including `b_stability`, `b_shift`, `b_plateau`, `mc_b_stability`,
   `mc_goodness_of_fit`, `omori_fit_test` and `b_value_tinti`. 25 published
   constants, of which three - the two Omori plausibility bounds and the offset
   floor - judge a fit rather than entering one and so have no keyword argument. The
@@ -1764,8 +1917,9 @@ Read this before drafting. Each of these is a real trap.
    k error reaches 6.4% while p stays within 1.4%. p is the robust number.
 6. **The DOI exists; cite the right one.** Cite the concept DOI,
    10.5281/zenodo.22653579, which always resolves to the latest version. Use a version
-   DOI only where the exact release matters, and then use 1.1.2, the release the paper
-   describes. Version 1.1.1 (10.5281/zenodo.22661044) ships example settings files
+   DOI only where the exact release matters, and then use 1.2.0, the release the paper
+   describes. Version 1.1.2 (10.5281/zenodo.23161364) lacks `b_shift` and `b_plateau` and
+   does not reproduce the paper's tables. Version 1.1.1 (10.5281/zenodo.22661044) ships example settings files
    whose whole-second origin times leave the Hector Mine and Ridgecrest mainshocks
    inside their own aftershock samples, and 1.1.0 mis-reads a European CSV export and
    takes the b-value sample at a bound its own estimator does not assume. Do not cite
@@ -1788,16 +1942,19 @@ Read this before drafting. Each of these is a real trap.
 11. **Do not let the self-test stand for validation of a reader's own analysis.** It
    checks the estimators against known values on a bundled catalogue. It says nothing
    about whether the reader chose a sensible window, threshold or mainshock.
-12. **Do not present "299 tests" as coverage.** It is a count, not a measure. What can
-    honestly be said is stronger and more specific: ten deliberate breakages of the
-    estimators were each caught by at least one test (section 10).
+12. **Do not present "339 tests" as coverage.** It is a count, not a measure. What can
+    honestly be said is stronger and more specific: 27 deliberate breakages of the
+    estimators were each caught by at least one test (sections 10 and 10d).
 13. **Do not describe the bundled fixture as raw data.** `kahramanmaras_180d.csv` is a
-    derived file: it carries elapsed days and magnitudes only, already windowed to 180
-    days, with no timestamps. Its provenance from the original KOERI export should be
-    stated in the paper, and the export itself archived with the release.
+    derived file: it carries elapsed days, magnitudes and epicentre coordinates
+    (columns `dt_days`, `mw`, `lat`, `lon`), already windowed to 180 days, with no
+    timestamps and no magnitude-type labels. Its provenance from the original KOERI
+    export should be stated in the paper, and the export itself archived with the
+    release. Because it carries epicentres it is more than a list of magnitudes, which
+    matters for any redistribution terms the agency attaches to its catalogue.
 14. **Never report a b-value, or an Omori p, without the threshold it was measured
-   at.** Both are threshold-dependent in every catalogue tested: b by about 0.2 and p
-   by up to 0.19 between Mc and Mc + 1. A bare "b = 0.844" is not a reproducible
+   at.** Both are threshold-dependent in every catalogue tested: b by 0.06 to 0.27 and p
+   by up to 0.19 between the maximum-curvature Mc and a threshold 0.5 to 1.0 above it. A bare "b = 0.844" is not a reproducible
    statement about the sequence, it is a statement about a choice. Section 9e.
 15. **Do not present the band-by-band b values as a measurement of how b evolved, and
    do not repeat the explanation that was offered for them.** Estimated at each band's
@@ -1816,16 +1973,35 @@ Read this before drafting. Each of these is a real trap.
    discontinuous across the uncalibrated 6.1-6.2 gap (6.157 against 6.119 at Ms 6.1).
    This is a deliberate fidelity choice and is documented.
 
+18. **Do not divide a change in b between two thresholds by the Shi and Bolt error of either
+    b-value, and do not say it is "ten times its error".** The two estimates share events, so
+    neither error is the error of the difference. Use `b_shift`, and quote its bootstrap
+    interval.
+19. **Do not say the synthetic experiment explains Hector Mine, Kahramanmaras or Ridgecrest.**
+    It shows that a constant b with a smooth loss of detection is sufficient to give the
+    pattern. For Hector Mine the fitted detection function has believable parameters (b 1.007,
+    mu 1.675, sigma 0.459). For Kahramanmaras and Ridgecrest the same fit needs mu at the upper
+    limit of its search range and does not describe the data. Say "sufficient, not proven", and
+    say that a b that truly varies with magnitude would look similar.
+20. **Do not call the plateau onset the completeness magnitude.** It is the lowest threshold
+    above which the test finds no dependence of b on the threshold, a decision rule whose error
+    rate at the first candidate was 4.4 per cent in the complete scenario, and it moves with the
+    top of the threshold grid in two of the three catalogues. State the grid. Ridgecrest has no
+    onset.
+21. **Do not say magnitudes were homogenised to Mw.** Only Ms and mb are converted. The USGS
+    catalogues are a mix of ML, MLr, Mh, Mw and other types as published, and the bundled
+    Kahramanmaras file has no type labels.
+
 ## 13. Status and what is outstanding
 
 Everything is done. The software is public, released, archived and citable.
 
-- **Repository:** github.com/HaikKaz/tremor-lab, current release `v1.1.2`.
+- **Repository:** github.com/HaikKaz/tremor-lab, current release `v1.2.0`.
 - **DOI:** concept 10.5281/zenodo.22653579, which always resolves to the latest
-  version and is the one to cite. Version 1.1.2 has its own DOI, issued by Zenodo when
-  the release is published and recorded in `CITATION.cff`. Version 1.1.1 is
-  10.5281/zenodo.22661044 and version 1.1.0 is 10.5281/zenodo.22653580; neither should
-  be cited in preference to 1.1.2. The 1.1.0 archive also carries a Software Heritage
+  version and is the one to cite. Version 1.2.0 has its own DOI, issued by Zenodo when
+  the release is published and recorded in `CITATION.cff`. Version 1.1.2 is
+  10.5281/zenodo.23161364, version 1.1.1 is 10.5281/zenodo.22661044 and version 1.1.0 is
+  10.5281/zenodo.22653580; none of them should be cited in preference to 1.2.0. The 1.1.0 archive also carries a Software Heritage
   identifier,
   `swh:1:dir:d09344f80b18a2ba5ad8408d0140ee9450182652`.
 - **ORCID:** 0009-0007-1842-1590, affiliation National Academy of Sciences of
@@ -1846,10 +2022,10 @@ cited software is how one citation record becomes two.
 
 The availability statement can now be written. One that is accurate:
 
-> *Tremor Lab v1.1.2 is openly available under the MIT licence at
+> *Tremor Lab v1.2.0 is openly available under the MIT licence at
 > https://github.com/HaikKaz/tremor-lab and archived at
 > https://doi.org/10.5281/zenodo.22653579. The version used in this work is
-> v1.1.2 (its own DOI, as issued by Zenodo for that release). It reproduces every
+> v1.2.0 (its own DOI, as issued by Zenodo for that release). It reproduces every
 > value reported here from the bundled catalogues with a single command each, and its
 > test suite runs on Python 3.11 to 3.13 in continuous integration.*
 
@@ -1869,15 +2045,15 @@ mainshock - section 9c measures that on Ridgecrest, where completeness moves fro
 in the first half hour to M 1.3 after a month.
 
 The Aki b-value assumes completeness above the chosen threshold, and **b is
-threshold-dependent in every catalogue tested** - by about 0.2 between Mc and Mc + 1,
-which is an order of magnitude larger than the Shi and Bolt error at either end. The
-same is true of Omori p, by up to 0.19. Neither should be reported without its
+threshold-dependent in every catalogue tested** - by 0.06 to 0.27 between the
+maximum-curvature Mc and a threshold 0.5 to 1.0 above it, which is 4.0 to 13.2 bootstrap
+errors of the change (section 10d). The same is true of Omori p, by up to 0.19. Neither should be reported without its
 threshold. The Omori fit needs a dense
 catalogue: where the catalogue above threshold is too thin the tool reports the absence
 rather than producing a fit, and two of the four case-study catalogues (Spitak, Racha)
 fall in that category — which is itself a finding, already reported in the thesis.
-Magnitude homogenisation is applied only where a scale column exists; where it does not,
-magnitudes are used as published and the tool says so.
+Only Ms and mb magnitudes are converted, and only where a scale column exists; every other
+type, and every file without a scale column, is used as published and the tool says so.
 
 ## 15. References to verify before submission
 

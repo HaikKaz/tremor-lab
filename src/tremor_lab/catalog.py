@@ -206,9 +206,9 @@ def read_catalog(
     window_days : float, optional
         Aftershock window length in days. Defaults to `constants.WINDOW_DAYS`.
     mag_type_col : str, optional
-        Column of magnitude-scale labels. When given, magnitudes are homogenised to Mw
-        by `tremor_lab.magnitude.to_mw`; when omitted they are taken as already on the
-        moment scale.
+        Column of magnitude-scale labels. When given, Ms and mb magnitudes are
+        converted to Mw by `tremor_lab.magnitude.to_mw` and every other type is used as
+        reported; when omitted all magnitudes are taken as already on the moment scale.
     dayfirst : bool, optional
         Read day-first dates such as 06.02.2023 as 6 February rather than 2 June.
         False by default. It applies only to the rows where the day and the month
@@ -228,7 +228,7 @@ def read_catalog(
     # The command line hands its whole [catalog.columns] table over, so the scale
     # column arrives as columns["mag_type"]; a library caller who wrote it there
     # rather than in `mag_type_col` used to have the role checked against the file
-    # and then never read, and got un-homogenised magnitudes without being told.
+    # and then never read, and got unconverted magnitudes without being told.
     mag_type_col = mag_type_col or columns.get("mag_type")
     _check_columns(frame, columns, mag_type_col)
     parsed = pd.DataFrame({"t": _parse_times(frame, columns, dayfirst)})

@@ -118,7 +118,7 @@ def from_raw():
     """The locked values, reached through the whole pipeline rather than around it.
 
     The other fixture in this directory carries elapsed days, so reading it
-    exercises no time parsing, no homogenisation and no windowing. This one is
+    exercises no time parsing, no magnitude conversion and no windowing. This one is
     KOERI-shaped, at the whole-second precision the agency publishes, and carries
     ten events outside the window that must be excluded. It is built by
     `examples/rebuild_koeri_fixture.py`, whose docstring explains that it is a

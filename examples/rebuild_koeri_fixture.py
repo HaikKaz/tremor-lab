@@ -4,10 +4,11 @@
 
 WHAT THIS IS, AND WHAT IT IS NOT
 --------------------------------
-`tests/data/kahramanmaras_180d.csv` is a *derived* file: it carries elapsed days
-and magnitudes, already windowed and already on the moment scale. Reading it back
-exercises none of the catalogue pipeline, so the headline reproduction was
-demonstrated on a path that skipped time parsing, magnitude homogenisation and
+`tests/data/kahramanmaras_180d.csv` is a *derived* file: it carries elapsed days,
+magnitudes and epicentre coordinates (columns `dt_days`, `mw`, `lat`, `lon`),
+already windowed, with a single magnitude column and no scale labels. Reading it
+back exercises none of the catalogue pipeline, so the headline reproduction was
+demonstrated on a path that skipped time parsing, magnitude conversion and
 windowing entirely.
 
 This script reconstructs the timestamps those elapsed days imply, and writes
@@ -94,7 +95,7 @@ def main() -> int:
     )
     b, omori = result["b_value"], result["omori"]
 
-    print("\nthrough the full pipeline: parse, homogenise, window, estimate")
+    print("\nthrough the full pipeline: parse, convert magnitudes, window, estimate")
     checks = [
         ("rows in the file", len(frame), 3469 + len(OUTSIDE_DAYS), 0),
         ("events in window", result["n_events"], 3469, 0),
